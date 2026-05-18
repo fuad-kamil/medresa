@@ -6,36 +6,68 @@ export default function AttendancePage() {
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
 
+  // Load students once on mount
   useEffect(() => {
     axiosInstance
       .get("/ustaz/students")
       .then((res) => {
         setStudents(res.data);
-        const initial = {};
-        res.data.forEach((s) => (initial[s._id] = "present"));
-        setAttendance(initial);
       })
       .catch((err) => console.error(err));
   }, []);
 
+  // Load existing attendance whenever date or student list changes
+  useEffect(() => {
+    if (students.length === 0) return;
+
+    axiosInstance
+      .get(`/ustaz/attendance?date=${selectedDate}`)
+      .then((res) => {
+        const existingRecords = res.data;
+        if (existingRecords && existingRecords.length > 0) {
+          const loadedAttendance = {};
+          // Set initial fallback for all students
+          students.forEach((s) => {
+            loadedAttendance[s._id] = "present";
+          });
+          // Populate with fetched records
+          existingRecords.forEach((record) => {
+            const studentId = typeof record.student === 'object' ? record.student._id : record.student;
+            loadedAttendance[studentId] = record.status;
+          });
+          setAttendance(loadedAttendance);
+          setIsUpdateMode(true);
+        } else {
+          // Reset to default "present"
+          const initial = {};
+          students.forEach((s) => (initial[s._id] = "present"));
+          setAttendance(initial);
+          setIsUpdateMode(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch existing attendance:", err);
+        const initial = {};
+        students.forEach((s) => (initial[s._id] = "present"));
+        setAttendance(initial);
+        setIsUpdateMode(false);
+      });
+  }, [selectedDate, students]);
+
   const markAttendance = async () => {
     try {
-      await axiosInstance.post("/ustaz/attendance", { attendance, date: selectedDate });
-      alert("Attendance marked successfully!");
-    } catch (err) {
-      if (err.response?.data?.message?.includes("already taken")) {
-        if (window.confirm("Attendance already taken for this date. Do you want to update it?")) {
-          try {
-            await axiosInstance.put("/ustaz/attendance", { attendance, date: selectedDate });
-            alert("Attendance updated successfully!");
-          } catch (updateErr) {
-            alert(updateErr.response?.data?.message || "Failed to update attendance");
-          }
-        }
+      if (isUpdateMode) {
+        await axiosInstance.put("/ustaz/attendance", { attendance, date: selectedDate });
+        alert("Attendance updated successfully!");
       } else {
-        alert(err.response?.data?.message || "Failed to mark attendance");
+        await axiosInstance.post("/ustaz/attendance", { attendance, date: selectedDate });
+        alert("Attendance marked successfully!");
+        setIsUpdateMode(true);
       }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to submit attendance");
     }
   };
 
@@ -76,7 +108,7 @@ export default function AttendancePage() {
                   <td className="p-5 text-gray-600 dark:text-gray-400">{student.surah}</td>
                   <td className="p-5">
                     <select
-                      value={attendance[student._id]}
+                      value={attendance[student._id] || "present"}
                       onChange={(e) =>
                         setAttendance({
                           ...attendance,
@@ -101,7 +133,7 @@ export default function AttendancePage() {
         onClick={markAttendance}
         className="mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors text-lg"
       >
-        Submit Attendance
+        {isUpdateMode ? "Update Attendance" : "Submit Attendance"}
       </button>
     </div>
   );

@@ -105,32 +105,67 @@ export const updateAttendance = async (req, res) => {
 // Helper: Check 3 consecutive absences
 const checkConsecutiveAbsences = async (studentIds) => {
     for (const studentId of studentIds) {
-        const recent = await Attendance.find({ student: studentId })
-            .sort({ date: -1 })
-            .limit(3)
+        try {
+            const recent = await Attendance.find({ student: studentId })
+                .sort({ date: -1 })
+                .limit(3)
 
-        if (
-            recent.length === 3 &&
-            recent.every(att => att.status === 'absent')
-        ) {
-            const student = await Student.findById(studentId).populate(
-                'assignedUstaz'
-            )
+            if (
+                recent.length === 3 &&
+                recent.every(att => att.status === 'absent')
+            ) {
+                const student = await Student.findById(studentId).populate(
+                    'assignedUstaz'
+                )
 
-            await sendEmail({
-                to: process.env.EMAIL_USER,
-                subject: `⚠️ Alert: 3 Consecutive Absences - ${student.fullName}`,
-                text: `Student ${student.fullName} has missed 3 or more consecutive classes from Ustaz ${student.assignedUstaz.name}. Please call Father at ${student.fatherPhone} or Mother at ${student.motherPhone} to ask the reason.`,
-                html: `
-          <h3>3 Consecutive Absences Alert</h3>
-          <p>Student <strong>${student.fullName}</strong> has missed 3 or more consecutive classes from Ustaz <strong>${student.assignedUstaz.name}</strong>.</p>
-          <p>Please call them to ask the reason:</p>
-          <ul>
-            <li><strong>Father:</strong> ${student.fatherPhone}</li>
-            <li><strong>Mother:</strong> ${student.motherPhone}</li>
-          </ul>
-        `
-            })
+                if (!student) continue;
+
+                const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
+
+                await sendEmail({
+                    to: process.env.EMAIL_USER,
+                    subject: `⚠️ Alert: 3 Consecutive Absences - ${student.fullName}`,
+                    text: `Student ${student.fullName} has missed 3 or more consecutive classes from Ustaz ${ustazName}. Please call Father at ${student.fatherPhone} or Mother at ${student.motherPhone} to ask the reason.`,
+                    html: `
+              <h3>3 Consecutive Absences Alert</h3>
+              <p>Student <strong>${student.fullName}</strong> has missed 3 or more consecutive classes from Ustaz <strong>${ustazName}</strong>.</p>
+              <p>Please call them to ask the reason:</p>
+              <ul>
+                <li><strong>Father:</strong> ${student.fatherPhone}</li>
+                <li><strong>Mother:</strong> ${student.motherPhone}</li>
+              </ul>
+            `
+                })
+            }
+        } catch (err) {
+            console.error(`Error in checkConsecutiveAbsences for student ${studentId}:`, err);
         }
+    }
+}
+
+// Get Attendance by Date for Logged-In Ustaz
+export const getAttendanceByDate = async (req, res) => {
+    try {
+        const { date } = req.query;
+        const ustazId = req.user.id;
+
+        if (!date) {
+            return res.status(400).json({ message: 'Date parameter is required.' });
+        }
+
+        const attendanceDate = new Date(date);
+        const startOfDay = new Date(attendanceDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(attendanceDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const records = await Attendance.find({
+            ustaz: ustazId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        res.json(records);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
