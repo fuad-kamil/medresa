@@ -220,3 +220,20 @@ export const updateStudent = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// Delete Ustaz
+export const deleteUstaz = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Remove Ustaz from User collection
+        await User.findOneAndDelete({ _id: id, role: 'ustaz' });
+        
+        // Set assignedUstaz to null for any assigned students
+        await Student.updateMany({ assignedUstaz: id }, { $unset: { assignedUstaz: "" } });
+        
+        res.json({ message: 'Ustaz deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

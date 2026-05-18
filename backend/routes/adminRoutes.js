@@ -8,6 +8,7 @@ import adminOnly from '../middleware/adminOnly.js'
 import {
     getAllUstazs,
     approveUstaz,
+    deleteUstaz,
     registerStudent,
     getAllStudents,
     getTodayAttendance,
@@ -22,6 +23,7 @@ import {
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
+router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
 
 // Student management
 router.post('/students', protect, adminOnly, registerStudent)

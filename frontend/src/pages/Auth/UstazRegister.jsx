@@ -95,9 +95,11 @@ export default function UstazRegister() {
           {/* Header */}
           <div className="bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-800 dark:to-teal-800 px-10 py-12 text-center text-white">
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30">
-                <BookOpen size={42} className="text-white" />
-              </div>
+              <img
+                src="/medresa_icon.jpg"
+                alt="Ali Medresa Logo"
+                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-white/30 shadow-2xl"
+              />
             </div>
             <h1 className="text-4xl font-bold">Join as Ustaz</h1>
             <p className="text-emerald-100 mt-2">Ali Medresa</p>

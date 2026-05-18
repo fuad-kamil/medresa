@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
 import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
@@ -22,19 +22,21 @@ export default function AdminDashboard() {
   const [transferStudentId, setTransferStudentId] = useState(null);
   const [newUstazId, setNewUstazId] = useState("");
 
-  // Delete Modal State
+  // Delete Student Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
 
-  const config = { headers: { Authorization: `Bearer ${token}` } };
+  // Delete Ustaz Modal State
+  const [isDeleteUstazModalOpen, setIsDeleteUstazModalOpen] = useState(false);
+  const [ustazToDelete, setUstazToDelete] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [studentsRes, ustazsRes, attendanceRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/admin/students", config),
-          axios.get("http://localhost:5000/api/admin/ustazs", config),
-          axios.get("http://localhost:5000/api/admin/attendance/today", config),
+          axiosInstance.get("/admin/students"),
+          axiosInstance.get("/admin/ustazs"),
+          axiosInstance.get("/admin/attendance/today"),
         ]);
 
         setStudents(studentsRes.data);
@@ -57,7 +59,7 @@ export default function AdminDashboard() {
   const handleApproveUstaz = async (ustazId, e) => {
     e.stopPropagation();
     try {
-      await axios.patch(`http://localhost:5000/api/admin/ustaz/approve/${ustazId}`, {}, config);
+      await axiosInstance.patch(`/admin/ustaz/approve/${ustazId}`);
       setUstazs(ustazs.map(u => u._id === ustazId ? { ...u, isApproved: true } : u));
     } catch (error) {
       console.error("Failed to approve ustaz:", error);
@@ -75,13 +77,33 @@ export default function AdminDashboard() {
     if (!studentToDelete) return;
     
     try {
-      await axios.delete(`http://localhost:5000/api/admin/students/${studentToDelete._id}`, config);
+      await axiosInstance.delete(`/admin/students/${studentToDelete._id}`);
       setStudents(students.filter(s => s._id !== studentToDelete._id));
       setIsDeleteModalOpen(false);
       setStudentToDelete(null);
     } catch (error) {
       console.error("Failed to delete student:", error);
       alert("Failed to delete student.");
+    }
+  };
+
+  const handleDeleteUstazClick = (ustaz, e) => {
+    e.stopPropagation();
+    setUstazToDelete(ustaz);
+    setIsDeleteUstazModalOpen(true);
+  };
+
+  const confirmDeleteUstaz = async () => {
+    if (!ustazToDelete) return;
+    
+    try {
+      await axiosInstance.delete(`/admin/ustaz/${ustazToDelete._id}`);
+      setUstazs(ustazs.filter(u => u._id !== ustazToDelete._id));
+      setIsDeleteUstazModalOpen(false);
+      setUstazToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete ustaz:", error);
+      alert("Failed to delete Ustaz.");
     }
   };
 
@@ -96,7 +118,7 @@ export default function AdminDashboard() {
     if (!newUstazId) return alert("Please select an Ustaz to transfer to.");
     
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/students/${transferStudentId}/transfer`, { assignedUstaz: newUstazId }, config);
+      const res = await axiosInstance.patch(`/admin/students/${transferStudentId}/transfer`, { assignedUstaz: newUstazId });
       
       // Update local state
       setStudents(students.map(s => s._id === transferStudentId ? { ...s, assignedUstaz: res.data.student.assignedUstaz } : s));
@@ -114,7 +136,7 @@ export default function AdminDashboard() {
     setHistoryData([]);
 
     try {
-      const res = await axios.get(`http://localhost:5000/api/admin/students/${student._id}/attendance`, config);
+      const res = await axiosInstance.get(`/admin/students/${student._id}/attendance`);
       setHistoryData(res.data);
     } catch (error) {
       console.error("Failed to fetch student history:", error);
@@ -150,7 +172,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow border border-gray-100 dark:border-gray-700 hover:shadow-xl transition">
           <div className="flex justify-between items-start">
             <div>
@@ -158,6 +180,16 @@ export default function AdminDashboard() {
               <p className="text-5xl font-bold mt-6 text-gray-800 dark:text-white">{totalStudents}</p>
             </div>
             <Users size={52} className="text-emerald-600/20" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow border border-gray-100 dark:border-gray-700 hover:shadow-xl transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-gray-500 dark:text-gray-400">Total Ustazs</p>
+              <p className="text-5xl font-bold mt-6 text-gray-800 dark:text-white">{ustazs.length}</p>
+            </div>
+            <User size={52} className="text-blue-600/20" />
           </div>
         </div>
 
@@ -202,22 +234,32 @@ export default function AdminDashboard() {
                   </div>
                   
                   {/* Show chevron on right side of name on mobile instead of wrapping it all the way below */}
-                  <div className="sm:hidden flex items-center text-gray-400 shrink-0">
-                     {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                  <div className="sm:hidden flex items-center text-gray-400 shrink-0 ml-auto">
+                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 text-gray-400">
+                <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 text-gray-400" onClick={(e) => e.stopPropagation()}>
                   {!ustaz.isApproved && (
                     <button
                       onClick={(e) => handleApproveUstaz(ustaz._id, e)}
-                      className="text-xs font-bold px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-colors shadow-sm w-full sm:w-auto"
+                      className="text-xs font-bold px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-colors shadow-sm"
                     >
                       APPROVE
                     </button>
                   )}
+                  
+                  {/* Delete Ustaz Button */}
+                  <button
+                    onClick={(e) => handleDeleteUstazClick(ustaz, e)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition"
+                    title="Delete Ustaz"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+
                   <div className="hidden sm:block">
-                    {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                   </div>
                 </div>
               </div>
@@ -403,6 +445,51 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   onClick={confirmDeleteStudent}
+                  className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Ustaz Confirmation Modal */}
+      {isDeleteUstazModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all">
+            
+            {/* Header Icon Area */}
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-500 dark:text-red-400" />
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                Delete Ustaz?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Are you absolutely sure you want to permanently delete{" "}
+                <strong className="text-gray-800 dark:text-gray-200">{ustazToDelete?.name}</strong>?
+              </p>
+              <p className="text-sm text-red-500 dark:text-red-400 font-medium mb-8">
+                This action cannot be undone. Assigned students will become unassigned.
+              </p>
+              
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsDeleteUstazModalOpen(false)}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteUstaz}
                   className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
                 >
                   Yes, Delete
