@@ -19,6 +19,7 @@ export default function WeeklyAbsentees() {
           if (!grouped[studentName]) {
             grouped[studentName] = {
               surah: record.student?.surah || "N/A",
+              stream: record.student?.stream || "quran",
               fatherPhone: record.student?.fatherPhone || "N/A",
               motherPhone: record.student?.motherPhone || "N/A",
               dates: []
@@ -95,7 +96,9 @@ export default function WeeklyAbsentees() {
               
               <div className="z-10">
                 <h3 className="font-bold text-gray-800 dark:text-white text-xl mb-1">{name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Surah: {data.surah}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {data.stream === 'kitab' ? `Kitab: ${data.surah}` : `Surah: ${data.surah}`}
+                </p>
               </div>
               
               <div className="z-10 bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">

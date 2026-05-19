@@ -258,7 +258,7 @@ export default function UstazDashboard() {
                       </div>
                     </td>
                     <td className="p-5 text-gray-600 dark:text-gray-400">
-                      {student.stream === 'kitab' ? "Kitab (No Surah)" : student.surah || "N/A"}
+                      {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
                     </td>
                     <td className="p-5">
                       <div className="flex gap-2 w-max">
@@ -318,7 +318,7 @@ export default function UstazDashboard() {
                 <div>
                   <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {student.stream === 'kitab' ? "Kitab Stream (No Surah)" : `Surah: ${student.surah || "N/A"}`}
+                    {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
                   </p>
                 </div>
                 {takenTodayMap[student._id] ? (

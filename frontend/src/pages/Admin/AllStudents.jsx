@@ -128,7 +128,7 @@ export default function AllStudents() {
                   Student Name
                 </th>
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
-                  Surah
+                  Surah / Kitab
                 </th>
 
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
@@ -168,7 +168,7 @@ export default function AllStudents() {
                       {student.fullName}
                     </td>
                     <td className="p-6 text-gray-700 dark:text-gray-300">
-                      {student.surah}
+                      {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
                     </td>
 
                     <td className="p-6 text-gray-700 dark:text-gray-300 font-medium">
@@ -210,7 +210,9 @@ export default function AllStudents() {
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Surah: {student.surah || "N/A"}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
+                  </p>
                 </div>
                 <span className="inline-flex items-center px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full uppercase tracking-wider">
                   <UserCheck size={12} className="mr-1" /> Active
