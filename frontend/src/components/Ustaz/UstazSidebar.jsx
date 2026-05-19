@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LogOut, LayoutDashboard, AlertCircle, Menu, X, CalendarX, Settings, UserPlus } from "lucide-react";
+import { LogOut, LayoutDashboard, AlertCircle, Menu, X, CalendarX, Settings, UserPlus, GraduationCap } from "lucide-react";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
@@ -147,6 +147,17 @@ export default function UstazSidebar() {
           >
             <UserPlus size={20} />
             Manage Students
+          </Link>
+
+          <Link
+            to="/ustaz/exams"
+            onClick={closeSidebar}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-6 ${
+              location.pathname === "/ustaz/exams" ? "bg-emerald-700" : "hover:bg-emerald-800"
+            }`}
+          >
+            <GraduationCap size={20} />
+            Exams
           </Link>
 
           {/* Yesterday's Absentees Section */}

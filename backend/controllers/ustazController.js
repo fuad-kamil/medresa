@@ -142,3 +142,27 @@ export const updateStudent = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// Update Student Exam Scores
+export const updateStudentScores = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { firstExam, secondExam, finalExam } = req.body;
+
+        // Ensure the student belongs to this Ustaz
+        const student = await Student.findOne({ _id: id, assignedUstaz: req.user.id });
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found or not assigned to you' });
+        }
+
+        student.firstExam = firstExam !== undefined ? Number(firstExam) : student.firstExam;
+        student.secondExam = secondExam !== undefined ? Number(secondExam) : student.secondExam;
+        student.finalExam = finalExam !== undefined ? Number(finalExam) : student.finalExam;
+
+        await student.save();
+
+        res.json({ message: 'Exam scores updated successfully', student });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

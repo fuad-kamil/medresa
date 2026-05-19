@@ -36,6 +36,7 @@ export default function AdminSidebar() {
       icon: UserPlus,
     },
     { name: "All Students", path: "/admin/students", icon: Users },
+    { name: "Exams", path: "/admin/exams", icon: GraduationCap },
   ];
 
   const closeSidebar = () => {

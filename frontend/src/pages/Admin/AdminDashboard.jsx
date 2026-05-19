@@ -160,6 +160,8 @@ export default function AdminDashboard() {
   if (loading) return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;
 
   const approvedUstazs = ustazs.filter(u => u.isApproved);
+  const quranUstazsCount = ustazs.filter(u => u.stream === 'quran' || !u.stream).length;
+  const kitabUstazsCount = ustazs.filter(u => u.stream === 'kitab').length;
 
   return (
     <div>
@@ -188,6 +190,9 @@ export default function AdminDashboard() {
             <div>
               <p className="text-gray-500 dark:text-gray-400">Total Ustazs</p>
               <p className="text-5xl font-bold mt-6 text-gray-800 dark:text-white">{ustazs.length}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 font-semibold">
+                Quran: <span className="text-emerald-600 dark:text-emerald-400">{quranUstazsCount}</span> | Kitab: <span className="text-blue-600 dark:text-blue-400">{kitabUstazsCount}</span>
+              </p>
             </div>
             <User size={52} className="text-blue-600/20" />
           </div>

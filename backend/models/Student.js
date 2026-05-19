@@ -33,6 +33,18 @@ const studentSchema = new mongoose.Schema(
             type: String,
             enum: ['active', 'inactive'],
             default: 'active'
+        },
+        firstExam: {
+            type: Number,
+            default: 0
+        },
+        secondExam: {
+            type: Number,
+            default: 0
+        },
+        finalExam: {
+            type: Number,
+            default: 0
         }
     },
     { timestamps: true }

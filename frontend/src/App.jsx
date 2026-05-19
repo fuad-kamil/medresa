@@ -19,6 +19,9 @@ import UstazSettings from "./pages/Ustaz/UstazSettings";
 import UstazManageStudent from "./pages/Ustaz/UstazManageStudent";
 import UstazLayout from "./components/Layout/UstazLayout";
 
+// Common
+import Exams from "./pages/Common/Exams";
+
 function App() {
   return (
     <Router>
@@ -48,6 +51,14 @@ function App() {
           element={
             <AdminLayout>
               <AllStudents />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/exams"
+          element={
+            <AdminLayout>
+              <Exams />
             </AdminLayout>
           }
         />
@@ -84,6 +95,14 @@ function App() {
           element={
             <UstazLayout>
               <AttendancePage />
+            </UstazLayout>
+          }
+        />
+        <Route
+          path="/ustaz/exams"
+          element={
+            <UstazLayout>
+              <Exams />
             </UstazLayout>
           }
         />

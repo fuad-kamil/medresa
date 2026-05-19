@@ -16,6 +16,7 @@ import {
     deleteStudent,
     transferStudent,
     updateStudent,
+    updateStudentScores,
     updateAdminProfile,
     updateAdminPassword
 } from '../controllers/adminController.js'
@@ -30,6 +31,7 @@ router.post('/students', protect, adminOnly, registerStudent)
 router.get('/students', protect, adminOnly, getAllStudents)
 router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceHistory)
 router.put('/students/:id', protect, adminOnly, updateStudent)
+router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)
 router.delete('/students/:id', protect, adminOnly, deleteStudent)
 router.patch('/students/:id/transfer', protect, adminOnly, transferStudent)
 
