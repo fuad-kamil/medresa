@@ -29,9 +29,9 @@ export default function Exams() {
   const fetchUstazs = async () => {
     try {
       const res = await axiosInstance.get("/admin/ustazs");
-      // Keep only approved teachers
-      const approvedUstazs = res.data.filter(u => u.isApproved);
-      setUstazs(approvedUstazs);
+      // Keep only approved teachers who are in the Kitab stream
+      const approvedKitabUstazs = res.data.filter(u => u.isApproved && u.stream === 'kitab');
+      setUstazs(approvedKitabUstazs);
     } catch (err) {
       console.error("Failed to fetch Ustazs", err);
     }
