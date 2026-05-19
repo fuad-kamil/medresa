@@ -49,6 +49,11 @@ const studentSchema = new mongoose.Schema(
         finalExam: {
             type: Number,
             default: 0
+        },
+        examScores: {
+            type: Map,
+            of: Number,
+            default: {}
         }
     },
     { timestamps: true }

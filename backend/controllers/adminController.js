@@ -276,16 +276,22 @@ export const deleteUstaz = async (req, res) => {
 export const updateStudentScores = async (req, res) => {
     try {
         const { id } = req.params;
-        const { firstExam, secondExam, finalExam } = req.body;
+        const { firstExam, secondExam, finalExam, examScores } = req.body;
 
         const student = await Student.findById(id);
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        student.firstExam = firstExam !== undefined ? Number(firstExam) : student.firstExam;
-        student.secondExam = secondExam !== undefined ? Number(secondExam) : student.secondExam;
-        student.finalExam = finalExam !== undefined ? Number(finalExam) : student.finalExam;
+        if (firstExam !== undefined) student.firstExam = Number(firstExam);
+        if (secondExam !== undefined) student.secondExam = Number(secondExam);
+        if (finalExam !== undefined) student.finalExam = Number(finalExam);
+
+        if (examScores) {
+            for (const [examId, score] of Object.entries(examScores)) {
+                student.examScores.set(examId, score === "" || score === null ? 0 : Number(score));
+            }
+        }
 
         await student.save();
 
@@ -294,3 +300,4 @@ export const updateStudentScores = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+

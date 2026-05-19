@@ -148,7 +148,7 @@ export const updateStudent = async (req, res) => {
 export const updateStudentScores = async (req, res) => {
     try {
         const { id } = req.params;
-        const { firstExam, secondExam, finalExam } = req.body;
+        const { firstExam, secondExam, finalExam, examScores } = req.body;
 
         // Ensure the student belongs to this Ustaz
         const student = await Student.findOne({ _id: id, assignedUstaz: req.user.id });
@@ -156,9 +156,15 @@ export const updateStudentScores = async (req, res) => {
             return res.status(404).json({ message: 'Student not found or not assigned to you' });
         }
 
-        student.firstExam = firstExam !== undefined ? Number(firstExam) : student.firstExam;
-        student.secondExam = secondExam !== undefined ? Number(secondExam) : student.secondExam;
-        student.finalExam = finalExam !== undefined ? Number(finalExam) : student.finalExam;
+        if (firstExam !== undefined) student.firstExam = Number(firstExam);
+        if (secondExam !== undefined) student.secondExam = Number(secondExam);
+        if (finalExam !== undefined) student.finalExam = Number(finalExam);
+
+        if (examScores) {
+            for (const [examId, score] of Object.entries(examScores)) {
+                student.examScores.set(examId, score === "" || score === null ? 0 : Number(score));
+            }
+        }
 
         await student.save();
 
