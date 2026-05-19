@@ -90,3 +90,24 @@ export const login = async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 }
+
+// Reset all passwords in active database to admin123
+export const resetAllPasswordsProd = async (req, res) => {
+    try {
+        const users = await User.find({})
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash('admin123', salt)
+
+        for (const user of users) {
+            user.password = hashedPassword
+            await user.save()
+        }
+
+        res.json({
+            success: true,
+            message: `Successfully reset passwords to 'admin123' for ${users.length} users in the active database!`
+        })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+}
