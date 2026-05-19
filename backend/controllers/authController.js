@@ -6,8 +6,9 @@ import jwt from 'jsonwebtoken'
 export const registerUstaz = async (req, res) => {
     try {
         const { name, email, password, phone, stream } = req.body
+        const normalizedEmail = email?.toLowerCase().trim()
 
-        const userExists = await User.findOne({ email })
+        const userExists = await User.findOne({ email: normalizedEmail })
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' })
         }
@@ -17,7 +18,7 @@ export const registerUstaz = async (req, res) => {
 
         const user = await User.create({
             name,
-            email,
+            email: normalizedEmail,
             password: hashedPassword,
             phone,
             stream: stream || 'quran',
@@ -42,8 +43,9 @@ export const registerUstaz = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password, role } = req.body
+        const normalizedEmail = email?.toLowerCase().trim()
 
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email: normalizedEmail })
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' })
         }
