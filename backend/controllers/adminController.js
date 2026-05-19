@@ -62,26 +62,14 @@ export const registerStudent = async (req, res) => {
     }
 }
 
-// Get All Students (fast - no attendance stats)
+// Get All Students (fast - uses aggregation pipeline, includes attendance stats)
 export const getAllStudents = async (req, res) => {
     try {
         const students = await Student.find()
             .populate('assignedUstaz', 'name email')
             .lean();
-        res.json(students);
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-}
 
-// Get All Students WITH attendance stats (used for Excel export)
-export const getAllStudentsWithStats = async (req, res) => {
-    try {
-        const students = await Student.find()
-            .populate('assignedUstaz', 'name email')
-            .lean();
-
-        // Single aggregation query to fetch all attendance counts at once
+        // Single aggregation query for ALL students at once (not N+1)
         const stats = await Attendance.aggregate([
             {
                 $group: {
@@ -93,7 +81,7 @@ export const getAllStudentsWithStats = async (req, res) => {
             }
         ]);
 
-        // Fast lookup map
+        // Fast in-memory lookup map
         const statsMap = {};
         stats.forEach((item) => {
             if (item._id) {
@@ -106,12 +94,8 @@ export const getAllStudentsWithStats = async (req, res) => {
         });
 
         const studentsWithStats = students.map((student) => {
-            const studentStats = statsMap[student._id.toString()] || {
-                presentCount: 0,
-                absentCount: 0,
-                excusedCount: 0
-            };
-            return { ...student, ...studentStats };
+            const s = statsMap[student._id.toString()] || { presentCount: 0, absentCount: 0, excusedCount: 0 };
+            return { ...student, ...s };
         });
 
         res.json(studentsWithStats);
@@ -119,6 +103,9 @@ export const getAllStudentsWithStats = async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 }
+
+// Get All Students WITH attendance stats (alias - same as getAllStudents, kept for compatibility)
+export const getAllStudentsWithStats = getAllStudents;
 
 // Get Today's Attendance
 export const getTodayAttendance = async (req, res) => {
