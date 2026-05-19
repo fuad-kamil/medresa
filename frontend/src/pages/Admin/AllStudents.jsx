@@ -1,24 +1,36 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
-import { Search, UserCheck, Calendar, Download } from "lucide-react";
+import { Search, UserCheck, Calendar, Download, AlertCircle, RefreshCw } from "lucide-react";
 import * as XLSX from "xlsx";
+import useAuthStore from "../../store/authStore";
 
 export default function AllStudents() {
+  const navigate = useNavigate();
+  const { token } = useAuthStore();
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchCriteria, setSearchCriteria] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!token) {
+      navigate("/");
+      return;
+    }
     fetchStudents();
-  }, []);
+  }, [token]);
 
   const fetchStudents = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await axiosInstance.get("/admin/students");
       setStudents(res.data);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.message || err.message || "Failed to load student list.");
     } finally {
       setLoading(false);
     }
@@ -132,6 +144,26 @@ export default function AllStudents() {
           </button>
         </div>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-8 p-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-pulse">
+          <div className="flex items-center gap-4 text-red-700 dark:text-red-400">
+            <AlertCircle size={24} className="flex-shrink-0" />
+            <div>
+              <p className="font-bold text-lg">Error Fetching Student Records</p>
+              <p className="text-md mt-1">{error}</p>
+            </div>
+          </div>
+          <button
+            onClick={fetchStudents}
+            className="flex items-center gap-2 px-5 py-3 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 rounded-xl transition font-semibold w-full sm:w-auto justify-center"
+          >
+            <RefreshCw size={18} />
+            Retry Fetching
+          </button>
+        </div>
+      )}
 
       {/* Desktop Table View */}
       <div className="hidden lg:block bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
