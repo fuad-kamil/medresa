@@ -29,8 +29,6 @@ export default function UstazDashboard() {
       const records = weeklyRes.data;
       setAllRecords(records);
 
-      updateAttendanceStateForDate(selectedDate, records, studentsRes.data);
-
       // Calculate weekly stats
       const stats = { present: 0, absent: 0, excused: 0 };
       records.forEach(r => {
@@ -46,37 +44,42 @@ export default function UstazDashboard() {
     }
   };
 
-  const updateAttendanceStateForDate = (dateStr, records, studentsList) => {
-    const targetDateStart = new Date(dateStr);
-    targetDateStart.setHours(0, 0, 0, 0);
-    const targetDateEnd = new Date(dateStr);
-    targetDateEnd.setHours(23, 59, 59, 999);
+  const fetchAttendanceForDate = async (dateStr, currentStudents) => {
+    if (currentStudents.length === 0) return;
+    try {
+      const res = await axiosInstance.get(`/ustaz/attendance?date=${dateStr}`);
+      const records = res.data;
+      const hasTakenDate = records.length > 0;
+      setIsEditMode(hasTakenDate);
 
-    const recentRecords = records.filter(r => {
-      const d = new Date(r.date);
-      return d >= targetDateStart && d <= targetDateEnd;
-    });
-
-    const hasTakenDate = recentRecords.length > 0;
-    setIsEditMode(hasTakenDate);
-
-    const takenMap = {};
-    recentRecords.forEach(r => {
-      const studentId = r.student && r.student._id ? r.student._id : r.student;
-      takenMap[studentId] = true;
-    });
-    setTakenTodayMap(takenMap);
-
-    const initial = {};
-    if (hasTakenDate) {
-      studentsList.forEach((s) => {
-        const record = recentRecords.find(r => r.student && r.student._id === s._id);
-        initial[s._id] = record ? record.status : "present";
+      const takenMap = {};
+      records.forEach(r => {
+        const studentId = r.student && r.student._id ? r.student._id : r.student;
+        takenMap[studentId] = true;
       });
-    } else {
-      studentsList.forEach((s) => (initial[s._id] = "present"));
+      setTakenTodayMap(takenMap);
+
+      const initial = {};
+      if (hasTakenDate) {
+        currentStudents.forEach((s) => {
+          const record = records.find(r => {
+            const studentId = r.student && r.student._id ? r.student._id : r.student;
+            return studentId === s._id;
+          });
+          initial[s._id] = record ? record.status : "present";
+        });
+      } else {
+        currentStudents.forEach((s) => (initial[s._id] = "present"));
+      }
+      setAttendance(initial);
+    } catch (err) {
+      console.error("Failed to fetch attendance for date:", err);
+      const initial = {};
+      currentStudents.forEach((s) => (initial[s._id] = "present"));
+      setAttendance(initial);
+      setIsEditMode(false);
+      setTakenTodayMap({});
     }
-    setAttendance(initial);
   };
 
   useEffect(() => {
@@ -85,9 +88,9 @@ export default function UstazDashboard() {
 
   useEffect(() => {
     if (students.length > 0) {
-      updateAttendanceStateForDate(selectedDate, allRecords, students);
+      fetchAttendanceForDate(selectedDate, students);
     }
-  }, [selectedDate, allRecords, students]);
+  }, [selectedDate, students]);
 
   const handleSubmitClick = () => {
     setIsConfirmModalOpen(true);
@@ -106,6 +109,8 @@ export default function UstazDashboard() {
       setTimeout(() => setSuccessMessage(""), 4000);
       // Refresh weekly stats
       fetchData();
+      // Refresh selected date attendance specifically to update state
+      fetchAttendanceForDate(selectedDate, students);
     } catch (err) {
       console.error("Attendance submission error:", err);
       alert(err.response?.data?.message || err.message || "Failed to submit attendance");
