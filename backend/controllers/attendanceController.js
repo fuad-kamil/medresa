@@ -1,5 +1,6 @@
 import Attendance from '../models/Attendance.js'
 import Student from '../models/Student.js'
+import User from '../models/User.js'
 import sendEmail from '../utils/sendEmail.js'
 
 // Mark Attendance
