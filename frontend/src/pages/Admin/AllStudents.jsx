@@ -47,11 +47,14 @@ export default function AllStudents() {
   const downloadExcel = () => {
     const data = filteredStudents.map(student => ({
       "Student Name": student.fullName || "N/A",
-      "Surah": student.surah || "N/A",
+      "Surah/Kitab": student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`,
       "Father Phone": student.fatherPhone || "N/A",
       "Mother Phone": student.motherPhone || "N/A",
       "Assigned Ustaz": student.assignedUstaz?.name || "Not Assigned",
-      "Status": student.status || "active"
+      "Status": student.status || "active",
+      "Total Present": student.presentCount || 0,
+      "Total Absent": student.absentCount || 0,
+      "Total Excused": student.excusedCount || 0
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -59,7 +62,17 @@ export default function AllStudents() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
 
     const max_width = data.reduce((w, r) => Math.max(w, r["Student Name"].length), 15);
-    worksheet["!cols"] = [ { wch: max_width }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 10 } ];
+    worksheet["!cols"] = [ 
+      { wch: max_width }, 
+      { wch: 20 }, 
+      { wch: 15 }, 
+      { wch: 15 }, 
+      { wch: 20 }, 
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 }
+    ];
 
     XLSX.writeFile(workbook, "Students_Export.xlsx");
   };

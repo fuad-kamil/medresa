@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
-import { Search, Save, GraduationCap, CheckCircle } from "lucide-react";
+import { Search, Save, GraduationCap, CheckCircle, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function Exams() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === "admin";
 
   const [students, setStudents] = useState([]);
+  const [ustazs, setUstazs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUstaz, setSelectedUstaz] = useState("all");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [savedSuccessId, setSavedSuccessId] = useState(null);
@@ -18,7 +21,21 @@ export default function Exams() {
 
   useEffect(() => {
     fetchStudents();
+    if (isAdmin) {
+      fetchUstazs();
+    }
   }, []);
+
+  const fetchUstazs = async () => {
+    try {
+      const res = await axiosInstance.get("/admin/ustazs");
+      // Keep only approved teachers
+      const approvedUstazs = res.data.filter(u => u.isApproved);
+      setUstazs(approvedUstazs);
+    } catch (err) {
+      console.error("Failed to fetch Ustazs", err);
+    }
+  };
 
   const fetchStudents = async () => {
     try {
@@ -86,9 +103,54 @@ export default function Exams() {
     }
   };
 
-  const filteredStudents = students.filter((student) =>
-    student.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch = student.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUstaz = selectedUstaz === "all" || student.assignedUstaz?._id === selectedUstaz;
+    return matchesSearch && matchesUstaz;
+  });
+
+  const downloadExcel = () => {
+    const data = filteredStudents.map((student) => {
+      const studentScores = scores[student._id] || { firstExam: 0, secondExam: 0, finalExam: 0 };
+      const totalScore = 
+        (Number(studentScores.firstExam) || 0) + 
+        (Number(studentScores.secondExam) || 0) + 
+        (Number(studentScores.finalExam) || 0);
+
+      const row = {
+        "Student Name": student.fullName || "N/A",
+        "First Exam": studentScores.firstExam || 0,
+        "Second Exam": studentScores.secondExam || 0,
+        "Final Exam": studentScores.finalExam || 0,
+        "Total Score": totalScore,
+      };
+
+      if (isAdmin) {
+        row["Assigned Ustaz"] = student.assignedUstaz?.name || "Not Assigned";
+      }
+
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Exams");
+
+    const max_width = data.reduce((w, r) => Math.max(w, r["Student Name"].length), 15);
+    const cols = [
+      { wch: max_width },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+    ];
+    if (isAdmin) {
+      cols.push({ wch: 20 });
+    }
+    worksheet["!cols"] = cols;
+
+    XLSX.writeFile(workbook, "Exams_Report.xlsx");
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -104,18 +166,45 @@ export default function Exams() {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="relative mt-6 md:mt-0 w-full md:w-80">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-            <Search size={20} />
+        {/* Filters and Actions */}
+        <div className="mt-6 md:mt-0 flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            {isAdmin && (
+              <select
+                value={selectedUstaz}
+                onChange={(e) => setSelectedUstaz(e.target.value)}
+                className="w-full sm:w-auto px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 text-md cursor-pointer shadow-sm text-gray-700 dark:text-gray-200"
+              >
+                <option value="all">All Ustazs</option>
+                {ustazs.map((ustaz) => (
+                  <option key={ustaz._id} value={ustaz._id}>
+                    {ustaz.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <div className="relative flex-1 w-full sm:w-60">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search size={20} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 text-md shadow-sm"
+              />
+            </div>
           </div>
-          <input
-            type="text"
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-5 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 text-md shadow-sm"
-          />
+
+          <button
+            onClick={downloadExcel}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl transition font-semibold text-md shadow-md cursor-pointer whitespace-nowrap"
+          >
+            <Download size={18} />
+            Export to Excel
+          </button>
         </div>
       </div>
 

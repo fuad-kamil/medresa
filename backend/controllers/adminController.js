@@ -66,8 +66,26 @@ export const getAllStudents = async (req, res) => {
     try {
         const students = await Student.find()
             .populate('assignedUstaz', 'name email')
+            .lean();
 
-        res.json(students)
+        // Fetch and append attendance stats for each student
+        const studentsWithStats = await Promise.all(
+            students.map(async (student) => {
+                const attendance = await Attendance.find({ student: student._id });
+                const presentCount = attendance.filter(a => a.status === 'present').length;
+                const absentCount = attendance.filter(a => a.status === 'absent').length;
+                const excusedCount = attendance.filter(a => a.status === 'excused').length;
+
+                return {
+                    ...student,
+                    presentCount,
+                    absentCount,
+                    excusedCount
+                };
+            })
+        );
+
+        res.json(studentsWithStats);
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
