@@ -184,7 +184,7 @@ export default function UstazManageStudent() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className={user?.stream === 'kitab' ? "col-span-2" : ""}>
+            <div>
               <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
                 Student Full Name
               </label>
@@ -199,27 +199,46 @@ export default function UstazManageStudent() {
                 required
               />
             </div>
-            {user?.stream !== 'kitab' && (
-              <div>
-                <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                  Current Surah
-                </label>
-                <select
-                  name="surah"
-                  value={formData.surah}
-                  onChange={(e) =>
-                    setFormData({ ...formData, surah: e.target.value })
-                  }
-                  className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                  required
-                >
-                  <option value="">Select a Surah</option>
-                  {SURAHS.map((surah) => (
-                    <option key={surah} value={surah}>{surah}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              {user?.stream === 'kitab' ? (
+                <>
+                  <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                    Kitab Name
+                  </label>
+                  <input
+                    type="text"
+                    name="surah"
+                    value={formData.surah}
+                    placeholder="Enter Kitab Name (e.g. Ajrumiyyah)"
+                    onChange={(e) =>
+                      setFormData({ ...formData, surah: e.target.value })
+                    }
+                    className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                    required
+                  />
+                </>
+              ) : (
+                <>
+                  <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                    Current Surah
+                  </label>
+                  <select
+                    name="surah"
+                    value={formData.surah}
+                    onChange={(e) =>
+                      setFormData({ ...formData, surah: e.target.value })
+                    }
+                    className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                    required
+                  >
+                    <option value="">Select a Surah</option>
+                    {SURAHS.map((surah) => (
+                      <option key={surah} value={surah}>{surah}</option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
