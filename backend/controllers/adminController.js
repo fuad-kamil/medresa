@@ -62,14 +62,26 @@ export const registerStudent = async (req, res) => {
     }
 }
 
-// Get All Students
+// Get All Students (fast - no attendance stats)
 export const getAllStudents = async (req, res) => {
     try {
         const students = await Student.find()
             .populate('assignedUstaz', 'name email')
             .lean();
+        res.json(students);
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+}
 
-        // Single aggregation query to fetch present, absent, and excused counts for all students at once
+// Get All Students WITH attendance stats (used for Excel export)
+export const getAllStudentsWithStats = async (req, res) => {
+    try {
+        const students = await Student.find()
+            .populate('assignedUstaz', 'name email')
+            .lean();
+
+        // Single aggregation query to fetch all attendance counts at once
         const stats = await Attendance.aggregate([
             {
                 $group: {
@@ -81,7 +93,7 @@ export const getAllStudents = async (req, res) => {
             }
         ]);
 
-        // Create a fast lookup map for student stats
+        // Fast lookup map
         const statsMap = {};
         stats.forEach((item) => {
             if (item._id) {
@@ -93,18 +105,13 @@ export const getAllStudents = async (req, res) => {
             }
         });
 
-        // Map stats back to students
         const studentsWithStats = students.map((student) => {
             const studentStats = statsMap[student._id.toString()] || {
                 presentCount: 0,
                 absentCount: 0,
                 excusedCount: 0
             };
-
-            return {
-                ...student,
-                ...studentStats
-            };
+            return { ...student, ...studentStats };
         });
 
         res.json(studentsWithStats);

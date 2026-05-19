@@ -11,6 +11,7 @@ import {
     deleteUstaz,
     registerStudent,
     getAllStudents,
+    getAllStudentsWithStats,
     getTodayAttendance,
     getStudentAttendanceHistory,
     deleteStudent,
@@ -29,6 +30,7 @@ router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
 // Student management
 router.post('/students', protect, adminOnly, registerStudent)
 router.get('/students', protect, adminOnly, getAllStudents)
+router.get('/students/with-stats', protect, adminOnly, getAllStudentsWithStats)
 router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceHistory)
 router.put('/students/:id', protect, adminOnly, updateStudent)
 router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)

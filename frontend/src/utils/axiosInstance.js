@@ -9,7 +9,7 @@ if (apiURL && !apiURL.endsWith('/api') && !apiURL.endsWith('/api/')) {
 
 const axiosInstance = axios.create({
     baseURL: apiURL,
-    timeout: 10000,
+    timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
     },

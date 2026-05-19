@@ -8,6 +8,7 @@ export default function AllStudents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchCriteria, setSearchCriteria] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchStudents();
@@ -44,39 +45,71 @@ export default function AllStudents() {
     return true;
   });
 
-  const downloadExcel = () => {
-    const data = filteredStudents.map(student => ({
-      "Student Name": student.fullName || "N/A",
-      "Surah/Kitab": student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`,
-      "Father Phone": student.fatherPhone || "N/A",
-      "Mother Phone": student.motherPhone || "N/A",
-      "Address": student.address || "N/A",
-      "Assigned Ustaz": student.assignedUstaz?.name || "Not Assigned",
-      "Status": student.status || "active",
-      "Total Present": student.presentCount || 0,
-      "Total Absent": student.absentCount || 0,
-      "Total Excused": student.excusedCount || 0
-    }));
+  const downloadExcel = async () => {
+    setExporting(true);
+    try {
+      // Fetch students with full attendance stats only when exporting
+      const res = await axiosInstance.get("/admin/students/with-stats", { timeout: 30000 });
+      const studentsWithStats = res.data;
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+      // Apply current filters
+      const term = searchTerm.toLowerCase();
+      const exportStudents = studentsWithStats.filter((student) => {
+        if (!term) return true;
+        if (searchCriteria === "all") {
+          return (
+            student.fullName?.toLowerCase().includes(term) ||
+            student.surah?.toLowerCase().includes(term) ||
+            student.assignedUstaz?.name?.toLowerCase().includes(term)
+          );
+        } else if (searchCriteria === "name") {
+          return student.fullName?.toLowerCase().includes(term);
+        } else if (searchCriteria === "surah") {
+          return student.surah?.toLowerCase().includes(term);
+        } else if (searchCriteria === "ustaz") {
+          return student.assignedUstaz?.name?.toLowerCase().includes(term);
+        }
+        return true;
+      });
 
-    const max_width = data.reduce((w, r) => Math.max(w, r["Student Name"].length), 15);
-    worksheet["!cols"] = [ 
-      { wch: max_width }, 
-      { wch: 20 }, 
-      { wch: 15 }, 
-      { wch: 15 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
-      { wch: 10 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 }
-    ];
+      const data = exportStudents.map(student => ({
+        "Student Name": student.fullName || "N/A",
+        "Surah/Kitab": student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`,
+        "Father Phone": student.fatherPhone || "N/A",
+        "Mother Phone": student.motherPhone || "N/A",
+        "Address": student.address || "N/A",
+        "Assigned Ustaz": student.assignedUstaz?.name || "Not Assigned",
+        "Status": student.status || "active",
+        "Total Present": student.presentCount || 0,
+        "Total Absent": student.absentCount || 0,
+        "Total Excused": student.excusedCount || 0
+      }));
 
-    XLSX.writeFile(workbook, "Students_Export.xlsx");
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+
+      const max_width = data.reduce((w, r) => Math.max(w, r["Student Name"].length), 15);
+      worksheet["!cols"] = [
+        { wch: max_width },
+        { wch: 20 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 }
+      ];
+
+      XLSX.writeFile(workbook, "Students_Export.xlsx");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export. Please try again.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -125,10 +158,20 @@ export default function AllStudents() {
           
           <button
             onClick={downloadExcel}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl transition font-medium text-lg whitespace-nowrap shadow-md"
+            disabled={exporting}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-2xl transition font-medium text-lg whitespace-nowrap shadow-md"
           >
-            <Download size={20} />
-            Export to Excel
+            {exporting ? (
+              <>
+                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                Preparing...
+              </>
+            ) : (
+              <>
+                <Download size={20} />
+                Export to Excel
+              </>
+            )}
           </button>
         </div>
       </div>
