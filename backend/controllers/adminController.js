@@ -41,15 +41,15 @@ export const approveUstaz = async (req, res) => {
 // Register Student
 export const registerStudent = async (req, res) => {
     try {
-        const { fullName, surah, fatherPhone, motherPhone, assignedUstaz } = req.body
+        const { fullName, surah, fatherPhone, motherPhone, assignedUstaz, stream } = req.body
 
         const student = await Student.create({
             fullName,
-            surah,
-
+            surah: stream === 'kitab' ? '' : surah,
             fatherPhone,
             motherPhone,
-            assignedUstaz
+            assignedUstaz,
+            stream: stream || 'quran'
         })
 
         res.status(201).json({
@@ -203,11 +203,11 @@ export const updateAdminPassword = async (req, res) => {
 export const updateStudent = async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, surah, fatherPhone, motherPhone, assignedUstaz } = req.body;
+        const { fullName, surah, fatherPhone, motherPhone, assignedUstaz, stream } = req.body;
 
         const student = await Student.findByIdAndUpdate(
             id,
-            { fullName, surah, fatherPhone, motherPhone, assignedUstaz },
+            { fullName, surah: stream === 'kitab' ? '' : surah, fatherPhone, motherPhone, assignedUstaz, stream: stream || 'quran' },
             { new: true }
         ).populate('assignedUstaz', 'name email');
 

@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 // Register Ustaz (Public)
 export const registerUstaz = async (req, res) => {
     try {
-        const { name, email, password, phone } = req.body
+        const { name, email, password, phone, stream } = req.body
 
         const userExists = await User.findOne({ email })
         if (userExists) {
@@ -20,6 +20,7 @@ export const registerUstaz = async (req, res) => {
             email,
             password: hashedPassword,
             phone,
+            stream: stream || 'quran',
             role: 'ustaz',
             isApproved: false
         })
@@ -78,7 +79,8 @@ export const login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                isApproved: user.isApproved
+                isApproved: user.isApproved,
+                stream: user.stream
             },
             token
         })

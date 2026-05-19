@@ -6,7 +6,7 @@ import useAuthStore from "../../store/authStore";
 
 export default function UstazSidebar() {
   const location = useLocation();
-  const { logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [yesterdayAbsentees, setYesterdayAbsentees] = useState([]);
   const [weeklyAbsentees, setWeeklyAbsentees] = useState({});
   const [isOpen, setIsOpen] = useState(false);
@@ -44,16 +44,28 @@ export default function UstazSidebar() {
           grouped[studentName].push(dateStr);
         });
 
-        // Filter for yesterday
+        // Filter for yesterday / previous class date
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
+        const targetDate = new Date(today);
+
+        if (user?.stream === 'kitab') {
+          const day = today.getDay(); // 0 = Sun, 1 = Mon, ..., 4 = Thu, 5 = Fri, 6 = Sat
+          let daysToSubtract = 1; // Default (Friday->Thursday, Saturday->Friday, Sunday->Saturday)
+          if (day === 1) daysToSubtract = 2; // Monday -> Saturday
+          else if (day === 2) daysToSubtract = 3; // Tuesday -> Saturday
+          else if (day === 3) daysToSubtract = 4; // Wednesday -> Saturday
+          else if (day === 4) daysToSubtract = 5; // Thursday -> Saturday
+          targetDate.setDate(today.getDate() - daysToSubtract);
+        } else {
+          // Quran stream: check 1 day ago (yesterday)
+          targetDate.setDate(today.getDate() - 1);
+        }
 
         const yesterdayRecords = absentRecords.filter((r) => {
           const rDate = new Date(r.date);
           rDate.setHours(0, 0, 0, 0);
-          return rDate.getTime() === yesterday.getTime();
+          return rDate.getTime() === targetDate.getTime();
         });
 
         const yestGrouped = {};
@@ -140,12 +152,12 @@ export default function UstazSidebar() {
           {/* Yesterday's Absentees Section */}
           <div className="mt-4 mb-2 px-2 flex items-center gap-2 text-emerald-300 font-semibold text-sm uppercase tracking-wider">
             <AlertCircle size={16} />
-            Yesterday's Absentees
+            {user?.stream === 'kitab' ? "Previous Class Absentees" : "Yesterday's Absentees"}
           </div>
           
           {yesterdayAbsentees.length === 0 ? (
             <div className="px-4 py-3 text-sm text-emerald-400/70 italic bg-emerald-950/30 rounded-xl mb-6">
-              No absentees yesterday!
+              No absentees {user?.stream === 'kitab' ? "last class" : "yesterday"}!
             </div>
           ) : (
             <div className="space-y-3 mb-6">

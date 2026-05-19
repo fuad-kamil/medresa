@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String
     },
+    stream: {
+        type: String,
+        enum: ['quran', 'kitab'],
+        default: 'quran'
+    },
     isApproved: {
         type: Boolean,
         default: false

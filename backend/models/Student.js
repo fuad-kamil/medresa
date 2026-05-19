@@ -8,7 +8,12 @@ const studentSchema = new mongoose.Schema(
         },
         surah: {
             type: String,
-            required: true
+            required: false
+        },
+        stream: {
+            type: String,
+            enum: ['quran', 'kitab'],
+            default: 'quran'
         },
 
         fatherPhone: {

@@ -10,6 +10,7 @@ export default function UstazRegister() {
     password: "",
     confirmPassword: "",
     phone: "",
+    stream: "quran",
   });
 
   const [loading, setLoading] = useState(false);
@@ -51,6 +52,7 @@ export default function UstazRegister() {
         email: formData.email.trim(),
         password: formData.password,
         phone: formData.phone.trim(),
+        stream: formData.stream,
       });
 
       setSuccess(true);
@@ -160,6 +162,22 @@ export default function UstazRegister() {
                   onChange={handleChange}
                   className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Teaching Stream
+                </label>
+                <select
+                  name="stream"
+                  value={formData.stream}
+                  onChange={handleChange}
+                  className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
+                  required
+                >
+                  <option value="quran">Quran Teacher</option>
+                  <option value="kitab">Kitab Teacher</option>
+                </select>
               </div>
 
               <div>

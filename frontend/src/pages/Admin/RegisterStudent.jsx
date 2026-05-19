@@ -7,6 +7,7 @@ export default function RegisterStudent() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
+    stream: "quran",
     surah: "",
     fatherPhone: "",
     motherPhone: "",
@@ -47,6 +48,7 @@ export default function RegisterStudent() {
     if (!studentId) {
       setFormData({
         fullName: "",
+        stream: "quran",
         surah: "",
         fatherPhone: "",
         motherPhone: "",
@@ -59,6 +61,7 @@ export default function RegisterStudent() {
     if (student) {
       setFormData({
         fullName: student.fullName || "",
+        stream: student.stream || "quran",
         surah: student.surah || "",
         fatherPhone: student.fatherPhone || "",
         motherPhone: student.motherPhone || "",
@@ -74,6 +77,7 @@ export default function RegisterStudent() {
     setSearchTerm("");
     setFormData({
       fullName: "",
+      stream: "quran",
       surah: "",
       fatherPhone: "",
       motherPhone: "",
@@ -101,6 +105,7 @@ export default function RegisterStudent() {
         fetchAllStudents(); // Refresh list so new student appears in edit mode
         setFormData({
           fullName: "",
+          stream: "quran",
           surah: "",
           fatherPhone: "",
           motherPhone: "",
@@ -206,7 +211,52 @@ export default function RegisterStudent() {
             </div>
             <div>
               <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                Current Surah
+                Student Stream (Quran / Kitab)
+              </label>
+              <select
+                name="stream"
+                value={formData.stream}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    stream: e.target.value,
+                    surah: e.target.value === "kitab" ? "" : formData.surah
+                  })
+                }
+                className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                required
+              >
+                <option value="quran">Quran Stream</option>
+                <option value="kitab">Kitab Stream</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                Assign to Ustaz
+              </label>
+              <select
+                name="assignedUstaz"
+                value={formData.assignedUstaz}
+                onChange={(e) =>
+                  setFormData({ ...formData, assignedUstaz: e.target.value })
+                }
+                className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                required
+              >
+                <option value="">Select Ustaz</option>
+                {ustazs.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.name} ({u.stream === 'kitab' ? 'Kitab' : 'Quran'})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                Current Surah {formData.stream === 'kitab' && "(Not required for Kitab)"}
               </label>
               <select
                 name="surah"
@@ -215,9 +265,10 @@ export default function RegisterStudent() {
                   setFormData({ ...formData, surah: e.target.value })
                 }
                 className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                required
+                required={formData.stream !== "kitab"}
+                disabled={formData.stream === "kitab"}
               >
-                <option value="">Select a Surah</option>
+                <option value="">{formData.stream === "kitab" ? "No Surah Needed" : "Select a Surah"}</option>
                 {SURAHS.map((surah) => (
                   <option key={surah} value={surah}>{surah}</option>
                 ))}
@@ -257,28 +308,6 @@ export default function RegisterStudent() {
                 required
               />
             </div>
-          </div>
-
-          <div>
-            <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-              Assign to Ustaz
-            </label>
-            <select
-              name="assignedUstaz"
-              value={formData.assignedUstaz}
-              onChange={(e) =>
-                setFormData({ ...formData, assignedUstaz: e.target.value })
-              }
-              className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-              required
-            >
-              <option value="">Select Ustaz</option>
-              {ustazs.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
           </div>
 
           <button

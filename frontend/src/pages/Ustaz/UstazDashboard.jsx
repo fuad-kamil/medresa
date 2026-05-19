@@ -14,6 +14,10 @@ export default function UstazDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [allRecords, setAllRecords] = useState([]);
 
+  const selectedDayOfWeek = new Date(selectedDate).getDay(); // 0 = Sun, 1 = Mon, ..., 4 = Thu, 5 = Fri, 6 = Sat
+  const isKitabDay = selectedDayOfWeek === 4 || selectedDayOfWeek === 5 || selectedDayOfWeek === 6;
+  const isBlocked = user?.stream === 'kitab' && !isKitabDay;
+
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -196,6 +200,20 @@ export default function UstazDashboard() {
           />
         </div>
       </div>
+
+      {isBlocked && (
+        <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-400 rounded-3xl flex flex-col md:flex-row items-center gap-4 shadow-sm animate-in fade-in slide-in-from-top-4">
+          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+            <AlertTriangle size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg mb-1">Kitab Attendance Restricted</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-md">
+              Kitab classes are only scheduled on <strong>Thursdays</strong>, <strong>Fridays</strong>, and <strong>Saturdays</strong>. Attendance marking is disabled for this day.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Desktop Table View */}
       <div className="hidden lg:block bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-10">
@@ -239,36 +257,41 @@ export default function UstazDashboard() {
                         <span><strong className="text-gray-800 dark:text-gray-300">M:</strong> {student.motherPhone || "N/A"}</span>
                       </div>
                     </td>
-                    <td className="p-5 text-gray-600 dark:text-gray-400">{student.surah}</td>
+                    <td className="p-5 text-gray-600 dark:text-gray-400">
+                      {student.stream === 'kitab' ? "Kitab (No Surah)" : student.surah || "N/A"}
+                    </td>
                     <td className="p-5">
                       <div className="flex gap-2 w-max">
                         <button
-                          onClick={() => setAttendance({ ...attendance, [student._id]: "present" })}
+                          onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "present" })}
+                          disabled={isBlocked}
                           className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
                             attendance[student._id] === "present"
                               ? "bg-emerald-500 text-white shadow-md ring-2 ring-emerald-300 dark:ring-emerald-700"
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                          }`}
+                          } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                         >
                           P <span className="font-normal opacity-80 ml-1">Present</span>
                         </button>
                         <button
-                          onClick={() => setAttendance({ ...attendance, [student._id]: "absent" })}
+                          onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "absent" })}
+                          disabled={isBlocked}
                           className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
                             attendance[student._id] === "absent"
                               ? "bg-red-500 text-white shadow-md ring-2 ring-red-300 dark:ring-red-700"
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50"
-                          }`}
+                          } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                         >
                           A <span className="font-normal opacity-80 ml-1">Absent</span>
                         </button>
                         <button
-                          onClick={() => setAttendance({ ...attendance, [student._id]: "excused" })}
+                          onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "excused" })}
+                          disabled={isBlocked}
                           className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
                             attendance[student._id] === "excused"
                               ? "bg-amber-500 text-white shadow-md ring-2 ring-amber-300 dark:ring-amber-700"
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                          }`}
+                          } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                         >
                           E <span className="font-normal opacity-80 ml-1">Excused</span>
                         </button>
@@ -294,7 +317,9 @@ export default function UstazDashboard() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Surah: {student.surah || "N/A"}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {student.stream === 'kitab' ? "Kitab Stream (No Surah)" : `Surah: ${student.surah || "N/A"}`}
+                  </p>
                 </div>
                 {takenTodayMap[student._id] ? (
                   <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
@@ -322,32 +347,35 @@ export default function UstazDashboard() {
               {/* Attendance Toggle Buttons */}
               <div className="flex gap-2 mt-2">
                 <button
-                  onClick={() => setAttendance({ ...attendance, [student._id]: "present" })}
+                  onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "present" })}
+                  disabled={isBlocked}
                   className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-1 ${
                     attendance[student._id] === "present"
                       ? "bg-emerald-500 text-white shadow-md ring-2 ring-emerald-300 dark:ring-emerald-700"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                  }`}
+                  } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                 >
                   <span className="text-lg">P</span>
                 </button>
                 <button
-                  onClick={() => setAttendance({ ...attendance, [student._id]: "absent" })}
+                  onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "absent" })}
+                  disabled={isBlocked}
                   className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-1 ${
                     attendance[student._id] === "absent"
                       ? "bg-red-500 text-white shadow-md ring-2 ring-red-300 dark:ring-red-700"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50"
-                  }`}
+                  } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                 >
                   <span className="text-lg">A</span>
                 </button>
                 <button
-                  onClick={() => setAttendance({ ...attendance, [student._id]: "excused" })}
+                  onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "excused" })}
+                  disabled={isBlocked}
                   className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-1 ${
                     attendance[student._id] === "excused"
                       ? "bg-amber-500 text-white shadow-md ring-2 ring-amber-300 dark:ring-amber-700"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                  }`}
+                  } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                 >
                   <span className="text-lg">E</span>
                 </button>
@@ -360,9 +388,14 @@ export default function UstazDashboard() {
       {students.length > 0 && (
         <button
           onClick={handleSubmitClick}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-5 rounded-2xl shadow-lg shadow-emerald-600/20 transition-colors text-xl mb-10"
+          disabled={isBlocked}
+          className={`w-full font-bold py-5 rounded-2xl shadow-lg transition-all text-xl mb-10 ${
+            isBlocked
+              ? "bg-gray-300 dark:bg-gray-800 text-gray-500 dark:text-gray-600 cursor-not-allowed shadow-none"
+              : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+          }`}
         >
-          {isEditMode ? "Update Attendance" : "Submit Attendance"}
+          {isBlocked ? "Attendance Locked" : isEditMode ? "Update Attendance" : "Submit Attendance"}
         </button>
       )}
 
