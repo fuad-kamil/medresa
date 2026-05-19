@@ -69,22 +69,43 @@ export const getAllStudents = async (req, res) => {
             .populate('assignedUstaz', 'name email')
             .lean();
 
-        // Fetch and append attendance stats for each student
-        const studentsWithStats = await Promise.all(
-            students.map(async (student) => {
-                const attendance = await Attendance.find({ student: student._id });
-                const presentCount = attendance.filter(a => a.status === 'present').length;
-                const absentCount = attendance.filter(a => a.status === 'absent').length;
-                const excusedCount = attendance.filter(a => a.status === 'excused').length;
+        // Single aggregation query to fetch present, absent, and excused counts for all students at once
+        const stats = await Attendance.aggregate([
+            {
+                $group: {
+                    _id: '$student',
+                    presentCount: { $sum: { $cond: [{ $eq: ['$status', 'present'] }, 1, 0] } },
+                    absentCount: { $sum: { $cond: [{ $eq: ['$status', 'absent'] }, 1, 0] } },
+                    excusedCount: { $sum: { $cond: [{ $eq: ['$status', 'excused'] }, 1, 0] } }
+                }
+            }
+        ]);
 
-                return {
-                    ...student,
-                    presentCount,
-                    absentCount,
-                    excusedCount
+        // Create a fast lookup map for student stats
+        const statsMap = {};
+        stats.forEach((item) => {
+            if (item._id) {
+                statsMap[item._id.toString()] = {
+                    presentCount: item.presentCount || 0,
+                    absentCount: item.absentCount || 0,
+                    excusedCount: item.excusedCount || 0
                 };
-            })
-        );
+            }
+        });
+
+        // Map stats back to students
+        const studentsWithStats = students.map((student) => {
+            const studentStats = statsMap[student._id.toString()] || {
+                presentCount: 0,
+                absentCount: 0,
+                excusedCount: 0
+            };
+
+            return {
+                ...student,
+                ...studentStats
+            };
+        });
 
         res.json(studentsWithStats);
     } catch (error) {
