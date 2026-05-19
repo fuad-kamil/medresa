@@ -38,8 +38,10 @@ export const markAttendance = async (req, res) => {
             records.push(record)
         }
 
-        // Check for 3 consecutive absences
-        await checkConsecutiveAbsences(Object.keys(attendance))
+        // Check for 3 consecutive absences in the background (non-blocking)
+        checkConsecutiveAbsences(Object.keys(attendance)).catch(err => {
+            console.error("Error in background consecutive absences check:", err);
+        });
 
         res.json({
             message: 'Attendance marked successfully',
@@ -91,8 +93,10 @@ export const updateAttendance = async (req, res) => {
             }
         }
 
-        // Check for 3 consecutive absences again just in case
-        await checkConsecutiveAbsences(Object.keys(attendance))
+        // Check for 3 consecutive absences again in the background (non-blocking)
+        checkConsecutiveAbsences(Object.keys(attendance)).catch(err => {
+            console.error("Error in background consecutive absences check:", err);
+        });
 
         res.json({
             message: 'Attendance updated successfully'
