@@ -23,7 +23,10 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'unsafe-none' },
+}));
 app.use(morgan('dev'));
 
 // Routes

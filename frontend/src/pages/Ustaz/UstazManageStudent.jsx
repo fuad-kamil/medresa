@@ -12,6 +12,7 @@ export default function UstazManageStudent() {
     surah: "",
     fatherPhone: "",
     motherPhone: "",
+    address: "",
   });
   const [myStudents, setMyStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -40,6 +41,7 @@ export default function UstazManageStudent() {
         surah: "",
         fatherPhone: "",
         motherPhone: "",
+        address: "",
       });
       return;
     }
@@ -51,6 +53,7 @@ export default function UstazManageStudent() {
         surah: student.surah || "",
         fatherPhone: student.fatherPhone || "",
         motherPhone: student.motherPhone || "",
+        address: student.address || "",
       });
     }
   };
@@ -65,6 +68,7 @@ export default function UstazManageStudent() {
       surah: "",
       fatherPhone: "",
       motherPhone: "",
+      address: "",
     });
   };
 
@@ -97,6 +101,7 @@ export default function UstazManageStudent() {
           surah: "",
           fatherPhone: "",
           motherPhone: "",
+          address: "",
         });
       }
       
@@ -275,6 +280,25 @@ export default function UstazManageStudent() {
                 />
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                Address
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
+                placeholder="Enter Student Address"
+                className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                required
+              />
+            </div>
           </div>
 
           <button

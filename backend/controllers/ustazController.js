@@ -100,13 +100,14 @@ export const updateUstazPassword = async (req, res) => {
 // Register a new student (Assigned specifically to this Ustaz)
 export const registerStudent = async (req, res) => {
     try {
-        const { fullName, surah, fatherPhone, motherPhone, stream } = req.body;
+        const { fullName, surah, fatherPhone, motherPhone, address, stream } = req.body;
 
         const student = await Student.create({
             fullName,
             surah: stream === 'kitab' ? '' : surah,
             fatherPhone,
             motherPhone,
+            address,
             stream: stream || 'quran',
             assignedUstaz: req.user.id // Automatically assign to the logged-in ustaz
         });
@@ -124,12 +125,12 @@ export const registerStudent = async (req, res) => {
 export const updateStudent = async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, surah, fatherPhone, motherPhone, stream } = req.body;
+        const { fullName, surah, fatherPhone, motherPhone, address, stream } = req.body;
 
         // Ensure the student actually belongs to this ustaz before updating
         const student = await Student.findOneAndUpdate(
             { _id: id, assignedUstaz: req.user.id },
-            { fullName, surah: stream === 'kitab' ? '' : surah, fatherPhone, motherPhone, stream: stream || 'quran' },
+            { fullName, surah: stream === 'kitab' ? '' : surah, fatherPhone, motherPhone, address, stream: stream || 'quran' },
             { new: true }
         );
 

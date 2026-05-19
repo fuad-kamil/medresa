@@ -29,6 +29,10 @@ const studentSchema = new mongoose.Schema(
             ref: 'User',
             required: false
         },
+        address: {
+            type: String,
+            required: false
+        },
         status: {
             type: String,
             enum: ['active', 'inactive'],

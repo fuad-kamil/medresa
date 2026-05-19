@@ -50,6 +50,7 @@ export default function AllStudents() {
       "Surah/Kitab": student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`,
       "Father Phone": student.fatherPhone || "N/A",
       "Mother Phone": student.motherPhone || "N/A",
+      "Address": student.address || "N/A",
       "Assigned Ustaz": student.assignedUstaz?.name || "Not Assigned",
       "Status": student.status || "active",
       "Total Present": student.presentCount || 0,
@@ -67,6 +68,7 @@ export default function AllStudents() {
       { wch: 20 }, 
       { wch: 15 }, 
       { wch: 15 }, 
+      { wch: 20 }, 
       { wch: 20 }, 
       { wch: 10 },
       { wch: 15 },
@@ -148,6 +150,9 @@ export default function AllStudents() {
                   Parents' Phones
                 </th>
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
+                  Address
+                </th>
+                <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
                   Assigned Ustaz
                 </th>
                 <th className="text-center p-6 font-semibold text-gray-600 dark:text-gray-300">
@@ -158,14 +163,14 @@ export default function AllStudents() {
             <tbody className="divide-y dark:divide-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-20">
+                  <td colSpan="6" className="text-center py-20">
                     <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full mx-auto"></div>
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="6"
                     className="text-center py-20 text-gray-500 dark:text-gray-400"
                   >
                     No students found
@@ -189,6 +194,9 @@ export default function AllStudents() {
                         <span><strong className="text-gray-800 dark:text-gray-300 font-medium">F:</strong> {student.fatherPhone || "N/A"}</span>
                         <span><strong className="text-gray-800 dark:text-gray-300 font-medium">M:</strong> {student.motherPhone || "N/A"}</span>
                       </div>
+                    </td>
+                    <td className="p-6 text-gray-700 dark:text-gray-300">
+                      {student.address || "N/A"}
                     </td>
                     <td className="p-6 text-gray-700 dark:text-gray-300">
                       {student.assignedUstaz?.name || "Not Assigned"}
@@ -245,6 +253,11 @@ export default function AllStudents() {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500 dark:text-gray-400">Mother's Phone</span>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
+                </div>
+                <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-1"></div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Address</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.address || "N/A"}</span>
                 </div>
               </div>
             </div>
