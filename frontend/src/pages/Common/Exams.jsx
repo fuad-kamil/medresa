@@ -24,11 +24,14 @@ export default function Exams() {
     try {
       const endpoint = isAdmin ? "/admin/students" : "/ustaz/students";
       const res = await axiosInstance.get(endpoint);
-      setStudents(res.data);
+      
+      // Filter out Quran students - exams are only for Kitab stream
+      const kitabStudents = res.data.filter(s => s.stream === 'kitab');
+      setStudents(kitabStudents);
 
       // Initialize local scores state
       const initialScores = {};
-      res.data.forEach((student) => {
+      kitabStudents.forEach((student) => {
         initialScores[student._id] = {
           firstExam: student.firstExam || 0,
           secondExam: student.secondExam || 0,
