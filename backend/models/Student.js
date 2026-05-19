@@ -22,7 +22,7 @@ const studentSchema = new mongoose.Schema(
         },
         motherPhone: {
             type: String,
-            required: true
+            required: false
         },
         assignedUstaz: {
             type: mongoose.Schema.Types.ObjectId,

@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { UserPlus, UserCog, Search } from "lucide-react";
 import { SURAHS } from "../../utils/surahs";
+import useAuthStore from "../../store/authStore";
 
 export default function UstazManageStudent() {
+  const { user } = useAuthStore();
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -76,12 +78,18 @@ export default function UstazManageStudent() {
           setLoading(false);
           return;
         }
-        await axiosInstance.put(`/ustaz/students/${selectedStudentId}`, formData);
+        await axiosInstance.put(`/ustaz/students/${selectedStudentId}`, {
+          ...formData,
+          stream: user?.stream || 'quran'
+        });
         setSuccess({ show: true, message: "✅ Student Updated Successfully!" });
         // Refresh student list
         fetchMyStudents();
       } else {
-        await axiosInstance.post("/ustaz/students", formData);
+        await axiosInstance.post("/ustaz/students", {
+          ...formData,
+          stream: user?.stream || 'quran'
+        });
         setSuccess({ show: true, message: "✅ Student Registered Successfully!" });
         fetchMyStudents(); // Refresh list so new student appears in edit mode
         setFormData({
@@ -176,7 +184,7 @@ export default function UstazManageStudent() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
+            <div className={user?.stream === 'kitab' ? "col-span-2" : ""}>
               <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
                 Student Full Name
               </label>
@@ -191,31 +199,33 @@ export default function UstazManageStudent() {
                 required
               />
             </div>
-            <div>
-              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                Current Surah
-              </label>
-              <select
-                name="surah"
-                value={formData.surah}
-                onChange={(e) =>
-                  setFormData({ ...formData, surah: e.target.value })
-                }
-                className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                required
-              >
-                <option value="">Select a Surah</option>
-                {SURAHS.map((surah) => (
-                  <option key={surah} value={surah}>{surah}</option>
-                ))}
-              </select>
-            </div>
+            {user?.stream !== 'kitab' && (
+              <div>
+                <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                  Current Surah
+                </label>
+                <select
+                  name="surah"
+                  value={formData.surah}
+                  onChange={(e) =>
+                    setFormData({ ...formData, surah: e.target.value })
+                  }
+                  className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                  required
+                >
+                  <option value="">Select a Surah</option>
+                  {SURAHS.map((surah) => (
+                    <option key={surah} value={surah}>{surah}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
+            <div className={user?.stream === 'kitab' ? "col-span-2" : ""}>
               <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                Father Phone
+                {user?.stream === 'kitab' ? "Phone Number" : "Father Phone"}
               </label>
               <input
                 type="tel"
@@ -229,21 +239,23 @@ export default function UstazManageStudent() {
               />
             </div>
 
-            <div>
-              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                Mother Phone
-              </label>
-              <input
-                type="tel"
-                name="motherPhone"
-                value={formData.motherPhone}
-                onChange={(e) =>
-                  setFormData({ ...formData, motherPhone: e.target.value })
-                }
-                className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                required
-              />
-            </div>
+            {user?.stream !== 'kitab' && (
+              <div>
+                <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                  Mother Phone
+                </label>
+                <input
+                  type="tel"
+                  name="motherPhone"
+                  value={formData.motherPhone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, motherPhone: e.target.value })
+                  }
+                  className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                  required
+                />
+              </div>
+            )}
           </div>
 
           <button

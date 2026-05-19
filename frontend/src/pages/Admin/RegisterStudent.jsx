@@ -297,9 +297,9 @@ export default function RegisterStudent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
+            <div className={formData.stream === 'kitab' ? "col-span-2" : ""}>
               <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                Father Phone
+                {formData.stream === 'kitab' ? "Phone Number" : "Father Phone"}
               </label>
               <input
                 type="tel"
@@ -313,21 +313,23 @@ export default function RegisterStudent() {
               />
             </div>
 
-            <div>
-              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                Mother Phone
-              </label>
-              <input
-                type="tel"
-                name="motherPhone"
-                value={formData.motherPhone}
-                onChange={(e) =>
-                  setFormData({ ...formData, motherPhone: e.target.value })
-                }
-                className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                required
-              />
-            </div>
+            {formData.stream !== 'kitab' && (
+              <div>
+                <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                  Mother Phone
+                </label>
+                <input
+                  type="tel"
+                  name="motherPhone"
+                  value={formData.motherPhone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, motherPhone: e.target.value })
+                  }
+                  className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                  required
+                />
+              </div>
+            )}
           </div>
 
           <button
