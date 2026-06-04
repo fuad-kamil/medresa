@@ -71,6 +71,7 @@ app.get('/api/test-email', async (req, res) => {
 // Route to manually scan and trigger alerts for all current 3-consecutive-absent students
 import Student from './models/Student.js';
 import Attendance from './models/Attendance.js';
+import buildAbsenceEmail from './utils/absenceEmailTemplate.js';
 
 app.get('/api/trigger-alerts', async (req, res) => {
     try {
@@ -102,20 +103,13 @@ app.get('/api/trigger-alerts', async (req, res) => {
                 uniqueDays.every(att => att.status === 'absent')
             ) {
                 const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
+                const emailContent = buildAbsenceEmail(student, ustazName);
                 
                 await sendEmail({
                     to: recipient,
-                    subject: `⚠️ Alert: 3 Consecutive Absences - ${student.fullName}`,
-                    text: `Student ${student.fullName} has missed 3 or more consecutive classes from Ustaz ${ustazName}. Please call Father at ${student.fatherPhone} or Mother at ${student.motherPhone} to ask the reason.`,
-                    html: `
-              <h3>3 Consecutive Absences Alert</h3>
-              <p>Student <strong>${student.fullName}</strong> has missed 3 or more consecutive classes from Ustaz <strong>${ustazName}</strong>.</p>
-              <p>Please call them to ask the reason:</p>
-              <ul>
-                <li><strong>Father:</strong> ${student.fatherPhone}</li>
-                <li><strong>Mother:</strong> ${student.motherPhone}</li>
-              </ul>
-            `
+                    subject: emailContent.subject,
+                    text: emailContent.text,
+                    html: emailContent.html,
                 });
 
                 triggeredStudents.push({

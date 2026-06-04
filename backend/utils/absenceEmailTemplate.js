@@ -1,0 +1,72 @@
+/**
+ * Generates the Amharic email template for 3 consecutive absences.
+ * Phone dial links are only shown for kitab stream students.
+ */
+const buildAbsenceEmail = (student, ustazName) => {
+    const isKitab = student.stream === 'kitab';
+
+    // Phone section differs based on stream
+    const fatherPhoneHtml = isKitab
+        ? `<a href="tel:${student.fatherPhone}" style="color: #1a73e8; text-decoration: none; font-weight: bold;">
+             📞 ${student.fatherPhone}
+           </a>`
+        : `<strong>${student.fatherPhone}</strong>`;
+
+    const motherPhoneHtml = isKitab
+        ? `<a href="tel:${student.motherPhone}" style="color: #1a73e8; text-decoration: none; font-weight: bold;">
+             📞 ${student.motherPhone}
+           </a>`
+        : `<strong>${student.motherPhone}</strong>`;
+
+    const subject = `⚠️ ማስጠንቀቂያ: 3 ተከታታይ ቀናት ቅጣት - ${student.fullName}`;
+
+    const text = `ተማሪ ${student.fullName} ከኡስታዝ ${ustazName} ትምህርት 3 ተከታታይ ቀናት ቀርቷል/ቀርታለች። እባክዎ ምክንያቱን ለመጠየቅ ለአባት ${student.fatherPhone} ወይም ለእናት ${student.motherPhone} ይደውሉ።`;
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #d32f2f, #b71c1c); padding: 20px; text-align: center;">
+          <h2 style="color: white; margin: 0; font-size: 20px;">⚠️ የቅጣት ማስጠንቀቂያ</h2>
+          <p style="color: #ffcdd2; margin: 5px 0 0 0; font-size: 14px;">3 ተከታታይ ቀናት ቀርቷል/ቀርታለች</p>
+        </div>
+        
+        <div style="padding: 24px;">
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            ተማሪ <strong style="color: #d32f2f;">${student.fullName}</strong> ከኡስታዝ 
+            <strong style="color: #1565c0;">${ustazName}</strong> ትምህርት 
+            <strong>3 ተከታታይ ቀናት ወይም ከዚያ በላይ</strong> ቀርቷል/ቀርታለች።
+          </p>
+          
+          <p style="font-size: 15px; color: #555; margin-top: 16px;">
+            እባክዎ ምክንያቱን ለመጠየቅ ይደውሉ፡
+          </p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+            <tr style="background-color: #f5f5f5;">
+              <td style="padding: 12px 16px; border: 1px solid #e0e0e0; font-size: 14px;">
+                👨 <strong>የአባት ስልክ:</strong>
+              </td>
+              <td style="padding: 12px 16px; border: 1px solid #e0e0e0; font-size: 16px;">
+                ${fatherPhoneHtml}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 16px; border: 1px solid #e0e0e0; font-size: 14px;">
+                👩 <strong>የእናት ስልክ:</strong>
+              </td>
+              <td style="padding: 12px 16px; border: 1px solid #e0e0e0; font-size: 16px;">
+                ${motherPhoneHtml}
+              </td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="background-color: #fafafa; padding: 12px 24px; border-top: 1px solid #e0e0e0; text-align: center;">
+          <p style="font-size: 12px; color: #999; margin: 0;">Ali Medresa - የተማሪ ክትትል ስርዓት</p>
+        </div>
+      </div>
+    `;
+
+    return { subject, text, html };
+};
+
+export default buildAbsenceEmail;

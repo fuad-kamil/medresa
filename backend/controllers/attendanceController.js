@@ -2,6 +2,7 @@ import Attendance from '../models/Attendance.js'
 import Student from '../models/Student.js'
 import User from '../models/User.js'
 import sendEmail from '../utils/sendEmail.js'
+import buildAbsenceEmail from '../utils/absenceEmailTemplate.js'
 
 // Mark Attendance
 export const markAttendance = async (req, res) => {
@@ -142,20 +143,13 @@ async function checkConsecutiveAbsences(studentIds) {
                 const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
 
                 const recipient = process.env.ALERT_EMAIL_RECIPIENT || process.env.EMAIL_USER;
+                const emailContent = buildAbsenceEmail(student, ustazName);
 
                 await sendEmail({
                     to: recipient,
-                    subject: `⚠️ Alert: 3 Consecutive Absences - ${student.fullName}`,
-                    text: `Student ${student.fullName} has missed 3 or more consecutive classes from Ustaz ${ustazName}. Please call Father at ${student.fatherPhone} or Mother at ${student.motherPhone} to ask the reason.`,
-                    html: `
-              <h3>3 Consecutive Absences Alert</h3>
-              <p>Student <strong>${student.fullName}</strong> has missed 3 or more consecutive classes from Ustaz <strong>${ustazName}</strong>.</p>
-              <p>Please call them to ask the reason:</p>
-              <ul>
-                <li><strong>Father:</strong> ${student.fatherPhone}</li>
-                <li><strong>Mother:</strong> ${student.motherPhone}</li>
-              </ul>
-            `
+                    subject: emailContent.subject,
+                    text: emailContent.text,
+                    html: emailContent.html,
                 });
             }
         } catch (err) {
