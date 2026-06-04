@@ -20,7 +20,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
                 },
                 body: JSON.stringify({
                     from: `Ali Medresa <${fromEmail}>`,
-                    to,
+                    to: to.toLowerCase(),
                     subject,
                     text,
                     html,
