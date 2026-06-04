@@ -141,10 +141,10 @@ async function checkConsecutiveAbsences(studentIds) {
 
                 const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
 
-                console.log(`⚠️ Sending 3 consecutive absences alert email for ${student.fullName}...`);
+                const recipient = process.env.ALERT_EMAIL_RECIPIENT || process.env.EMAIL_USER;
 
                 await sendEmail({
-                    to: process.env.EMAIL_USER,
+                    to: recipient,
                     subject: `⚠️ Alert: 3 Consecutive Absences - ${student.fullName}`,
                     text: `Student ${student.fullName} has missed 3 or more consecutive classes from Ustaz ${ustazName}. Please call Father at ${student.fatherPhone} or Mother at ${student.motherPhone} to ask the reason.`,
                     html: `

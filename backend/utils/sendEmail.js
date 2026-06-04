@@ -29,15 +29,16 @@ const sendEmail = async ({ to, subject, text, html }) => {
 
             if (response.ok) {
                 console.log('✅ Email sent via Resend HTTP API');
-                return true;
+                return { success: true };
             } else {
                 const errData = await response.json();
                 console.error('❌ Resend API error:', errData);
+                return { success: false, error: errData };
             }
         } catch (error) {
             console.error('❌ Resend HTTP request failed:', error.message);
+            return { success: false, error: error.message };
         }
-        console.log('🔄 Falling back to other methods...');
     }
 
     // Method 2: Generic HTTP API (e.g. Google Apps Script Web App)
@@ -55,15 +56,16 @@ const sendEmail = async ({ to, subject, text, html }) => {
 
             if (response.ok) {
                 console.log('✅ Email sent successfully via Generic HTTP API');
-                return true;
+                return { success: true };
             } else {
                 const errText = await response.text();
                 console.error('❌ Email API response error:', response.status, errText);
+                return { success: false, error: `Status ${response.status}: ${errText}` };
             }
         } catch (error) {
             console.error('❌ HTTP Email API failed:', error.message);
+            return { success: false, error: error.message };
         }
-        console.log('🔄 Falling back to SMTP...');
     }
 
     // Method 3: Standard SMTP (Gmail Nodemailer)
@@ -86,10 +88,10 @@ const sendEmail = async ({ to, subject, text, html }) => {
 
         const info = await transporter.sendMail(mailOptions);
         console.log('✅ Email sent via SMTP:', info.messageId);
-        return true;
+        return { success: true, messageId: info.messageId };
     } catch (error) {
         console.error('❌ SMTP Email sending failed:', error.message);
-        return false;
+        return { success: false, error: error.message };
     }
 };
 

@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import seedRoutes from './routes/seedRoutes.js';
+import sendEmail from './utils/sendEmail.js';
 
 // Add this route with other routes
 
@@ -35,6 +36,37 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ustaz', ustazRoutes);
 app.use('/api/exams', examRoutes);
+
+// Test Route for Email
+app.get('/api/test-email', async (req, res) => {
+    try {
+        console.log("Running manual email test route...");
+        const recipient = process.env.ALERT_EMAIL_RECIPIENT || process.env.EMAIL_USER;
+        const result = await sendEmail({
+            to: recipient,
+            subject: "Test Email from Ali Medresa System",
+            text: "If you receive this, email sending works perfectly!",
+            html: "<h1>Test Email</h1><p>Email configuration is working successfully.</p>"
+        });
+        
+        res.json({
+            success: result.success,
+            recipient,
+            result,
+            envChecks: {
+                hasResendKey: !!process.env.RESEND_API_KEY,
+                hasEmailUser: !!process.env.EMAIL_USER,
+                hasEmailPass: !!process.env.EMAIL_PASS,
+                hasEmailApiUrl: !!process.env.EMAIL_API_URL
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ 
+            success: false, 
+            error: err.message 
+        });
+    }
+});
 
 // Test Route
 app.get('/', (req, res) => {
