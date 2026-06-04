@@ -5,18 +5,22 @@
 const buildAbsenceEmail = (student, ustazName) => {
     const isKitab = student.stream === 'kitab';
 
+    const buttonStyle = "display: inline-block; padding: 8px 16px; background-color: #e8f0fe; color: #1a73e8; text-decoration: none; border-radius: 20px; font-weight: bold; border: 1px solid #1a73e8; margin-top: 4px;";
+    
     // Phone section differs based on stream
     const fatherPhoneHtml = isKitab
-        ? `<a href="tel:${student.fatherPhone}" style="color: #1a73e8; text-decoration: none; font-weight: bold;">
-             📞 ${student.fatherPhone}
+        ? `<a href="tel:${student.fatherPhone}" style="${buttonStyle}">
+             <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Call" width="16" height="16" style="vertical-align: middle;">
+             <span style="vertical-align: middle; margin-left: 6px;">${student.fatherPhone}</span>
            </a>`
-        : `<strong>${student.fatherPhone}</strong>`;
+        : `<strong style="font-size: 16px;">${student.fatherPhone}</strong>`;
 
     const motherPhoneHtml = isKitab
-        ? `<a href="tel:${student.motherPhone}" style="color: #1a73e8; text-decoration: none; font-weight: bold;">
-             📞 ${student.motherPhone}
+        ? `<a href="tel:${student.motherPhone}" style="${buttonStyle}">
+             <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Call" width="16" height="16" style="vertical-align: middle;">
+             <span style="vertical-align: middle; margin-left: 6px;">${student.motherPhone}</span>
            </a>`
-        : `<strong>${student.motherPhone}</strong>`;
+        : `<strong style="font-size: 16px;">${student.motherPhone}</strong>`;
 
     const subject = `⚠️ ማስጠንቀቂያ: 3 ተከታታይ ቀናት ቅጣት - ${student.fullName}`;
 
