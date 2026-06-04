@@ -108,24 +108,40 @@ export const updateAttendance = async (req, res) => {
 }
 
 // Helper: Check 3 consecutive absences
-const checkConsecutiveAbsences = async (studentIds) => {
+async function checkConsecutiveAbsences(studentIds) {
     for (const studentId of studentIds) {
         try {
-            const recent = await Attendance.find({ student: studentId })
+            // Find recent records to check for consecutive absences
+            const recentRecords = await Attendance.find({ student: studentId })
                 .sort({ date: -1 })
-                .limit(3)
+                .limit(10);
+
+            // Filter to get only the latest record per unique calendar day
+            const uniqueDays = [];
+            const seenDates = new Set();
+
+            for (const record of recentRecords) {
+                const dayStr = new Date(record.date).toISOString().split('T')[0];
+                if (!seenDates.has(dayStr)) {
+                    seenDates.add(dayStr);
+                    uniqueDays.push(record);
+                }
+                if (uniqueDays.length === 3) break;
+            }
 
             if (
-                recent.length === 3 &&
-                recent.every(att => att.status === 'absent')
+                uniqueDays.length === 3 &&
+                uniqueDays.every(att => att.status === 'absent')
             ) {
                 const student = await Student.findById(studentId).populate(
                     'assignedUstaz'
-                )
+                );
 
                 if (!student) continue;
 
                 const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
+
+                console.log(`⚠️ Sending 3 consecutive absences alert email for ${student.fullName}...`);
 
                 await sendEmail({
                     to: process.env.EMAIL_USER,
@@ -140,7 +156,7 @@ const checkConsecutiveAbsences = async (studentIds) => {
                 <li><strong>Mother:</strong> ${student.motherPhone}</li>
               </ul>
             `
-                })
+                });
             }
         } catch (err) {
             console.error(`Error in checkConsecutiveAbsences for student ${studentId}:`, err);
