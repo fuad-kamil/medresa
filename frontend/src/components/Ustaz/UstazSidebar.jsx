@@ -149,16 +149,18 @@ export default function UstazSidebar() {
             Manage Students
           </Link>
 
-          <Link
-            to="/ustaz/exams"
-            onClick={closeSidebar}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-6 ${
-              location.pathname === "/ustaz/exams" ? "bg-emerald-700" : "hover:bg-emerald-800"
-            }`}
-          >
-            <GraduationCap size={20} />
-            Exams
-          </Link>
+          {user?.stream === 'kitab' && (
+            <Link
+              to="/ustaz/exams"
+              onClick={closeSidebar}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-6 ${
+                location.pathname === "/ustaz/exams" ? "bg-emerald-700" : "hover:bg-emerald-800"
+              }`}
+            >
+              <GraduationCap size={20} />
+              Exams
+            </Link>
+          )}
 
           {/* Yesterday's Absentees Section */}
           <div className="mt-4 mb-2 px-2 flex items-center gap-2 text-emerald-300 font-semibold text-sm uppercase tracking-wider">

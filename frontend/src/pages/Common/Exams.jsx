@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
 import { 
@@ -19,6 +20,11 @@ import * as XLSX from "xlsx";
 export default function Exams() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === "admin";
+
+  // Redirect Quran Ustazs as exams are not applicable to them
+  if (user && user.role === "ustaz" && user.stream === "quran") {
+    return <Navigate to="/ustaz" replace />;
+  }
 
   const [students, setStudents] = useState([]);
   const [ustazs, setUstazs] = useState([]);
