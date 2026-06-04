@@ -4,11 +4,46 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const sendEmail = async ({ to, subject, text, html }) => {
-    // If an HTTP API URL is configured (e.g. Google Apps Script Web App, webhook, etc.),
-    // send the email via HTTP POST to bypass Render's SMTP port blocks.
+    // Method 1: Resend HTTP API (Highly Recommended for Render free tier)
+    if (process.env.RESEND_API_KEY) {
+        try {
+            console.log('📬 Sending email via Resend HTTP API...');
+            
+            // With a free Resend account, you can send to your registered email using 'onboarding@resend.dev'
+            const fromEmail = 'onboarding@resend.dev';
+            
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: `Ali Medresa <${fromEmail}>`,
+                    to,
+                    subject,
+                    text,
+                    html,
+                }),
+            });
+
+            if (response.ok) {
+                console.log('✅ Email sent via Resend HTTP API');
+                return true;
+            } else {
+                const errData = await response.json();
+                console.error('❌ Resend API error:', errData);
+            }
+        } catch (error) {
+            console.error('❌ Resend HTTP request failed:', error.message);
+        }
+        console.log('🔄 Falling back to other methods...');
+    }
+
+    // Method 2: Generic HTTP API (e.g. Google Apps Script Web App)
     if (process.env.EMAIL_API_URL) {
         try {
-            console.log('📬 Attempting to send email via HTTP API...');
+            console.log('📬 Attempting to send email via Generic HTTP API...');
             
             const response = await fetch(process.env.EMAIL_API_URL, {
                 method: 'POST',
@@ -19,7 +54,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
             });
 
             if (response.ok) {
-                console.log('✅ Email sent successfully via HTTP API');
+                console.log('✅ Email sent successfully via Generic HTTP API');
                 return true;
             } else {
                 const errText = await response.text();
@@ -31,6 +66,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
         console.log('🔄 Falling back to SMTP...');
     }
 
+    // Method 3: Standard SMTP (Gmail Nodemailer)
     try {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
