@@ -68,6 +68,79 @@ app.get('/api/test-email', async (req, res) => {
     }
 });
 
+// Route to manually scan and trigger alerts for all current 3-consecutive-absent students
+import Student from './models/Student.js';
+import Attendance from './models/Attendance.js';
+
+app.get('/api/trigger-alerts', async (req, res) => {
+    try {
+        console.log("Running bulk consecutive absence check...");
+        const students = await Student.find().populate('assignedUstaz');
+        const recipient = process.env.ALERT_EMAIL_RECIPIENT || process.env.EMAIL_USER;
+        const triggeredStudents = [];
+
+        for (const student of students) {
+            const recentRecords = await Attendance.find({ student: student._id })
+                .sort({ date: -1 })
+                .limit(10);
+
+            // Filter to get only the latest record per unique calendar day
+            const uniqueDays = [];
+            const seenDates = new Set();
+
+            for (const record of recentRecords) {
+                const dayStr = new Date(record.date).toISOString().split('T')[0];
+                if (!seenDates.has(dayStr)) {
+                    seenDates.add(dayStr);
+                    uniqueDays.push(record);
+                }
+                if (uniqueDays.length === 3) break;
+            }
+
+            if (
+                uniqueDays.length === 3 &&
+                uniqueDays.every(att => att.status === 'absent')
+            ) {
+                const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
+                
+                await sendEmail({
+                    to: recipient,
+                    subject: `⚠️ Alert: 3 Consecutive Absences - ${student.fullName}`,
+                    text: `Student ${student.fullName} has missed 3 or more consecutive classes from Ustaz ${ustazName}. Please call Father at ${student.fatherPhone} or Mother at ${student.motherPhone} to ask the reason.`,
+                    html: `
+              <h3>3 Consecutive Absences Alert</h3>
+              <p>Student <strong>${student.fullName}</strong> has missed 3 or more consecutive classes from Ustaz <strong>${ustazName}</strong>.</p>
+              <p>Please call them to ask the reason:</p>
+              <ul>
+                <li><strong>Father:</strong> ${student.fatherPhone}</li>
+                <li><strong>Mother:</strong> ${student.motherPhone}</li>
+              </ul>
+            `
+                });
+
+                triggeredStudents.push({
+                    name: student.fullName,
+                    ustaz: ustazName,
+                    fatherPhone: student.fatherPhone,
+                    motherPhone: student.motherPhone
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            recipient,
+            triggeredCount: triggeredStudents.length,
+            triggeredStudents
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+});
+
 // Test Route
 app.get('/', (req, res) => {
     res.send(`
