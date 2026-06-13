@@ -104,7 +104,7 @@ export const registerStudent = async (req, res) => {
 
         const student = await Student.create({
             fullName,
-            surah: stream === 'kitab' ? '' : surah,
+            surah,
             fatherPhone,
             motherPhone,
             address,
@@ -130,7 +130,7 @@ export const updateStudent = async (req, res) => {
         // Ensure the student actually belongs to this ustaz before updating
         const student = await Student.findOneAndUpdate(
             { _id: id, assignedUstaz: req.user.id },
-            { fullName, surah: stream === 'kitab' ? '' : surah, fatherPhone, motherPhone, address, stream: stream || 'quran' },
+            { fullName, surah, fatherPhone, motherPhone, address, stream: stream || 'quran' },
             { new: true }
         );
 

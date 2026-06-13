@@ -258,7 +258,25 @@ export default function Exams() {
       return row;
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
+    let worksheet;
+    if (!isAdmin) {
+      worksheet = XLSX.utils.aoa_to_sheet([
+        ["ALI MEDRESA - EXAM PERFORMANCE REPORT"],
+        [`Ustaz: ${user?.name || "N/A"}`],
+        ["Class Stream: Kitab"],
+        [`Generated On: ${new Date().toLocaleDateString()}`],
+        [] // Spacer row
+      ]);
+      XLSX.utils.sheet_add_json(worksheet, data, { origin: 5 });
+
+      const totalCols = exams.length + 2; // Student Name + Exams + Total
+      worksheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }
+      ];
+    } else {
+      worksheet = XLSX.utils.json_to_sheet(data);
+    }
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Exams");
 

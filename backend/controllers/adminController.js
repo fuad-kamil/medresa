@@ -45,7 +45,7 @@ export const registerStudent = async (req, res) => {
 
         const student = await Student.create({
             fullName,
-            surah: stream === 'kitab' ? '' : surah,
+            surah,
             fatherPhone,
             motherPhone,
             address,
@@ -241,7 +241,7 @@ export const updateStudent = async (req, res) => {
 
         const student = await Student.findByIdAndUpdate(
             id,
-            { fullName, surah: stream === 'kitab' ? '' : surah, fatherPhone, motherPhone, address, assignedUstaz, stream: stream || 'quran' },
+            { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream: stream || 'quran' },
             { new: true }
         ).populate('assignedUstaz', 'name email');
 
