@@ -11,6 +11,7 @@ export default function UstazSettings() {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
+    kitabName: user?.kitabName || "",
   });
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
@@ -126,6 +127,21 @@ export default function UstazSettings() {
                 className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-white outline-none"
               />
             </div>
+
+            {user?.stream === 'kitab' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Kitab Name <span className="text-xs text-gray-400">(auto-assigned to your students)</span>
+                </label>
+                <input
+                  type="text"
+                  value={profileData.kitabName}
+                  onChange={(e) => setProfileData({ ...profileData, kitabName: e.target.value })}
+                  placeholder="e.g. Ajrumiyyah, Tuhfatul Atfaal"
+                  className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-white outline-none"
+                />
+              </div>
+            )}
 
             {profileMsg && (
               <div className={`p-3 rounded-lg text-sm font-medium ${profileMsg.includes('success') ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>

@@ -90,8 +90,11 @@ export default function UstazManageStudent() {
         // Refresh student list
         fetchMyStudents();
       } else {
+        // For kitab stream in register mode, auto-fill surah from the ustaz's kitabName
+        const surahValue = user?.stream === 'kitab' ? (user?.kitabName || formData.surah) : formData.surah;
         await axiosInstance.post("/ustaz/students", {
           ...formData,
+          surah: surahValue,
           stream: user?.stream || 'quran'
         });
         setSuccess({ show: true, message: "✅ Student Registered Successfully!" });
@@ -210,17 +213,26 @@ export default function UstazManageStudent() {
                   <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
                     Kitab Name
                   </label>
-                  <input
-                    type="text"
-                    name="surah"
-                    value={formData.surah}
-                    placeholder="Enter Kitab Name (e.g. Ajrumiyyah)"
-                    onChange={(e) =>
-                      setFormData({ ...formData, surah: e.target.value })
-                    }
-                    className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                    required
-                  />
+                  {!isEditMode ? (
+                    // Register mode: auto-filled from ustaz profile, read-only
+                    <div className={`w-full px-6 py-4 text-lg rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 flex items-center gap-3`}>
+                      <span className="text-emerald-600 dark:text-emerald-400 text-sm font-bold uppercase tracking-wider">Auto</span>
+                      <span>{user?.kitabName || <span className="italic text-sm text-red-400">No kitab set — update in Settings</span>}</span>
+                    </div>
+                  ) : (
+                    // Edit mode: editable
+                    <input
+                      type="text"
+                      name="surah"
+                      value={formData.surah}
+                      placeholder="Enter Kitab Name (e.g. Ajrumiyyah)"
+                      onChange={(e) =>
+                        setFormData({ ...formData, surah: e.target.value })
+                      }
+                      className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700`}
+                      required
+                    />
+                  )}
                 </>
               ) : (
                 <>

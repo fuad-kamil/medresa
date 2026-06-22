@@ -11,6 +11,7 @@ export default function UstazRegister() {
     confirmPassword: "",
     phone: "",
     stream: "quran",
+    kitabName: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,8 @@ export default function UstazRegister() {
       return "Password must be at least 6 characters long";
     if (formData.password !== formData.confirmPassword)
       return "Passwords do not match";
+    if (formData.stream === "kitab" && !formData.kitabName.trim())
+      return "Kitab name is required for Kitab teachers";
     return null;
   };
 
@@ -53,6 +56,7 @@ export default function UstazRegister() {
         password: formData.password,
         phone: formData.phone.trim(),
         stream: formData.stream,
+        kitabName: formData.stream === "kitab" ? formData.kitabName.trim() : undefined,
       });
 
       setSuccess(true);
@@ -179,6 +183,24 @@ export default function UstazRegister() {
                   <option value="kitab">Kitab Teacher</option>
                 </select>
               </div>
+
+              {formData.stream === "kitab" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Kitab Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="kitabName"
+                    value={formData.kitabName}
+                    onChange={handleChange}
+                    placeholder="e.g. Ajrumiyyah, Tuhfatul Atfaal"
+                    className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This will be auto-assigned to all students you register.</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

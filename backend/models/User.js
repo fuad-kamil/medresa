@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
         enum: ['quran', 'kitab'],
         default: 'quran'
     },
+    kitabName: {
+        type: String,
+        trim: true
+    },
     isApproved: {
         type: Boolean,
         default: false

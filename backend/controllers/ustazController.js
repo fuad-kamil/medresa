@@ -47,6 +47,9 @@ export const updateUstazProfile = async (req, res) => {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
         user.phone = req.body.phone || user.phone;
+        if (user.stream === 'kitab' && req.body.kitabName !== undefined) {
+            user.kitabName = req.body.kitabName;
+        }
 
         const updatedUser = await user.save();
 
@@ -58,7 +61,9 @@ export const updateUstazProfile = async (req, res) => {
                 email: updatedUser.email,
                 phone: updatedUser.phone,
                 role: updatedUser.role,
-                isApproved: updatedUser.isApproved
+                isApproved: updatedUser.isApproved,
+                stream: updatedUser.stream,
+                kitabName: updatedUser.kitabName
             }
         });
     } catch (error) {
