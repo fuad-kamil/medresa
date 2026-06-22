@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CalendarCheck, CalendarX, Clock, CheckCircle2, AlertTriangle, X } from "lucide-react";
+import { CalendarCheck, CalendarX, Clock, CheckCircle2, AlertTriangle, X, Users } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
 
@@ -152,7 +152,18 @@ export default function UstazDashboard() {
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
         This Week's Attendance Status
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {/* Total Students Card */}
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-blue-100 dark:border-gray-700 flex items-center gap-6">
+          <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <Users size={32} />
+          </div>
+          <div>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">My Students</p>
+            <p className="text-3xl font-bold text-gray-800 dark:text-white">{students.length}</p>
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-emerald-100 dark:border-gray-700 flex items-center gap-6">
           <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <CalendarCheck size={32} />
