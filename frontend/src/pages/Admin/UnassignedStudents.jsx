@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
-import { Search, UserMinus, UserCheck, Trash2, AlertCircle, RefreshCw } from "lucide-react";
+import { Search, UserMinus, UserCheck, Trash2, AlertCircle, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
 export default function UnassignedStudents() {
@@ -18,6 +18,19 @@ export default function UnassignedStudents() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedUstazId, setSelectedUstazId] = useState("");
   const [assignLoading, setAssignLoading] = useState(false);
+
+  // Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Success Notification State
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const showSuccess = (msg) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
 
   useEffect(() => {
     if (!token) {
@@ -49,14 +62,24 @@ export default function UnassignedStudents() {
     }
   };
 
-  const handleDelete = async (studentId) => {
-    if (!window.confirm("Are you sure you want to delete this student? This action cannot be undone.")) return;
-    
+  const handleDeleteClick = (student) => {
+    setStudentToDelete(student);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!studentToDelete) return;
+    setDeleteLoading(true);
     try {
-      await axiosInstance.delete(`/admin/students/${studentId}`);
-      setStudents(students.filter(s => s._id !== studentId));
+      await axiosInstance.delete(`/admin/students/${studentToDelete._id}`);
+      setStudents(students.filter(s => s._id !== studentToDelete._id));
+      setIsDeleteModalOpen(false);
+      setStudentToDelete(null);
+      showSuccess("Student deleted successfully!");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to delete student.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -76,6 +99,7 @@ export default function UnassignedStudents() {
       });
       setIsAssignModalOpen(false);
       setStudents(students.filter(s => s._id !== selectedStudent._id));
+      showSuccess("Ustaz assigned successfully!");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to assign Ustaz.");
     } finally {
@@ -124,6 +148,14 @@ export default function UnassignedStudents() {
           </div>
         </div>
       </div>
+
+      {/* Success Message Toast */}
+      {successMessage && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
+          <CheckCircle size={24} />
+          <span className="font-semibold text-lg">{successMessage}</span>
+        </div>
+      )}
 
       {/* Error State */}
       {error && (
@@ -216,7 +248,7 @@ export default function UnassignedStudents() {
                           Assign Ustaz
                         </button>
                         <button
-                          onClick={() => handleDelete(student._id)}
+                          onClick={() => handleDeleteClick(student)}
                           className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 rounded-xl transition font-medium"
                         >
                           <Trash2 size={18} />
@@ -281,7 +313,7 @@ export default function UnassignedStudents() {
                   <UserCheck size={18} /> Assign
                 </button>
                 <button
-                  onClick={() => handleDelete(student._id)}
+                  onClick={() => handleDeleteClick(student)}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 rounded-xl transition font-medium"
                 >
                   <Trash2 size={18} /> Delete
@@ -349,6 +381,46 @@ export default function UnassignedStudents() {
                   disabled={assignLoading || !selectedUstazId}
                 >
                   {assignLoading ? "Assigning..." : "Assign"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && studentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100">
+            
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                Delete Student?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+                Are you sure you want to permanently delete <span className="font-bold text-gray-800 dark:text-gray-200">{studentToDelete.fullName}</span>? This action cannot be undone.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-bold transition-all shadow-sm"
+                  disabled={deleteLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-md shadow-red-500/30 transition-all disabled:opacity-70"
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? "Deleting..." : "Yes, Delete"}
                 </button>
               </div>
             </div>
