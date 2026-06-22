@@ -11,12 +11,40 @@ export default function UstazDashboard() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [takenTodayMap, setTakenTodayMap] = useState({});
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const getInitialDate = () => {
+    const u = useAuthStore.getState().user;
+    if (u?.stream === 'kitab') {
+      let curr = new Date();
+      while (true) {
+        const day = curr.getDay();
+        if (day === 4 || day === 5 || day === 6) return curr.toISOString().split('T')[0];
+        curr.setDate(curr.getDate() - 1);
+      }
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getInitialDate());
   const [allRecords, setAllRecords] = useState([]);
 
   const selectedDayOfWeek = new Date(selectedDate).getDay(); // 0 = Sun, 1 = Mon, ..., 4 = Thu, 5 = Fri, 6 = Sat
   const isKitabDay = selectedDayOfWeek === 4 || selectedDayOfWeek === 5 || selectedDayOfWeek === 6;
   const isBlocked = user?.stream === 'kitab' && !isKitabDay;
+
+  const getKitabAllowedDates = () => {
+    const dates = [];
+    let curr = new Date();
+    while (dates.length < 4) {
+      const day = curr.getDay();
+      if (day === 4 || day === 5 || day === 6) {
+        dates.push(new Date(curr));
+      }
+      curr.setDate(curr.getDate() - 1);
+    }
+    return dates;
+  };
+
+  const kitabAllowedDates = user?.stream === 'kitab' ? getKitabAllowedDates() : [];
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -206,14 +234,32 @@ export default function UstazDashboard() {
         </h2>
         <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 w-max">
           <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">Date:</label>
-          <input
-            type="date"
-            min={new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-            max={new Date().toISOString().split('T')[0]}
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none"
-          />
+          {user?.stream === 'kitab' ? (
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer"
+            >
+              {kitabAllowedDates.map(d => {
+                const dateStr = d.toISOString().split('T')[0];
+                const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+                return (
+                  <option key={dateStr} value={dateStr}>
+                    {dayName}, {dateStr}
+                  </option>
+                );
+              })}
+            </select>
+          ) : (
+            <input
+              type="date"
+              min={new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              max={new Date().toISOString().split('T')[0]}
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none"
+            />
+          )}
         </div>
       </div>
 
