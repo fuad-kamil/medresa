@@ -129,7 +129,12 @@ export default function UstazDashboard() {
     <div>
       <div className="mb-8">
         <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white">
-          Assalamu Alaikum, {user?.name || "Ustaz"}
+          {user?.name || "Ustaz"}
+          {user?.stream === 'kitab' && user?.kitabName && (
+            <span className="ml-3 text-2xl lg:text-3xl font-semibold text-emerald-600 dark:text-emerald-400">
+              — {user.kitabName}
+            </span>
+          )}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-3 text-lg">
           Here is your weekly overview and today's class.
