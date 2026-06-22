@@ -166,8 +166,8 @@ export default function AdminDashboard() {
   return (
     <div>
       <div className="mb-10">
-        <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white">
-          Assalamu Alaikum, Admin
+        <h1 className="text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-400 pb-2">
+          Assalamu Alaikum
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-3 text-lg">
           Welcome to your dashboard
