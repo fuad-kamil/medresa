@@ -33,8 +33,16 @@ export default function UstazRegister() {
     return null;
   };
 
+  // Capitalize first letter of each word for text fields
+  const capitalizeWords = (value) =>
+    value.replace(/(?:^|\s)\S/g, (char) => char.toUpperCase());
+
+  const TEXT_FIELDS = ["name", "kitabName"];
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const newValue = TEXT_FIELDS.includes(name) ? capitalizeWords(value) : value;
+    setFormData({ ...formData, [name]: newValue });
   };
 
   const handleSubmit = async (e) => {
