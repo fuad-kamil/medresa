@@ -27,7 +27,8 @@ export default function AllStudents() {
     setError(null);
     try {
       const res = await axiosInstance.get("/admin/students");
-      setStudents(res.data);
+      const assignedStudents = res.data.filter(s => s.assignedUstaz);
+      setStudents(assignedStudents);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || "Failed to load student list.");

@@ -9,6 +9,7 @@ import UstazRegister from "./pages/Auth/UstazRegister";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import RegisterStudent from "./pages/Admin/RegisterStudent";
 import AllStudents from "./pages/Admin/AllStudents";
+import UnassignedStudents from "./pages/Admin/UnassignedStudents";
 import AdminSettings from "./pages/Admin/AdminSettings";
 import AdminLayout from "./components/Layout/AdminLayout";
 
@@ -52,6 +53,14 @@ function App() {
           element={
             <AdminLayout>
               <AllStudents />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/unassigned-students"
+          element={
+            <AdminLayout>
+              <UnassignedStudents />
             </AdminLayout>
           }
         />

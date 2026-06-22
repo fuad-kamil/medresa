@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   UserPlus,
+  UserMinus,
   Settings,
   LogOut,
   Menu,
@@ -36,6 +37,7 @@ export default function AdminSidebar() {
       icon: UserPlus,
     },
     { name: "All Students", path: "/admin/students", icon: Users },
+    { name: "Unassigned Students", path: "/admin/unassigned-students", icon: UserMinus },
     { name: "Exams", path: "/admin/exams", icon: GraduationCap },
   ];
 
