@@ -25,24 +25,24 @@ app.use('/api/seed', seedRoutes);
 app.use(express.json());
 // SECURITY: Restrict CORS to only known frontend origins
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(u => u.trim()) : []),
+    'http://localhost:5173',
+    'http://localhost:3000',
+    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(u => u.trim()) : []),
 ];
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. curl, Postman in dev)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS policy: Origin '${origin}' not allowed.`));
-    }
-  },
-  credentials: true,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. curl, Postman in dev)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS policy: Origin '${origin}' not allowed.`));
+        }
+    },
+    credentials: true,
 }));
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  crossOriginOpenerPolicy: { policy: 'unsafe-none' },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'unsafe-none' },
 }));
 app.use(morgan('dev'));
 
@@ -64,7 +64,7 @@ app.get('/api/test-email', protect, adminOnly, async (req, res) => {
             text: "If you receive this, email sending works perfectly!",
             html: "<h1>Test Email</h1><p>Email configuration is working successfully.</p>"
         });
-        
+
         res.json({
             success: result.success,
             recipient,
@@ -77,9 +77,9 @@ app.get('/api/test-email', protect, adminOnly, async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(500).json({ 
-            success: false, 
-            error: err.message 
+        res.status(500).json({
+            success: false,
+            error: err.message
         });
     }
 });
@@ -121,7 +121,7 @@ app.get('/api/trigger-alerts', protect, adminOnly, async (req, res) => {
             ) {
                 const ustazName = student.assignedUstaz ? student.assignedUstaz.name : "Unassigned";
                 const emailContent = buildAbsenceEmail(student, ustazName);
-                
+
                 await sendEmail({
                     to: recipient,
                     subject: emailContent.subject,
