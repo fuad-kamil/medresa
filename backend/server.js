@@ -23,13 +23,15 @@ const app = express();
 app.use('/api/seed', seedRoutes);
 // Middleware
 app.use(express.json());
-// SECURITY: Restrict CORS to only the known frontend origin
+// SECURITY: Restrict CORS to only known frontend origins
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(u => u.trim()) : []),
 ];
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, Postman in dev)
+    // Allow requests with no origin (e.g. curl, Postman in dev)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
