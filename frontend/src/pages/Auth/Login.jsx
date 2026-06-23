@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { Moon, Sun, BookOpen } from "lucide-react";
+import { Moon, Sun, Mail, Lock, UserCog, BookOpen } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 import { useLogin } from "../../hooks/useLogin";
 
@@ -31,106 +31,126 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 dark:from-gray-950 dark:via-slate-900 dark:to-black flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden bg-slate-50 dark:bg-gray-950 transition-colors duration-500 font-sans">
+      {/* Animated Background Elements */}
+      <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-300 dark:bg-emerald-600 rounded-full mix-blend-multiply filter blur-3xl opacity-40 dark:opacity-20 animate-blob"></div>
+      <div className="absolute top-0 -right-4 w-72 h-72 bg-teal-300 dark:bg-teal-600 rounded-full mix-blend-multiply filter blur-3xl opacity-40 dark:opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-cyan-300 dark:bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-40 dark:opacity-20 animate-blob animation-delay-4000"></div>
+
       {/* Theme Toggle */}
       <button
         onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 rounded-2xl bg-white/10 hover:bg-white/20 dark:bg-gray-800/50 text-white transition z-20"
+        className="absolute top-4 sm:top-6 right-4 sm:right-6 p-3 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 hover:scale-105 hover:bg-white dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 transition-all z-20 shadow-sm"
+        aria-label="Toggle theme"
       >
-        {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
+        {theme === "dark" ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-600" />}
       </button>
 
-      <div className="w-full max-w-lg">
-        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-emerald-100 dark:border-gray-700">
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] overflow-hidden border border-white/60 dark:border-gray-700/50">
           {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-800 dark:to-teal-800 px-10 py-12 text-center">
-            <div className="flex justify-center mb-4">
-              <img
-                src="/medresa_icon.jpg"
-                alt="Ali Medresa Logo"
-                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-white/30 shadow-2xl"
-              />
+          <div className="px-6 sm:px-8 pt-10 pb-6 text-center">
+            <div className="flex justify-center mb-6">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                <img
+                  src="/medresa_icon.jpg"
+                  alt="Ali Medresa Logo"
+                  className="relative w-24 h-24 rounded-3xl object-cover ring-2 ring-white/80 dark:ring-gray-800/80 shadow-xl transform transition hover:scale-105 duration-300"
+                />
+              </div>
             </div>
-            <h1 className="text-4xl font-bold text-white">Ali Medresa</h1>
-            <p className="text-emerald-100 mt-2">Quranic Education System</p>
+            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 tracking-tight">
+              Ali Medresa
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm font-medium uppercase tracking-widest">
+              Quranic Education
+            </p>
           </div>
 
           {/* Form Area */}
-          <div className="p-10">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-white text-center mb-8">
-              Welcome Back
-            </h2>
-
+          <div className="px-6 sm:px-8 pb-10">
             {error && (
-              <div className="mb-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-5 py-4 rounded-2xl text-center">
-                {error}
+              <div className="mb-6 bg-red-50/90 dark:bg-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl text-sm text-center flex items-center justify-center gap-2 animate-pulse">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-red-400 shrink-0"></div>
+                <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={onSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email Address
+            <form onSubmit={onSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1 flex items-center gap-2">
+                  <Mail size={16} className="text-emerald-500" /> Email Address
                 </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-5 py-4 border rounded-2xl focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white text-base ${
-                    formErrors.email
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                  required
-                />
+                <div className="relative group">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`w-full pl-4 pr-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:text-white transition-all duration-300 group-hover:border-emerald-300 dark:group-hover:border-emerald-700 ${
+                      formErrors.email
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
+                        : "border-gray-200 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-emerald-500"
+                    }`}
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
                 {formErrors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {formErrors.email}
-                  </p>
+                  <p className="text-red-500 text-xs ml-1 font-medium">{formErrors.email}</p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Password
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1 flex items-center gap-2">
+                  <Lock size={16} className="text-emerald-500" /> Password
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-5 py-4 border rounded-2xl focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white text-base ${
-                    formErrors.password
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                  required
-                />
+                <div className="relative group">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full pl-4 pr-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:text-white transition-all duration-300 group-hover:border-emerald-300 dark:group-hover:border-emerald-700 ${
+                      formErrors.password
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
+                        : "border-gray-200 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-emerald-500"
+                    }`}
+                    placeholder="Enter your password"
+                    required
+                  />
+                </div>
                 {formErrors.password && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {formErrors.password}
-                  </p>
+                  <p className="text-red-500 text-xs ml-1 font-medium">{formErrors.password}</p>
                 )}
               </div>
 
               {/* Role Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Login As
+              <div className="pt-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1 block">
+                  Select Role
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/60 rounded-2xl">
                   <button
                     type="button"
                     onClick={() => setRole("admin")}
-                    className={`py-4 rounded-2xl font-medium transition-all ${role === "admin" ? "bg-emerald-700 text-white shadow-md" : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                      role === "admin"
+                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_10px_rgb(0,0,0,0.05)] dark:shadow-[0_2px_10px_rgb(0,0,0,0.2)]"
+                        : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    }`}
                   >
-                    Admin
+                    <UserCog size={18} /> Admin
                   </button>
                   <button
                     type="button"
                     onClick={() => setRole("ustaz")}
-                    className={`py-4 rounded-2xl font-medium transition-all ${role === "ustaz" ? "bg-emerald-700 text-white shadow-md" : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                      role === "ustaz"
+                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_10px_rgb(0,0,0,0.05)] dark:shadow-[0_2px_10px_rgb(0,0,0,0.2)]"
+                        : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    }`}
                   >
-                    Ustaz
+                    <BookOpen size={18} /> Ustaz
                   </button>
                 </div>
               </div>
@@ -138,22 +158,32 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-70 mt-2"
+                className="group relative w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent text-sm font-bold rounded-2xl text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-gray-900 shadow-lg shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0 mt-6"
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Authenticating...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </button>
             </form>
 
             {/* Register Link */}
             {role === "ustaz" && (
-              <div className="text-center mt-6">
-                <p className="text-gray-600 dark:text-gray-400">
-                  Don't have an account?{" "}
+              <div className="text-center mt-8">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  New here?{" "}
                   <Link
                     to="/ustaz-register"
-                    className="text-emerald-600 dark:text-emerald-500 font-medium hover:underline"
+                    className="font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-500/30 hover:decoration-emerald-500"
                   >
-                    Register as Ustaz
+                    Create an account
                   </Link>
                 </p>
               </div>
@@ -161,6 +191,25 @@ export default function Login() {
           </div>
         </div>
       </div>
+      
+      {/* Custom Styles for Blob Animation */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}} />
     </div>
   );
 }
