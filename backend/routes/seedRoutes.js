@@ -5,7 +5,19 @@ import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
-router.post('/create-admin', async (req, res) => {
+// Middleware: only allow if x-seed-secret header matches SEED_SECRET env var
+const seedGuard = (req, res, next) => {
+    const secret = req.headers['x-seed-secret'];
+    if (!secret || secret !== process.env.SEED_SECRET) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized. A valid seed secret is required.'
+        });
+    }
+    next();
+};
+
+router.post('/create-admin', seedGuard, async (req, res) => {
     try {
         const email = req.body.email || process.env.ADMIN_EMAIL;
         const password = req.body.password || process.env.ADMIN_PASSWORD;

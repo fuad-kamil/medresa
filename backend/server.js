@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import seedRoutes from './routes/seedRoutes.js';
 import sendEmail from './utils/sendEmail.js';
+import protect from './middleware/auth.js';
+import adminOnly from './middleware/adminOnly.js';
 
 // Add this route with other routes
 
@@ -21,8 +23,19 @@ const app = express();
 app.use('/api/seed', seedRoutes);
 // Middleware
 app.use(express.json());
+// SECURITY: Restrict CORS to only the known frontend origin
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+];
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, Postman in dev)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy: Origin '${origin}' not allowed.`));
+    }
+  },
   credentials: true,
 }));
 app.use(helmet({
@@ -38,7 +51,8 @@ app.use('/api/ustaz', ustazRoutes);
 app.use('/api/exams', examRoutes);
 
 // Test Route for Email
-app.get('/api/test-email', async (req, res) => {
+// SECURITY: Protected — Admin only
+app.get('/api/test-email', protect, adminOnly, async (req, res) => {
     try {
         console.log("Running manual email test route...");
         const recipient = process.env.ALERT_EMAIL_RECIPIENT || process.env.EMAIL_USER;
@@ -73,7 +87,8 @@ import Student from './models/Student.js';
 import Attendance from './models/Attendance.js';
 import buildAbsenceEmail from './utils/absenceEmailTemplate.js';
 
-app.get('/api/trigger-alerts', async (req, res) => {
+// SECURITY: Protected — Admin only
+app.get('/api/trigger-alerts', protect, adminOnly, async (req, res) => {
     try {
         console.log("Running bulk consecutive absence check...");
         const students = await Student.find().populate('assignedUstaz');
