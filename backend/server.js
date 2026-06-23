@@ -8,8 +8,6 @@ import sendEmail from './utils/sendEmail.js';
 import protect from './middleware/auth.js';
 import adminOnly from './middleware/adminOnly.js';
 
-// Add this route with other routes
-
 import connectDB from './config/db.js';
 
 // Import Routes
@@ -20,33 +18,37 @@ import examRoutes from './routes/examRoutes.js';
 
 dotenv.config();
 const app = express();
-app.use('/api/seed', seedRoutes);
-// Middleware
-app.use(express.json());
-// SECURITY: Restrict CORS to only known frontend origins
+
+// ── CORS must be FIRST, before any routes ─────────────────────────────────────
 const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(u => u.trim()) : []),
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://medresa-five.vercel.app',            // production frontend (Vercel)
+  ...(process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
+    : []),
 ];
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. curl, Postman in dev)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`CORS policy: Origin '${origin}' not allowed.`));
-        }
-    },
-    credentials: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy: Origin '${origin}' not allowed.`));
+    }
+  },
+  credentials: true,
 }));
+// ──────────────────────────────────────────────────────────────────────────────
+
+app.use(express.json());
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    crossOriginOpenerPolicy: { policy: 'unsafe-none' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'unsafe-none' },
 }));
 app.use(morgan('dev'));
 
 // Routes
+app.use('/api/seed', seedRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ustaz', ustazRoutes);
