@@ -19,8 +19,7 @@ import {
   FileText
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { useReactToPrint } from "react-to-print";
 import ReportCardTemplate from "../../components/ReportCard/ReportCardTemplate";
 import { useRef } from "react";
 
@@ -284,40 +283,24 @@ export default function Exams() {
     return index >= 0 ? index + 1 : null;
   };
 
-  const generatePDF = async (student) => {
+  const handlePrint = useReactToPrint({
+    contentRef: reportCardRef,
+    documentTitle: reportCardData ? `ReportCard_${reportCardData.fullName.replace(/\s+/g, '_')}` : 'Report_Card',
+    onAfterPrint: () => setGeneratingPdfId(null),
+    onPrintError: () => {
+      alert("Failed to generate PDF. Please try again.");
+      setGeneratingPdfId(null);
+    }
+  });
+
+  const generatePDF = (student) => {
     setGeneratingPdfId(student._id);
     setReportCardData(student);
     
-    // Wait for state to update and component to render
-    setTimeout(async () => {
-      try {
-        if (!reportCardRef.current) return;
-        
-        const canvas = await html2canvas(reportCardRef.current, {
-          scale: 2, // Higher quality
-          useCORS: true, // Allow external images if any
-          logging: false
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`ReportCard_${student.fullName.replace(/\s+/g, '_')}.pdf`);
-      } catch (error) {
-        console.error("Error generating PDF", error);
-        alert("Failed to generate PDF. Please try again.");
-      } finally {
-        setGeneratingPdfId(null);
-      }
-    }, 100); // 100ms delay to ensure the DOM is updated
+    // Wait for state to update and component to render with the new student data
+    setTimeout(() => {
+      handlePrint();
+    }, 100);
   };
 
   const downloadExcel = () => {

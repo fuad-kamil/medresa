@@ -1,28 +1,7 @@
 import React, { forwardRef } from 'react';
 
-// Using exact Hex values to avoid Tailwind v4's OKLCH format
-// which causes html2canvas to crash.
-const C = {
-  emerald100: '#d1fae5',
-  emerald600: '#059669',
-  emerald700: '#047857',
-  emerald800: '#065f46',
-  gray50: '#f9fafb',
-  gray100: '#f3f4f6',
-  gray200: '#e5e7eb',
-  gray400: '#9ca3af',
-  gray500: '#6b7280',
-  gray600: '#4b5563',
-  gray700: '#374151',
-  gray800: '#1f2937',
-  red100: '#fee2e2',
-  red600: '#dc2626',
-  amber100: '#fef3c7',
-  amber500: '#f59e0b',
-  white: '#ffffff',
-  transparent: 'transparent'
-};
-
+// Using a printable template that relies on the browser's native PDF/Print engine.
+// We can use standard Tailwind classes here safely because the browser natively supports modern CSS (unlike html2canvas).
 const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, ustazName, rank, totalStudents }, ref) => {
   if (!student) return null;
 
@@ -44,140 +23,134 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
   });
 
   return (
-    <div>
-      <div className="absolute top-[-10000px] left-[-10000px]">
-        <div 
-          id="report-card-content" 
-          ref={ref}
-          style={{ 
-            width: '210mm', 
-            minHeight: '297mm', 
-            padding: '20mm',
-            backgroundColor: C.white,
-            color: C.gray800,
-            fontFamily: 'system-ui, -apple-system, sans-serif'
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between pb-6 mb-8" style={{ borderBottom: `4px solid ${C.emerald600}` }}>
-            <div className="flex items-center gap-4">
-              <img src="/logo.png" alt="Medresa Logo" className="w-24 h-24 object-contain" onError={(e) => {
-                e.target.style.display = 'none';
-              }} />
-              <div style={{ display: 'none' }} id="logo-fallback">M</div>
-              <div>
-                <h1 className="text-4xl font-extrabold uppercase tracking-wider" style={{ color: C.emerald800 }}>{medresaName || "Ali Medresa"}</h1>
-                <p className="text-xl font-medium tracking-wide mt-1" style={{ color: C.gray500 }}>Official Student Report Card</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: C.gray400 }}>Date Issued</p>
-              <p className="text-lg font-semibold" style={{ color: C.gray800 }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            </div>
-          </div>
+    <div style={{ display: "none" }}>
+      {/* The ref is attached to this inner container which gets cloned into the print iframe */}
+      <div ref={ref} className="p-10 bg-white text-gray-800" style={{ width: '100%', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
+        
+        {/* Print-specific styles to force A4 sizing and hide URLs */}
+        <style type="text/css" media="print">
+          {`
+            @page { size: A4 portrait; margin: 15mm; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          `}
+        </style>
 
-          {/* Student Info Grid */}
-          <div className="grid grid-cols-2 gap-6 mb-10 p-6 rounded-2xl" style={{ backgroundColor: C.gray50, border: `1px solid ${C.gray200}` }}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-4 border-emerald-600 pb-6 mb-8">
+          <div className="flex items-center gap-4">
+            <img src="/logo.png" alt="Medresa Logo" className="w-24 h-24 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: C.gray400 }}>Student Name</p>
-              <p className="text-2xl font-bold" style={{ color: C.gray800 }}>{student.fullName}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: C.gray400 }}>Ustaz</p>
-              <p className="text-2xl font-bold" style={{ color: C.gray800 }}>{ustazName || student.assignedUstaz?.name || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: C.gray400 }}>Stream</p>
-              <p className="text-xl font-medium capitalize" style={{ color: C.gray700 }}>{student.stream || "Kitab"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: C.gray400 }}>Class Rank</p>
-              <p className="text-xl font-bold" style={{ color: C.emerald600 }}>
-                {rank ? `${rank} out of ${totalStudents}` : "N/A"}
-              </p>
+              <h1 className="text-4xl font-extrabold text-emerald-800 uppercase tracking-wider">{medresaName || "Ali Medresa"}</h1>
+              <p className="text-xl text-gray-500 font-medium tracking-wide mt-1">Official Student Report Card</p>
             </div>
           </div>
-
-          {/* Academic Performance */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: C.emerald800 }}>
-              Academic Performance
-            </h2>
-            <table className="w-full text-left border-collapse rounded-xl overflow-hidden shadow-sm">
-              <thead>
-                <tr style={{ backgroundColor: C.emerald600, color: C.white }}>
-                  <th className="p-4 font-bold uppercase tracking-wider text-sm" style={{ borderBottom: `1px solid ${C.emerald700}` }}>Exam Name</th>
-                  <th className="p-4 font-bold uppercase tracking-wider text-sm text-center" style={{ borderBottom: `1px solid ${C.emerald700}` }}>Max Score</th>
-                  <th className="p-4 font-bold uppercase tracking-wider text-sm text-center" style={{ borderBottom: `1px solid ${C.emerald700}` }}>Score Achieved</th>
-                </tr>
-              </thead>
-              <tbody style={{ backgroundColor: C.white }}>
-                {exams.length === 0 ? (
-                  <tr>
-                    <td colSpan="3" className="p-6 text-center" style={{ color: C.gray500, borderBottom: `1px solid ${C.gray200}` }}>No exams recorded.</td>
-                  </tr>
-                ) : (
-                  exams.map((exam, index) => {
-                    const score = Number(studentScores[exam._id]) || 0;
-                    return (
-                      <tr key={exam._id} style={{ backgroundColor: index % 2 === 0 ? C.gray50 : C.white }}>
-                        <td className="p-4 font-semibold" style={{ color: C.gray800, borderBottom: `1px solid ${C.gray200}` }}>{exam.name}</td>
-                        <td className="p-4 text-center font-medium" style={{ color: C.gray600, borderBottom: `1px solid ${C.gray200}` }}>{exam.maxScore || 100}</td>
-                        <td className="p-4 text-center font-bold" style={{ color: C.emerald600, borderBottom: `1px solid ${C.gray200}` }}>{score}</td>
-                      </tr>
-                    );
-                  })
-                )}
-                <tr style={{ backgroundColor: C.gray100, borderTop: `2px solid ${C.emerald600}` }}>
-                  <td className="p-4 font-bold text-right uppercase tracking-wider" style={{ color: C.gray800 }}>Total</td>
-                  <td className="p-4 text-center font-bold" style={{ color: C.gray800 }}>{maxPossibleScore}</td>
-                  <td className="p-4 text-center font-bold text-xl" style={{ color: C.emerald600 }}>{totalScore}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="text-right">
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Date Issued</p>
+            <p className="text-lg font-semibold text-gray-800">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
-
-          {/* Attendance Record */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-4" style={{ color: C.emerald800 }}>Attendance Record</h2>
-            <div className="flex gap-4">
-              <div className="flex-1 p-6 rounded-xl text-center" style={{ backgroundColor: C.white, border: `2px solid ${C.emerald100}` }}>
-                <p className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: C.gray400 }}>Present</p>
-                <p className="text-3xl font-black" style={{ color: C.emerald600 }}>{present}</p>
-              </div>
-              <div className="flex-1 p-6 rounded-xl text-center" style={{ backgroundColor: C.white, border: `2px solid ${C.red100}` }}>
-                <p className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: C.gray400 }}>Absent</p>
-                <p className="text-3xl font-black" style={{ color: C.red600 }}>{absent}</p>
-              </div>
-              <div className="flex-1 p-6 rounded-xl text-center" style={{ backgroundColor: C.white, border: `2px solid ${C.amber100}` }}>
-                <p className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: C.gray400 }}>Excused</p>
-                <p className="text-3xl font-black" style={{ color: C.amber500 }}>{excused}</p>
-              </div>
-              <div className="flex-1 p-6 rounded-xl text-center shadow-md" style={{ backgroundColor: C.emerald600 }}>
-                <p className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: C.emerald100 }}>Rate</p>
-                <p className="text-3xl font-black" style={{ color: C.white }}>{attendancePercentage}%</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Signatures */}
-          <div className="mt-24 flex justify-between px-10">
-            <div className="text-center w-64">
-              <div className="h-8 mb-2" style={{ borderBottom: `2px solid ${C.gray800}` }}></div>
-              <p className="text-sm font-bold uppercase tracking-wider" style={{ color: C.gray500 }}>Ustaz Signature</p>
-            </div>
-            <div className="text-center w-64">
-              <div className="h-8 mb-2" style={{ borderBottom: `2px solid ${C.gray800}` }}></div>
-              <p className="text-sm font-bold uppercase tracking-wider" style={{ color: C.gray500 }}>Parent/Guardian Signature</p>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-16 text-center pt-6" style={{ borderTop: `1px solid ${C.gray200}` }}>
-            <p className="text-xs font-medium" style={{ color: C.gray400 }}>Generated automatically by the Medresa Management System</p>
-          </div>
-
         </div>
+
+        {/* Student Info Grid */}
+        <div className="grid grid-cols-2 gap-6 mb-10 bg-gray-50 p-6 rounded-2xl border border-gray-200">
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Student Name</p>
+            <p className="text-2xl font-bold text-gray-800">{student.fullName}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ustaz</p>
+            <p className="text-2xl font-bold text-gray-800">{ustazName || student.assignedUstaz?.name || "N/A"}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Stream</p>
+            <p className="text-xl font-medium text-gray-700 capitalize">{student.stream || "Kitab"}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Class Rank</p>
+            <p className="text-xl font-bold text-emerald-600">
+              {rank ? `${rank} out of ${totalStudents}` : "N/A"}
+            </p>
+          </div>
+        </div>
+
+        {/* Academic Performance */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold text-emerald-800 mb-4 flex items-center gap-2">
+            Academic Performance
+          </h2>
+          <table className="w-full text-left border-collapse rounded-xl overflow-hidden shadow-sm border border-gray-200">
+            <thead>
+              <tr className="bg-emerald-600 text-white">
+                <th className="p-4 font-bold uppercase tracking-wider text-sm border-b border-emerald-700">Exam Name</th>
+                <th className="p-4 font-bold uppercase tracking-wider text-sm border-b border-emerald-700 text-center">Max Score</th>
+                <th className="p-4 font-bold uppercase tracking-wider text-sm border-b border-emerald-700 text-center">Score Achieved</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {exams.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="p-6 text-center text-gray-500 border-b border-gray-200">No exams recorded.</td>
+                </tr>
+              ) : (
+                exams.map((exam, index) => {
+                  const score = Number(studentScores[exam._id]) || 0;
+                  return (
+                    <tr key={exam._id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="p-4 font-semibold text-gray-800 border-b border-gray-200">{exam.name}</td>
+                      <td className="p-4 text-center font-medium text-gray-600 border-b border-gray-200">{exam.maxScore || 100}</td>
+                      <td className="p-4 text-center font-bold text-emerald-600 border-b border-gray-200">{score}</td>
+                    </tr>
+                  );
+                })
+              )}
+              <tr className="bg-gray-100 border-t-4 border-emerald-600">
+                <td className="p-4 font-bold text-gray-800 text-right uppercase tracking-wider">Total</td>
+                <td className="p-4 text-center font-bold text-gray-800">{maxPossibleScore}</td>
+                <td className="p-4 text-center font-bold text-emerald-600 text-xl">{totalScore}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Attendance Record */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-emerald-800 mb-4">Attendance Record</h2>
+          <div className="flex gap-4">
+            <div className="flex-1 bg-white p-6 rounded-xl border-2 border-emerald-100 text-center">
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Present</p>
+              <p className="text-3xl font-black text-emerald-600">{present}</p>
+            </div>
+            <div className="flex-1 bg-white p-6 rounded-xl border-2 border-red-100 text-center">
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Absent</p>
+              <p className="text-3xl font-black text-red-600">{absent}</p>
+            </div>
+            <div className="flex-1 bg-white p-6 rounded-xl border-2 border-amber-100 text-center">
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Excused</p>
+              <p className="text-3xl font-black text-amber-500">{excused}</p>
+            </div>
+            <div className="flex-1 bg-emerald-600 p-6 rounded-xl text-center shadow-md">
+              <p className="text-sm font-bold text-emerald-100 uppercase tracking-wider mb-2">Rate</p>
+              <p className="text-3xl font-black text-white">{attendancePercentage}%</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Signatures */}
+        <div className="mt-24 flex justify-between px-10">
+          <div className="text-center w-64">
+            <div className="border-b-2 border-gray-800 h-8 mb-2"></div>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Ustaz Signature</p>
+          </div>
+          <div className="text-center w-64">
+            <div className="border-b-2 border-gray-800 h-8 mb-2"></div>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Parent/Guardian Signature</p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-16 text-center border-t border-gray-200 pt-6">
+          <p className="text-xs font-medium text-gray-400">Generated automatically by the Medresa Management System</p>
+        </div>
+
       </div>
     </div>
   );
