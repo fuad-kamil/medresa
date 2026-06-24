@@ -605,8 +605,11 @@ export default function Exams() {
                     <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                         <th className="p-6 font-semibold text-gray-600 dark:text-gray-300">Student Name</th>
                         {exams.map((exam) => (
-                        <th key={exam._id} className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-32 whitespace-nowrap">
-                            {exam.name}
+                        <th key={exam._id} className="p-4 font-semibold text-gray-600 dark:text-gray-300 text-center min-w-[120px]">
+                            <div className="flex flex-col items-center justify-center gap-0.5">
+                                <span className="whitespace-nowrap">{exam.name}</span>
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal normal-case whitespace-nowrap">(Max: {exam.maxScore || 100})</span>
+                            </div>
                         </th>
                         ))}
                         <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-28">Total</th>

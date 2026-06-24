@@ -142,10 +142,7 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-12 text-center border-t border-gray-200 pt-4">
-          <p className="text-xs font-medium text-gray-400">Generated automatically by the Medresa Management System</p>
-        </div>
+
 
       </div>
     </div>
