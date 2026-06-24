@@ -22,6 +22,8 @@ import {
     updateAdminPassword
 } from '../controllers/adminController.js'
 
+import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
+
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
@@ -39,6 +41,11 @@ router.patch('/students/:id/transfer', protect, adminOnly, transferStudent)
 
 // Attendance
 router.get('/attendance/today', protect, adminOnly, getTodayAttendance)
+
+// Exams — Admin can view/manage per-ustaz exam columns
+router.get('/exams/ustaz/:ustazId', protect, adminOnly, getExamsByUstaz)
+router.put('/exams/:id', protect, adminOnly, updateExam)
+router.delete('/exams/:id', protect, adminOnly, deleteExam)
 
 // Admin Settings
 router.put('/settings/profile', protect, adminOnly, updateAdminProfile)
