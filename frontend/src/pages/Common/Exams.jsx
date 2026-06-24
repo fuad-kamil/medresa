@@ -562,6 +562,17 @@ export default function Exams() {
                             required
                             />
                         </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Max Score</label>
+                            <input
+                            type="number"
+                            min="1"
+                            value={newExamMaxScore}
+                            onChange={(e) => setNewExamMaxScore(e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-900 transition"
+                            required
+                            />
+                        </div>
                         </div>
                     </div>
                     <button
@@ -696,6 +707,7 @@ export default function Exams() {
         rank={reportCardData ? getStudentRank(reportCardData._id) : null}
         totalStudents={students.length}
         ustazName={isAdmin ? (ustazs.find(u => u._id === selectedUstaz)?.name) : user?.name}
+        kitabName={isAdmin ? (ustazs.find(u => u._id === selectedUstaz)?.kitabName) : user?.kitabName}
       />
     </div>
   );
