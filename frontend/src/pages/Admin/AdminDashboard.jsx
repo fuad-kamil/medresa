@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle } from "lucide-react";
+import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle, RotateCcw } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
 export default function AdminDashboard() {
@@ -13,6 +13,7 @@ export default function AdminDashboard() {
 
   // History Modal State
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [selectedStudentName, setSelectedStudentName] = useState("");
   const [selectedHistoryStudentId, setSelectedHistoryStudentId] = useState(null);
@@ -147,11 +148,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const resetAttendanceHistory = async () => {
-    if (!window.confirm(`Are you sure you want to reset all attendance records for ${selectedStudentName}? This action cannot be undone and is usually done at the start of a new semester.`)) {
-      return;
-    }
-
+  const confirmResetAttendance = async () => {
     try {
       await axiosInstance.delete(`/admin/students/${selectedHistoryStudentId}/attendance`);
       setHistoryData([]);
@@ -164,7 +161,7 @@ export default function AdminDashboard() {
         return s;
       }));
 
-      alert("Attendance history has been reset successfully.");
+      setIsResetModalOpen(false);
     } catch (error) {
       console.error("Failed to reset attendance history:", error);
       alert("Failed to reset attendance history.");
@@ -368,10 +365,10 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">Attendance History: {selectedStudentName}</h2>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={resetAttendanceHistory}
-                  className="px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-xl text-sm font-bold transition-colors"
+                  onClick={() => setIsResetModalOpen(true)}
+                  className="px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50 rounded-xl text-sm font-bold transition-colors flex items-center gap-2"
                 >
-                  Reset History
+                  <RotateCcw size={16} /> Reset History
                 </button>
                 <button onClick={() => setIsHistoryModalOpen(false)} className="text-gray-500 hover:text-gray-800 dark:hover:text-white transition">
                   <X size={24} />
@@ -532,6 +529,51 @@ export default function AdminDashboard() {
                   className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
                 >
                   Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Attendance Modal */}
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all">
+            
+            {/* Header Icon Area */}
+            <div className="bg-amber-50 dark:bg-amber-900/20 pt-8 pb-6 flex justify-center border-b border-amber-100 dark:border-amber-900/30">
+              <div className="w-20 h-20 bg-amber-100 dark:bg-amber-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <RotateCcw size={40} className="text-amber-500 dark:text-amber-400" />
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                Reset Attendance?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Are you sure you want to reset all attendance records for{" "}
+                <strong className="text-gray-800 dark:text-gray-200">{selectedStudentName}</strong>?
+              </p>
+              <p className="text-sm text-amber-600 dark:text-amber-500 font-medium mb-8">
+                This action cannot be undone and is usually done at the start of a new semester.
+              </p>
+              
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsResetModalOpen(false)}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmResetAttendance}
+                  className="flex-1 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-lg shadow-amber-500/30 transition-all hover:-translate-y-0.5"
+                >
+                  Yes, Reset
                 </button>
               </div>
             </div>
