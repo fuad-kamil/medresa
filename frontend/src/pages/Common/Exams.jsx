@@ -15,9 +15,14 @@ import {
   Edit3,
   Loader2,
   User,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import ReportCardTemplate from "../../components/ReportCard/ReportCardTemplate";
+import { useRef } from "react";
 
 export default function Exams() {
   const { user } = useAuthStore();
@@ -37,6 +42,9 @@ export default function Exams() {
   const [tableLoading, setTableLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [savedSuccessId, setSavedSuccessId] = useState(null);
+  const [generatingPdfId, setGeneratingPdfId] = useState(null);
+  const reportCardRef = useRef(null);
+  const [reportCardData, setReportCardData] = useState(null);
   
   // Local score states for inline editing (mapped as: scores[studentId][examId])
   const [scores, setScores] = useState({});
@@ -255,6 +263,62 @@ export default function Exams() {
   const filteredStudents = students.filter((student) => {
     return student.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+  // Calculate ranks based on total scores of all students in the group
+  const calculateTotalScore = (studentId) => {
+    const studentScores = scores[studentId] || {};
+    let totalScore = 0;
+    exams.forEach(exam => {
+      totalScore += Number(studentScores[exam._id]) || 0;
+    });
+    return totalScore;
+  };
+
+  const studentsWithRanks = [...students].map(s => ({
+    ...s,
+    computedTotal: calculateTotalScore(s._id)
+  })).sort((a, b) => b.computedTotal - a.computedTotal);
+  
+  const getStudentRank = (studentId) => {
+    const index = studentsWithRanks.findIndex(s => s._id === studentId);
+    return index >= 0 ? index + 1 : null;
+  };
+
+  const generatePDF = async (student) => {
+    setGeneratingPdfId(student._id);
+    setReportCardData(student);
+    
+    // Wait for state to update and component to render
+    setTimeout(async () => {
+      try {
+        if (!reportCardRef.current) return;
+        
+        const canvas = await html2canvas(reportCardRef.current, {
+          scale: 2, // Higher quality
+          useCORS: true, // Allow external images if any
+          logging: false
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`ReportCard_${student.fullName.replace(/\s+/g, '_')}.pdf`);
+      } catch (error) {
+        console.error("Error generating PDF", error);
+        alert("Failed to generate PDF. Please try again.");
+      } finally {
+        setGeneratingPdfId(null);
+      }
+    }, 100); // 100ms delay to ensure the DOM is updated
+  };
 
   const downloadExcel = () => {
     if (filteredStudents.length === 0) {
@@ -543,7 +607,8 @@ export default function Exams() {
                         </th>
                         ))}
                         <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-28">Total</th>
-                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-28">Action</th>
+                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-28">Rank</th>
+                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-40">Action</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y dark:divide-gray-800">
@@ -595,22 +660,38 @@ export default function Exams() {
                                 </span>
                             </td>
 
+                            {/* Rank */}
+                            <td className="p-6 text-center font-bold text-gray-700 dark:text-gray-300">
+                                #{getStudentRank(student._id)}
+                            </td>
+
                             {/* Action Button */}
                             <td className="p-6 text-center">
-                                {savedSuccessId === student._id ? (
-                                <span className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm shadow-sm animate-pulse">
-                                    <CheckCircle size={16} /> Saved
-                                </span>
-                                ) : (
-                                <button
-                                    onClick={() => handleSaveScores(student._id)}
-                                    disabled={savingId === student._id}
-                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl font-semibold text-sm transition shadow-sm hover:shadow-md cursor-pointer"
-                                >
-                                    <Save size={16} />
-                                    {savingId === student._id ? "Saving..." : "Save"}
-                                </button>
-                                )}
+                                <div className="flex gap-2 justify-center">
+                                    <button
+                                        onClick={() => generatePDF(student)}
+                                        disabled={generatingPdfId === student._id}
+                                        title="Download Report Card PDF"
+                                        className="inline-flex items-center justify-center p-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 text-emerald-600 dark:text-emerald-400 rounded-xl transition shadow-sm cursor-pointer"
+                                    >
+                                        {generatingPdfId === student._id ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
+                                    </button>
+                                    
+                                    {savedSuccessId === student._id ? (
+                                    <span className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm shadow-sm animate-pulse w-[88px]">
+                                        <CheckCircle size={16} /> Saved
+                                    </span>
+                                    ) : (
+                                    <button
+                                        onClick={() => handleSaveScores(student._id)}
+                                        disabled={savingId === student._id}
+                                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl font-semibold text-sm transition shadow-sm hover:shadow-md cursor-pointer w-[88px]"
+                                    >
+                                        <Save size={16} />
+                                        {savingId === student._id ? "..." : "Save"}
+                                    </button>
+                                    )}
+                                </div>
                             </td>
                             </tr>
                         );
@@ -622,6 +703,17 @@ export default function Exams() {
             </div>
           </>
       )}
+
+      {/* Hidden Report Card Template */}
+      <ReportCardTemplate 
+        ref={reportCardRef}
+        student={reportCardData}
+        exams={exams}
+        scores={scores}
+        rank={reportCardData ? getStudentRank(reportCardData._id) : null}
+        totalStudents={students.length}
+        ustazName={isAdmin ? (ustazs.find(u => u._id === selectedUstaz)?.name) : user?.name}
+      />
     </div>
   );
 }

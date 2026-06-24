@@ -9,9 +9,36 @@ export const getMyStudents = async (req, res) => {
     try {
         const students = await Student.find({
             assignedUstaz: req.user.id
-        })
+        }).lean()
 
-        res.json(students)
+        const stats = await Attendance.aggregate([
+            {
+                $group: {
+                    _id: '$student',
+                    presentCount: { $sum: { $cond: [{ $eq: ['$status', 'present'] }, 1, 0] } },
+                    absentCount: { $sum: { $cond: [{ $eq: ['$status', 'absent'] }, 1, 0] } },
+                    excusedCount: { $sum: { $cond: [{ $eq: ['$status', 'excused'] }, 1, 0] } }
+                }
+            }
+        ]);
+
+        const statsMap = {};
+        stats.forEach((item) => {
+            if (item._id) {
+                statsMap[item._id.toString()] = {
+                    presentCount: item.presentCount || 0,
+                    absentCount: item.absentCount || 0,
+                    excusedCount: item.excusedCount || 0
+                };
+            }
+        });
+
+        const studentsWithStats = students.map((student) => {
+            const s = statsMap[student._id.toString()] || { presentCount: 0, absentCount: 0, excusedCount: 0 };
+            return { ...student, ...s };
+        });
+
+        res.json(studentsWithStats)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
