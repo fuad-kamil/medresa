@@ -138,6 +138,17 @@ export const getStudentAttendanceHistory = async (req, res) => {
     }
 }
 
+// Reset Student Attendance History
+export const resetStudentAttendance = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Attendance.deleteMany({ student: id });
+        res.json({ message: 'Attendance history reset successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 // Delete Student
 export const deleteStudent = async (req, res) => {
     try {

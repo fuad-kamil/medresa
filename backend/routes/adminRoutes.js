@@ -14,6 +14,7 @@ import {
     getAllStudentsWithStats,
     getTodayAttendance,
     getStudentAttendanceHistory,
+    resetStudentAttendance,
     deleteStudent,
     transferStudent,
     updateStudent,
@@ -34,6 +35,7 @@ router.post('/students', protect, adminOnly, registerStudent)
 router.get('/students', protect, adminOnly, getAllStudents)
 router.get('/students/with-stats', protect, adminOnly, getAllStudentsWithStats)
 router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceHistory)
+router.delete('/students/:id/attendance', protect, adminOnly, resetStudentAttendance)
 router.put('/students/:id', protect, adminOnly, updateStudent)
 router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)
 router.delete('/students/:id', protect, adminOnly, deleteStudent)

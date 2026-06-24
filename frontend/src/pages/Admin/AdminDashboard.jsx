@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [selectedStudentName, setSelectedStudentName] = useState("");
+  const [selectedHistoryStudentId, setSelectedHistoryStudentId] = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Transfer Modal State
@@ -131,6 +132,7 @@ export default function AdminDashboard() {
 
   const openHistoryModal = async (student) => {
     setSelectedStudentName(student.fullName);
+    setSelectedHistoryStudentId(student._id);
     setIsHistoryModalOpen(true);
     setLoadingHistory(true);
     setHistoryData([]);
@@ -142,6 +144,30 @@ export default function AdminDashboard() {
       console.error("Failed to fetch student history:", error);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const resetAttendanceHistory = async () => {
+    if (!window.confirm(`Are you sure you want to reset all attendance records for ${selectedStudentName}? This action cannot be undone and is usually done at the start of a new semester.`)) {
+      return;
+    }
+
+    try {
+      await axiosInstance.delete(`/admin/students/${selectedHistoryStudentId}/attendance`);
+      setHistoryData([]);
+      
+      // Update the main students list to show 0 for counts
+      setStudents(students.map(s => {
+        if (s._id === selectedHistoryStudentId) {
+          return { ...s, presentCount: 0, absentCount: 0, excusedCount: 0 };
+        }
+        return s;
+      }));
+
+      alert("Attendance history has been reset successfully.");
+    } catch (error) {
+      console.error("Failed to reset attendance history:", error);
+      alert("Failed to reset attendance history.");
     }
   };
 
@@ -340,9 +366,17 @@ export default function AdminDashboard() {
           <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">Attendance History: {selectedStudentName}</h2>
-              <button onClick={() => setIsHistoryModalOpen(false)} className="text-gray-500 hover:text-gray-800 dark:hover:text-white transition">
-                <X size={24} />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={resetAttendanceHistory}
+                  className="px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-xl text-sm font-bold transition-colors"
+                >
+                  Reset History
+                </button>
+                <button onClick={() => setIsHistoryModalOpen(false)} className="text-gray-500 hover:text-gray-800 dark:hover:text-white transition">
+                  <X size={24} />
+                </button>
+              </div>
             </div>
             
             <div className="p-6 overflow-y-auto">
