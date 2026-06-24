@@ -17,12 +17,15 @@ import {
   User,
   Users,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  FileDown
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useReactToPrint } from "react-to-print";
 import ReportCardTemplate from "../../components/ReportCard/ReportCardTemplate";
 import { useRef } from "react";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
 
 export default function Exams() {
   const { user } = useAuthStore();
@@ -44,6 +47,8 @@ export default function Exams() {
   const [savedSuccessId, setSavedSuccessId] = useState(null);
   const [generatingPdfId, setGeneratingPdfId] = useState(null);
   const reportCardRef = useRef(null);
+  const captureRef = useRef(null);
+  const [downloadingPdfId, setDownloadingPdfId] = useState(null);
   const [reportCardData, setReportCardData] = useState(null);
   
   // Local score states for inline editing (mapped as: scores[studentId][examId])
@@ -305,11 +310,37 @@ export default function Exams() {
   const generatePDF = (student) => {
     setGeneratingPdfId(student._id);
     setReportCardData(student);
-    
-    // Wait for state to update and component to render with the new student data
     setTimeout(() => {
       handlePrint();
     }, 100);
+  };
+
+  const downloadPDF = (student) => {
+    setDownloadingPdfId(student._id);
+    setReportCardData(student);
+    setTimeout(async () => {
+      try {
+        if (!captureRef.current) return;
+        const dataUrl = await toPng(captureRef.current, {
+          quality: 1,
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+        });
+        const img = new Image();
+        img.src = dataUrl;
+        await new Promise(resolve => { img.onload = resolve; });
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdfW = pdf.internal.pageSize.getWidth();
+        const pdfH = (img.height * pdfW) / img.width;
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, pdfH);
+        pdf.save(`ReportCard_${student.fullName.replace(/\s+/g, '_')}.pdf`);
+      } catch (err) {
+        console.error('PDF download error:', err);
+        alert('Failed to download PDF. Please try again.');
+      } finally {
+        setDownloadingPdfId(null);
+      }
+    }, 200);
   };
 
   const downloadExcel = () => {
@@ -678,10 +709,18 @@ export default function Exams() {
                                     <button
                                         onClick={() => generatePDF(student)}
                                         disabled={generatingPdfId === student._id}
-                                        title="Download Report Card PDF"
+                                        title="Print Report Card"
                                         className="inline-flex items-center justify-center p-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 text-emerald-600 dark:text-emerald-400 rounded-xl transition shadow-sm cursor-pointer"
                                     >
                                         {generatingPdfId === student._id ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
+                                    </button>
+                                    <button
+                                        onClick={() => downloadPDF(student)}
+                                        disabled={downloadingPdfId === student._id}
+                                        title="Download Report Card as PDF"
+                                        className="inline-flex items-center justify-center p-2.5 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-800/60 disabled:opacity-50 text-emerald-700 dark:text-emerald-400 rounded-xl transition shadow-sm cursor-pointer"
+                                    >
+                                        {downloadingPdfId === student._id ? <Loader2 size={18} className="animate-spin" /> : <FileDown size={18} />}
                                     </button>
                                     
                                     {savedSuccessId === student._id ? (
@@ -714,6 +753,7 @@ export default function Exams() {
       {/* Hidden Report Card Template */}
       <ReportCardTemplate 
         ref={reportCardRef}
+        captureRef={captureRef}
         student={reportCardData}
         exams={exams}
         scores={scores}

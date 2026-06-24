@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 
 // Using a printable template that relies on the browser's native PDF/Print engine.
 // We can use standard Tailwind classes here safely because the browser natively supports modern CSS (unlike html2canvas).
-const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, ustazName, kitabName, rank, totalStudents }, ref) => {
+const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, ustazName, kitabName, rank, totalStudents, captureRef }, ref) => {
   if (!student) return null;
 
   // Calculate Attendance Stats
@@ -23,9 +23,11 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
   });
 
   return (
-    <div style={{ display: "none" }}>
-      {/* The ref is attached to this inner container which gets cloned into the print iframe */}
-      <div ref={ref} className="p-10 bg-white text-gray-800" style={{ width: '100%', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ position: 'fixed', top: '-10000px', left: '-10000px', zIndex: -1 }}>
+      {/* ref for react-to-print */}
+      <div ref={ref} className="p-10 bg-white text-gray-800" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'system-ui, sans-serif' }}>
+        {/* inner div for html-to-image capture */}
+        <div ref={captureRef}>
         
         {/* Print-specific styles to force A4 sizing and hide URLs */}
         <style type="text/css" media="print">
@@ -144,7 +146,8 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
 
 
 
-      </div>
+        </div> {/* captureRef */}
+      </div> {/* printRef */}
     </div>
   );
 });
