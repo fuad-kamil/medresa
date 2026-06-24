@@ -328,7 +328,8 @@ export default function Exams() {
 
       exams.forEach((exam) => {
         const score = Number(studentScores[exam._id]) || 0;
-        row[exam.name] = score;
+        const columnHeader = `${exam.name} (Max: ${exam.maxScore || 100})`;
+        row[columnHeader] = score;
         totalScore += score;
       });
 
