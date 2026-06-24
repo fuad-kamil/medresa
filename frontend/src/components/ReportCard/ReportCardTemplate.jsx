@@ -105,12 +105,12 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
                 })
               )}
               <tr className="bg-gray-100 border-t-2 border-emerald-600">
-                <td className="p-3 font-bold text-gray-700 uppercase tracking-wide text-xs">Total</td>
+                <td className="p-3 font-bold text-gray-700 uppercase tracking-wide text-xs">ድምር</td>
                 <td className="p-3 text-center font-bold text-gray-600">{maxPossibleScore}</td>
                 <td className="p-3 text-center font-bold text-emerald-700 text-base">{totalScore}</td>
               </tr>
               <tr className="bg-emerald-50 border-t border-emerald-200">
-                <td colSpan="2" className="p-3 font-bold text-emerald-800 uppercase tracking-wide text-xs">Class Rank</td>
+                <td colSpan="2" className="p-3 font-bold text-emerald-800 uppercase tracking-wide text-xs">ደረጃ</td>
                 <td className="p-3 text-center font-bold text-emerald-700">
                   {rank ? `${rank} / ${totalStudents}` : "N/A"}
                 </td>
