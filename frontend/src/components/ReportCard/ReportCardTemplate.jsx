@@ -23,7 +23,7 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
   const scorePercentage = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
 
   return (
-    <div className="hidden">
+    <div>
       {/* 
         This wrapper is positioned completely off-screen but retains its dimensions.
         html2canvas will capture the inner div (#report-card-content).
