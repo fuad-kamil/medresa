@@ -321,18 +321,37 @@ export default function Exams() {
     setTimeout(async () => {
       try {
         if (!captureRef.current) return;
+        // A4 at 96dpi = 794 x 1123px. We capture at pixelRatio:2 for sharpness.
         const dataUrl = await toPng(captureRef.current, {
           quality: 1,
           pixelRatio: 2,
           backgroundColor: '#ffffff',
+          width: 794,
+          height: captureRef.current.scrollHeight,
         });
         const img = new Image();
         img.src = dataUrl;
         await new Promise(resolve => { img.onload = resolve; });
+
+        // A4 in mm
+        const A4_W = 210;
+        const A4_H = 297;
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pdfW = pdf.internal.pageSize.getWidth();
-        const pdfH = (img.height * pdfW) / img.width;
-        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, pdfH);
+        
+        // Scale image to fit full A4 width
+        const imgHeightInMm = (img.height / img.width) * A4_W;
+
+        if (imgHeightInMm <= A4_H) {
+          // Fits on one page — centre vertically
+          const yOffset = (A4_H - imgHeightInMm) / 2;
+          pdf.addImage(dataUrl, 'PNG', 0, yOffset, A4_W, imgHeightInMm);
+        } else {
+          // Taller than one page — scale down to fit height
+          const scaledW = (A4_H / imgHeightInMm) * A4_W;
+          const xOffset = (A4_W - scaledW) / 2;
+          pdf.addImage(dataUrl, 'PNG', xOffset, 0, scaledW, A4_H);
+        }
+
         pdf.save(`ReportCard_${student.fullName.replace(/\s+/g, '_')}.pdf`);
       } catch (err) {
         console.error('PDF download error:', err);
@@ -340,7 +359,7 @@ export default function Exams() {
       } finally {
         setDownloadingPdfId(null);
       }
-    }, 200);
+    }, 300);
   };
 
   const downloadExcel = () => {

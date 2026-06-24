@@ -24,10 +24,18 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
 
   return (
     <div style={{ position: 'fixed', top: '-10000px', left: '-10000px', zIndex: -1 }}>
-      {/* ref for react-to-print */}
-      <div ref={ref} className="p-10 bg-white text-gray-800" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'system-ui, sans-serif' }}>
-        {/* inner div for html-to-image capture */}
-        <div ref={captureRef}>
+      {/* captureRef — used by html-to-image for PDF download, sized to A4 at 96dpi */}
+      <div ref={captureRef} style={{
+        width: '794px',
+        minHeight: '1123px',
+        padding: '60px',
+        backgroundColor: '#ffffff',
+        color: '#1f2937',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        boxSizing: 'border-box'
+      }}>
+      {/* printRef — used by react-to-print */}
+      <div ref={ref} style={{ width: '100%', fontFamily: 'system-ui, sans-serif' }}>
         
         {/* Print-specific styles to force A4 sizing and hide URLs */}
         <style type="text/css" media="print">
@@ -146,8 +154,8 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
 
 
 
-        </div> {/* captureRef */}
       </div> {/* printRef */}
+      </div> {/* captureRef */}
     </div>
   );
 });
