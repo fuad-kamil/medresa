@@ -16,7 +16,8 @@ import {
   Loader2,
   User,
   Users,
-  FileText
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useReactToPrint } from "react-to-print";
@@ -55,6 +56,9 @@ export default function Exams() {
   const [editingExamId, setEditingExamId] = useState(null);
   const [editingExamName, setEditingExamName] = useState("");
   const [configActionLoading, setConfigActionLoading] = useState(false);
+  
+  // Custom Delete Modal State
+  const [deleteModalData, setDeleteModalData] = useState(null);
 
   useEffect(() => {
     if (isAdmin) {
@@ -230,27 +234,32 @@ export default function Exams() {
     }
   };
 
-  const handleDeleteExam = async (examId, name) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete the exam column "${name}"?\n\nWARNING: All student scores for this exam will be permanently deleted.`
-    );
-    if (!confirmDelete) return;
-
+  const confirmDeleteExam = async () => {
+    if (!deleteModalData) return;
+    
     setConfigActionLoading(true);
+    const { id } = deleteModalData;
+    
     try {
-      await axiosInstance.delete(`/ustaz/exams/${examId}`);
+      const endpoint = isAdmin 
+        ? `/admin/exams/${id}` 
+        : `/ustaz/exams/${id}`;
+        
+      await axiosInstance.delete(endpoint);
       
-      setExams(prev => prev.filter(e => e._id !== examId));
+      setExams(prev => prev.filter(e => e._id !== id));
       
       setScores(prev => {
         const copy = { ...prev };
         Object.keys(copy).forEach(studentId => {
           if (copy[studentId]) {
-            delete copy[studentId][examId];
+            delete copy[studentId][id];
           }
         });
         return copy;
       });
+      
+      setDeleteModalData(null);
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || "Failed to delete exam column");
@@ -532,7 +541,7 @@ export default function Exams() {
                                     <Edit3 size={15} />
                                 </button>
                                 <button
-                                    onClick={() => handleDeleteExam(exam._id, exam.name)}
+                                    onClick={() => setDeleteModalData({ id: exam._id, name: exam.name })}
                                     className="p-1.5 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/20 text-gray-500 hover:text-red-600 dark:text-gray-400 rounded-lg transition cursor-pointer border border-gray-100 dark:border-gray-700"
                                     title="Delete"
                                 >
@@ -709,6 +718,49 @@ export default function Exams() {
         ustazName={isAdmin ? (ustazs.find(u => u._id === selectedUstaz)?.name) : user?.name}
         kitabName={isAdmin ? (ustazs.find(u => u._id === selectedUstaz)?.kitabName) : user?.kitabName}
       />
+      {/* Delete Confirmation Modal */}
+      {deleteModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle size={40} className="text-red-500" />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Delete Exam Column?</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to delete the <span className="font-bold text-gray-700 dark:text-gray-300">"{deleteModalData.name}"</span> column?
+              </p>
+              
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 mb-8 text-left flex gap-3">
+                <AlertTriangle size={24} className="text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800 dark:text-amber-400 font-medium leading-relaxed">
+                  <span className="font-bold block mb-1">Warning:</span>
+                  All student scores associated with this exam will be permanently deleted and cannot be recovered.
+                </p>
+              </div>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setDeleteModalData(null)}
+                  disabled={configActionLoading}
+                  className="flex-1 py-3.5 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteExam}
+                  disabled={configActionLoading}
+                  className="flex-1 py-3.5 px-4 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold rounded-xl transition flex justify-center items-center gap-2 cursor-pointer shadow-md shadow-red-600/20"
+                >
+                  {configActionLoading ? <Loader2 size={20} className="animate-spin" /> : "Yes, Delete It"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
