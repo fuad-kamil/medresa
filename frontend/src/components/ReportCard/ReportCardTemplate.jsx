@@ -71,39 +71,39 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
           <h2 className="text-2xl font-bold text-emerald-800 mb-4 flex items-center gap-2">
             Academic Performance
           </h2>
-          <table className="w-full text-left border-collapse rounded-xl overflow-hidden shadow-sm border border-gray-200">
+          <table className="w-full text-center border-collapse rounded-xl overflow-hidden shadow-sm border border-gray-200 text-sm">
             <thead>
               <tr className="bg-emerald-600 text-white">
-                <th className="p-4 font-bold uppercase tracking-wider text-sm border-b border-emerald-700">Exam Name</th>
-                <th className="p-4 font-bold uppercase tracking-wider text-sm border-b border-emerald-700 text-center">Max Score</th>
-                <th className="p-4 font-bold uppercase tracking-wider text-sm border-b border-emerald-700 text-center">Score Achieved</th>
+                <th className="p-3 font-bold uppercase tracking-wider text-xs border-b border-emerald-700 text-left">Student Name</th>
+                {exams.map(exam => (
+                  <th key={exam._id} className="p-3 font-bold uppercase tracking-wider text-xs border-b border-emerald-700">
+                    {exam.name}<br/>
+                    <span className="text-[10px] font-normal text-emerald-200">(Max: {exam.maxScore || 100})</span>
+                  </th>
+                ))}
+                <th className="p-3 font-bold uppercase tracking-wider text-xs border-b border-emerald-700">Total</th>
+                <th className="p-3 font-bold uppercase tracking-wider text-xs border-b border-emerald-700">Rank</th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {exams.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="p-6 text-center text-gray-500 border-b border-gray-200">No exams recorded.</td>
-                </tr>
-              ) : (
-                exams.map((exam, index) => {
-                  const score = Number(studentScores[exam._id]) || 0;
-                  return (
-                    <tr key={exam._id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                      <td className="p-4 font-semibold text-gray-800 border-b border-gray-200">{exam.name}</td>
-                      <td className="p-4 text-center font-medium text-gray-600 border-b border-gray-200">{exam.maxScore || 100}</td>
-                      <td className="p-4 text-center font-bold text-emerald-600 border-b border-gray-200">{score}</td>
-                    </tr>
-                  );
-                })
-              )}
-              <tr className="bg-gray-100 border-t-2 border-emerald-600">
-                <td className="p-3 font-bold text-gray-800 text-right uppercase tracking-wider">Total</td>
-                <td className="p-3 text-center font-bold text-gray-800">{maxPossibleScore}</td>
-                <td className="p-3 text-center font-bold text-emerald-600 text-lg">{totalScore}</td>
-              </tr>
-              <tr className="bg-emerald-50 border-t-2 border-emerald-200">
-                <td colSpan="2" className="p-3 font-bold text-emerald-800 text-right uppercase tracking-wider">Class Rank</td>
-                <td className="p-3 text-center font-bold text-emerald-700 text-lg">
+              <tr>
+                <td className="p-3 font-bold text-gray-800 border-b border-gray-200 text-left whitespace-nowrap">{student.fullName}</td>
+                {exams.length === 0 ? (
+                  <td className="p-3 text-gray-500 italic border-b border-gray-200">No exams</td>
+                ) : (
+                  exams.map(exam => {
+                    const score = Number(studentScores[exam._id]) || 0;
+                    return (
+                      <td key={exam._id} className="p-3 font-bold text-emerald-600 border-b border-gray-200">
+                        {score}
+                      </td>
+                    );
+                  })
+                )}
+                <td className="p-3 font-bold text-gray-800 border-b border-gray-200 bg-gray-50">
+                  {totalScore} <span className="text-xs text-gray-400 font-normal">/ {maxPossibleScore}</span>
+                </td>
+                <td className="p-3 font-bold text-emerald-700 border-b border-gray-200 bg-emerald-50 whitespace-nowrap">
                   {rank ? `${rank} out of ${totalStudents}` : "N/A"}
                 </td>
               </tr>
