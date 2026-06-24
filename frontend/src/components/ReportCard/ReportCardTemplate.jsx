@@ -124,15 +124,15 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
           <h2 className="text-xl font-bold text-emerald-800 mb-3">Attendance Record</h2>
           <div className="flex gap-3">
             <div className="flex-1 bg-white p-4 rounded-xl border border-emerald-100 text-center">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Present</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">የመጣበት</p>
               <p className="text-2xl font-black text-emerald-600">{present}</p>
             </div>
             <div className="flex-1 bg-white p-4 rounded-xl border border-red-100 text-center">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Absent</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">የቀረበት</p>
               <p className="text-2xl font-black text-red-600">{absent}</p>
             </div>
             <div className="flex-1 bg-white p-4 rounded-xl border border-amber-100 text-center">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Excused</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ፍቃድ</p>
               <p className="text-2xl font-black text-amber-500">{excused}</p>
             </div>
             <div className="flex-1 bg-emerald-600 p-4 rounded-xl text-center shadow-sm">
