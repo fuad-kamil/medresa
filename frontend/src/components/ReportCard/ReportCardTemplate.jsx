@@ -23,7 +23,7 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
   });
 
   return (
-    <div style={{ position: 'fixed', top: '-10000px', left: '-10000px', zIndex: -1 }}>
+    <div style={{ position: 'absolute', top: 0, left: '-9999px', width: 0, height: 0, overflow: 'hidden', zIndex: -1 }}>
       {/* captureRef — used by html-to-image for PDF download, sized to A4 at 96dpi */}
       <div ref={captureRef} style={{
         width: '794px',

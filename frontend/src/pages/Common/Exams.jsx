@@ -648,8 +648,98 @@ export default function Exams() {
                 </div>
             )}
 
-            {/* Main Table Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-850">
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-4">
+              {tableLoading ? (
+                  <div className="flex justify-center py-20 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm">
+                      <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full font-medium"></div>
+                  </div>
+              ) : filteredStudents.length === 0 ? (
+                  <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-850 text-gray-500 font-medium shadow-sm">
+                      No students found.
+                  </div>
+              ) : (
+                  filteredStudents.map((student) => {
+                      const studentScores = scores[student._id] || {};
+                      let totalScore = 0;
+                      exams.forEach(exam => {
+                          totalScore += Number(studentScores[exam._id]) || 0;
+                      });
+                      
+                      return (
+                          <div key={student._id} className="bg-white dark:bg-gray-900 rounded-3xl shadow-md border border-gray-100 dark:border-gray-800 p-5 flex flex-col gap-4 transition-all duration-200 hover:shadow-lg">
+                              <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-3">
+                                  <h3 className="font-bold text-lg text-gray-800 dark:text-white flex items-center gap-2">
+                                      <User size={18} className="text-emerald-500" />
+                                      {student.fullName}
+                                  </h3>
+                                  <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+                                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">Rank</span>
+                                      <span className="text-emerald-700 dark:text-emerald-400 font-black text-sm">#{getStudentRank(student._id)}</span>
+                                  </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                  {exams.map((exam) => (
+                                      <div key={exam._id} className="bg-gray-50 dark:bg-gray-950/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
+                                          <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide truncate" title={exam.name}>
+                                              {exam.name} <span className="font-normal normal-case opacity-70 block mt-0.5">Max: {exam.maxScore || 100}</span>
+                                          </label>
+                                          <input
+                                              type="number"
+                                              min="0"
+                                              max="100"
+                                              value={studentScores[exam._id] ?? 0}
+                                              onChange={(e) => handleScoreChange(student._id, exam._id, e.target.value)}
+                                              className="w-full px-3 py-2.5 text-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold text-gray-800 dark:text-white shadow-sm"
+                                          />
+                                      </div>
+                                  ))}
+                              </div>
+                              
+                              <div className="flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                                  <span className="font-bold text-emerald-800 dark:text-emerald-400">Total Score</span>
+                                  <span className="font-black text-2xl text-emerald-600 dark:text-emerald-400">{totalScore}</span>
+                              </div>
+                              
+                              <div className="flex gap-2 justify-end mt-1 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                  <button
+                                      onClick={() => generatePDF(student)}
+                                      disabled={generatingPdfId === student._id}
+                                      className="p-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-emerald-600 dark:text-emerald-400 rounded-xl transition cursor-pointer shadow-sm"
+                                  >
+                                      {generatingPdfId === student._id ? <Loader2 size={20} className="animate-spin" /> : <FileText size={20} />}
+                                  </button>
+                                  <button
+                                      onClick={() => downloadPDF(student)}
+                                      disabled={downloadingPdfId === student._id}
+                                      className="p-3.5 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-800/60 text-emerald-700 dark:text-emerald-400 rounded-xl transition cursor-pointer shadow-sm"
+                                  >
+                                      {downloadingPdfId === student._id ? <Loader2 size={20} className="animate-spin" /> : <FileDown size={20} />}
+                                  </button>
+                                  {savedSuccessId === student._id ? (
+                                      <span className="flex items-center justify-center gap-1.5 flex-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm shadow-sm animate-pulse">
+                                          <CheckCircle size={18} /> Saved
+                                      </span>
+                                  ) : (
+                                      <button
+                                          onClick={() => handleSaveScores(student._id)}
+                                          disabled={savingId === student._id}
+                                          className="flex items-center justify-center gap-2 flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-xl font-bold text-sm transition shadow-md shadow-emerald-600/20 cursor-pointer"
+                                      >
+                                          {savingId === student._id ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                          {savingId === student._id ? "Saving..." : "Save Scores"}
+                                      </button>
+                                  )}
+                              </div>
+                          </div>
+                      );
+                  })
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-850">
                 <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
