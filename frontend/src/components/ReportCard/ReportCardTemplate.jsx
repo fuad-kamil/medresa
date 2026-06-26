@@ -51,11 +51,11 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
             <img src="/medresa_icon.jpg" alt="Medresa Logo" className="w-20 h-20 object-contain rounded-full border-2 border-emerald-100" onError={(e) => { e.target.style.display = 'none'; }} />
             <div>
               <h1 className="text-3xl font-extrabold text-emerald-800 uppercase tracking-wider">{medresaName || "Ali Medresa"}</h1>
-              <p className="text-lg text-gray-500 font-medium tracking-wide mt-1">Student Report Card</p>
+              <p className="text-lg text-gray-500 font-medium tracking-wide mt-1">የተማሪ ዉጤት ካርድ</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Date Issued</p>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">የተሰጠበት ቀን</p>
             <p className="text-lg font-semibold text-gray-800">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
         </div>
@@ -63,22 +63,22 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
         {/* Student Info Grid */}
         <div className="grid grid-cols-3 gap-4 mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-200">
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Student Name</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">የተማሪ ስም</p>
             <p className="text-xl font-bold text-gray-800">{student.fullName}</p>
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ustaz</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ከኡስታዝ</p>
             <p className="text-xl font-bold text-gray-800">{ustazName || student.assignedUstaz?.name || "N/A"}</p>
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Kitab</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">የኪታብ ስም</p>
             <p className="text-lg font-medium text-gray-700 capitalize">{kitabName || student.stream || "Kitab"}</p>
           </div>
         </div>
 
         {/* Academic Performance */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-emerald-800 mb-3">Academic Performance</h2>
+          <h2 className="text-xl font-bold text-emerald-800 mb-3">የትምህርት ውጤት</h2>
           <table className="w-full text-left border-collapse border border-gray-200 text-sm">
             <thead>
               <tr className="bg-emerald-600 text-white">
@@ -121,7 +121,7 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
 
         {/* Attendance Record */}
         <div className="mb-10">
-          <h2 className="text-xl font-bold text-emerald-800 mb-3">Attendance Record</h2>
+          <h2 className="text-xl font-bold text-emerald-800 mb-3">የአቴንዳንስ ዝርዝር</h2>
           <div className="flex gap-3">
             <div className="flex-1 bg-white p-4 rounded-xl border border-emerald-100 text-center">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">የመጣበት</p>
@@ -146,7 +146,7 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
         <div className="mt-16 flex justify-end px-10">
           <div className="text-center w-64">
             <div className="border-b-2 border-gray-800 h-8 mb-2"></div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Parent/Guardian Signature</p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">የኡስታዝ ፊርማ</p>
           </div>
         </div>
 
