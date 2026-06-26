@@ -7,7 +7,6 @@ export default function UstazDashboard() {
   const { user } = useAuthStore();
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
-  const [weeklyStats, setWeeklyStats] = useState({ present: 0, absent: 0, excused: 0 });
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [takenTodayMap, setTakenTodayMap] = useState({});
@@ -60,15 +59,6 @@ export default function UstazDashboard() {
       
       const records = weeklyRes.data;
       setAllRecords(records);
-
-      // Calculate weekly stats
-      const stats = { present: 0, absent: 0, excused: 0 };
-      records.forEach(r => {
-        if (r.status === "present") stats.present++;
-        if (r.status === "absent") stats.absent++;
-        if (r.status === "excused") stats.excused++;
-      });
-      setWeeklyStats(stats);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     } finally {
@@ -181,9 +171,9 @@ export default function UstazDashboard() {
         </div>
       )}
 
-      {/* Weekly Stats */}
+      {/* Daily Stats */}
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-        This Week's Attendance Status
+        Attendance Overview for Selected Date
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* Total Students Card */}
@@ -203,7 +193,7 @@ export default function UstazDashboard() {
           </div>
           <div>
             <p className="text-gray-500 dark:text-gray-400 font-medium">Present</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{weeklyStats.present}</p>
+            <p className="text-3xl font-bold text-gray-800 dark:text-white">{Object.values(attendance).filter(v => v === "present").length}</p>
           </div>
         </div>
 
@@ -213,7 +203,7 @@ export default function UstazDashboard() {
           </div>
           <div>
             <p className="text-gray-500 dark:text-gray-400 font-medium">Absent</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{weeklyStats.absent}</p>
+            <p className="text-3xl font-bold text-gray-800 dark:text-white">{Object.values(attendance).filter(v => v === "absent").length}</p>
           </div>
         </div>
 
@@ -223,7 +213,7 @@ export default function UstazDashboard() {
           </div>
           <div>
             <p className="text-gray-500 dark:text-gray-400 font-medium">Excused</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{weeklyStats.excused}</p>
+            <p className="text-3xl font-bold text-gray-800 dark:text-white">{Object.values(attendance).filter(v => v === "excused").length}</p>
           </div>
         </div>
       </div>
