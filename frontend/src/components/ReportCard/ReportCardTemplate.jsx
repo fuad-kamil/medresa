@@ -31,17 +31,17 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
         padding: '60px',
         backgroundColor: '#ffffff',
         color: '#1f2937',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: '"Nyala", "Kefa", "Noto Sans Ethiopic", system-ui, -apple-system, sans-serif',
         boxSizing: 'border-box'
       }}>
       {/* printRef — used by react-to-print */}
-      <div ref={ref} style={{ width: '100%', fontFamily: 'system-ui, sans-serif' }}>
+      <div ref={ref} style={{ width: '100%', fontFamily: '"Nyala", "Kefa", "Noto Sans Ethiopic", system-ui, sans-serif' }}>
         
         {/* Print-specific styles to force A4 sizing and hide URLs */}
         <style type="text/css" media="print">
           {`
             @page { size: A4 portrait; margin: 15mm; }
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: "Nyala", "Kefa", "Noto Sans Ethiopic", system-ui, sans-serif !important; }
           `}
         </style>
 
