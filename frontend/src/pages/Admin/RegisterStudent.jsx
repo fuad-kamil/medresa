@@ -7,7 +7,7 @@ export default function RegisterStudent() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
-    stream: "quran",
+    stream: "",
     surah: "",
     fatherPhone: "",
     motherPhone: "",
@@ -49,7 +49,7 @@ export default function RegisterStudent() {
     if (!studentId) {
       setFormData({
         fullName: "",
-        stream: "quran",
+        stream: "",
         surah: "",
         fatherPhone: "",
         motherPhone: "",
@@ -63,7 +63,7 @@ export default function RegisterStudent() {
     if (student) {
       setFormData({
         fullName: student.fullName || "",
-        stream: student.stream || "quran",
+        stream: student.stream || "",
         surah: student.surah || "",
         fatherPhone: student.fatherPhone || "",
         motherPhone: student.motherPhone || "",
@@ -80,7 +80,7 @@ export default function RegisterStudent() {
     setSearchTerm("");
     setFormData({
       fullName: "",
-      stream: "quran",
+      stream: "",
       surah: "",
       fatherPhone: "",
       motherPhone: "",
@@ -109,7 +109,7 @@ export default function RegisterStudent() {
         fetchAllStudents(); // Refresh list so new student appears in edit mode
         setFormData({
           fullName: "",
-          stream: "quran",
+          stream: "",
           surah: "",
           fatherPhone: "",
           motherPhone: "",
@@ -221,16 +221,19 @@ export default function RegisterStudent() {
               <select
                 name="stream"
                 value={formData.stream}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const newStream = e.target.value;
                   setFormData({
                     ...formData,
-                    stream: e.target.value,
-                    surah: e.target.value === "kitab" ? "" : formData.surah
-                  })
-                }
+                    stream: newStream,
+                    surah: newStream === "kitab" ? "" : formData.surah,
+                    assignedUstaz: ""
+                  });
+                }}
                 className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
                 required
               >
+                <option value="">-- Select Stream --</option>
                 <option value="quran">Quran Stream</option>
                 <option value="kitab">Kitab Stream</option>
               </select>
@@ -245,14 +248,23 @@ export default function RegisterStudent() {
               <select
                 name="assignedUstaz"
                 value={formData.assignedUstaz}
-                onChange={(e) =>
-                  setFormData({ ...formData, assignedUstaz: e.target.value })
-                }
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const selectedUstazObj = ustazs.find(u => u._id === selectedId);
+                  setFormData({ 
+                    ...formData, 
+                    assignedUstaz: selectedId,
+                    stream: selectedUstazObj ? selectedUstazObj.stream : formData.stream,
+                    surah: (selectedUstazObj && selectedUstazObj.stream === "kitab") ? "" : formData.surah
+                  });
+                }}
                 className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all cursor-pointer ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
                 required
               >
                 <option value="">Select Ustaz</option>
-                {ustazs.map((u) => (
+                {ustazs
+                  .filter(u => formData.stream === "" || u.stream === formData.stream)
+                  .map((u) => (
                   <option key={u._id} value={u._id}>
                     {u.name} ({u.stream === 'kitab' ? 'Kitab' : 'Quran'})
                   </option>
