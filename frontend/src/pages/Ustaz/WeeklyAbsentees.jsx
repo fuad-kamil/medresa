@@ -45,7 +45,7 @@ export default function WeeklyAbsentees() {
     fetchAbsentees();
   }, []);
 
-  const filteredAbsentees = Object.entries(absentees).filter(([name]) => 
+  const filteredAbsentees = Object.entries(absentees).filter(([name]) =>
     name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -93,14 +93,14 @@ export default function WeeklyAbsentees() {
           {filteredAbsentees.map(([name, data], idx) => (
             <div key={idx} className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-red-100 dark:border-red-900/30 flex flex-col gap-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-red-50 dark:bg-red-900/10 rounded-bl-full -z-0"></div>
-              
+
               <div className="z-10">
                 <h3 className="font-bold text-gray-800 dark:text-white text-xl mb-1">{name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {data.stream === 'kitab' ? `Kitab: ${data.surah}` : `Surah: ${data.surah}`}
                 </p>
               </div>
-              
+
               <div className="z-10 bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500 dark:text-gray-400">Phone</span>
