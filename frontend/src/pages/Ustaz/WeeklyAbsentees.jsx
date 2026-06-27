@@ -103,11 +103,11 @@ export default function WeeklyAbsentees() {
               
               <div className="z-10 bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Father's Phone</span>
+                  <span className="text-gray-500 dark:text-gray-400">Phone</span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">{data.fatherPhone}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Mother's Phone</span>
+                  <span className="text-gray-500 dark:text-gray-400">Phone</span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">{data.motherPhone}</span>
                 </div>
               </div>

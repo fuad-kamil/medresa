@@ -8,7 +8,7 @@ import { registerUstaz, login } from '../controllers/authController.js'
 // Rate Limiters
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 login requests per window
+    max: 15, // limit each IP to 15 login requests per window
     standardHeaders: true,
     legacyHeaders: false,
     message: {
