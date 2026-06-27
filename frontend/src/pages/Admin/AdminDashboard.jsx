@@ -8,6 +8,7 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState([]);
   const [ustazs, setUstazs] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
+  const [ustazAttendanceStatus, setUstazAttendanceStatus] = useState({});
   const [expandedUstazId, setExpandedUstazId] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,15 +36,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentsRes, ustazsRes, attendanceRes] = await Promise.all([
+        const [studentsRes, ustazsRes, attendanceRes, attStatusRes] = await Promise.all([
           axiosInstance.get("/admin/students"),
           axiosInstance.get("/admin/ustazs"),
           axiosInstance.get("/admin/attendance/today"),
+          axiosInstance.get("/admin/ustazs/attendance-status"),
         ]);
 
         setStudents(studentsRes.data);
         setUstazs(ustazsRes.data);
         setTodayAttendance(attendanceRes.data);
+        setUstazAttendanceStatus(attStatusRes.data);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -259,6 +262,27 @@ export default function AdminDashboard() {
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {ustazStudents.length} Students Assigned
                     </p>
+                    {/* Attendance status pills */}
+                    {ustazAttendanceStatus[ustaz._id] && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {ustazAttendanceStatus[ustaz._id].map((day, i) => (
+                          <span
+                            key={i}
+                            title={day.date}
+                            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold transition-all
+                              ${ day.taken
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              }
+                              ${ day.isToday ? 'ring-2 ring-offset-1 ring-current' : '' }
+                            `}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${ day.taken ? 'bg-emerald-500' : 'bg-red-400' }`} />
+                            {day.dayName}{day.isToday ? ' (Today)' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Show chevron on right side of name on mobile instead of wrapping it all the way below */}

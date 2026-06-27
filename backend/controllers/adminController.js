@@ -311,4 +311,65 @@ export const updateStudentScores = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
-
+
+// Get Ustaz Attendance Status (today + last 3 relevant days per ustaz)
+export const getUstazAttendanceStatus = async (req, res) => {
+    try {
+        const ustazs = await User.find({ role: 'ustaz', isApproved: true }).select('_id stream');
+
+        // Kitab valid days: Thu=4, Fri=5, Sat=6
+        const KITAB_DAYS = new Set([4, 5, 6]);
+
+        // Fetch last 14 days of attendance for all ustazs in one query
+        const since = new Date();
+        since.setDate(since.getDate() - 14);
+        since.setHours(0, 0, 0, 0);
+
+        const ustazIds = ustazs.map(u => u._id);
+        const records = await Attendance.find({
+            ustaz: { $in: ustazIds },
+            date: { $gte: since }
+        }).select('ustaz date');
+
+        // Build a fast lookup Set: "ustazId_YYYY-MM-DD"
+        const takenSet = new Set();
+        for (const r of records) {
+            const dateStr = new Date(r.date).toISOString().split('T')[0];
+            takenSet.add(`${r.ustaz.toString()}_${dateStr}`);
+        }
+
+        // Get last 4 relevant days going backwards from today
+        const getRelevantDays = (stream) => {
+            const days = [];
+            const cursor = new Date();
+            cursor.setHours(0, 0, 0, 0);
+            while (days.length < 4) {
+                const dow = cursor.getDay();
+                if (stream !== 'kitab' || KITAB_DAYS.has(dow)) {
+                    days.push(new Date(cursor));
+                }
+                cursor.setDate(cursor.getDate() - 1);
+            }
+            return days; // [most recent, ..., oldest]
+        };
+
+        const result = {};
+        for (const ustaz of ustazs) {
+            const stream = ustaz.stream || 'quran';
+            const days = getRelevantDays(stream);
+            result[ustaz._id] = days.map((day, i) => {
+                const dateStr = day.toISOString().split('T')[0];
+                return {
+                    date: dateStr,
+                    taken: takenSet.has(`${ustaz._id}_${dateStr}`),
+                    dayName: day.toLocaleDateString('en-US', { weekday: 'short' }),
+                    isToday: i === 0
+                };
+            });
+        }
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

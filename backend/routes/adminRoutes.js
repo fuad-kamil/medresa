@@ -20,13 +20,15 @@ import {
     updateStudent,
     updateStudentScores,
     updateAdminProfile,
-    updateAdminPassword
+    updateAdminPassword,
+    getUstazAttendanceStatus
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
 
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
+router.get('/ustazs/attendance-status', protect, adminOnly, getUstazAttendanceStatus)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
 router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
 
