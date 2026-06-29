@@ -71,6 +71,22 @@ export default function AttendancePage() {
     }
   };
 
+  const resetAttendance = async () => {
+    if (!window.confirm("Are you sure you want to reset attendance for this date? This will delete all records for this day.")) return;
+    
+    try {
+      await axiosInstance.delete(`/ustaz/attendance?date=${selectedDate}`);
+      alert("Attendance reset successfully!");
+      
+      const initial = {};
+      students.forEach((s) => (initial[s._id] = "present"));
+      setAttendance(initial);
+      setIsUpdateMode(false);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to reset attendance");
+    }
+  };
+
   const minDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const maxDate = new Date().toISOString().split('T')[0];
 
@@ -129,12 +145,22 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      <button
-        onClick={markAttendance}
-        className="mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors text-lg"
-      >
-        {isUpdateMode ? "Update Attendance" : "Submit Attendance"}
-      </button>
+      <div className="mt-8 flex flex-col md:flex-row gap-4">
+        <button
+          onClick={markAttendance}
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors text-lg"
+        >
+          {isUpdateMode ? "Update Attendance" : "Submit Attendance"}
+        </button>
+        {isUpdateMode && (
+          <button
+            onClick={resetAttendance}
+            className="flex-1 md:max-w-xs bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors text-lg"
+          >
+            Reset Attendance
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -184,3 +184,30 @@ export const getAttendanceByDate = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// Reset Attendance by Date for Logged-In Ustaz
+export const resetAttendance = async (req, res) => {
+    try {
+        const { date } = req.query;
+        const ustazId = req.user.id;
+
+        if (!date) {
+            return res.status(400).json({ message: 'Date parameter is required.' });
+        }
+
+        const attendanceDate = new Date(date);
+        const startOfDay = new Date(attendanceDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(attendanceDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        await Attendance.deleteMany({
+            ustaz: ustazId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        res.json({ message: 'Attendance reset successfully for this date.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

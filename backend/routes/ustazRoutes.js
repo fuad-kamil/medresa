@@ -6,7 +6,7 @@ import protect from '../middleware/auth.js'
 import ustazOnly from '../middleware/ustazOnly.js'
 
 import { getMyStudents, getWeeklyAttendance, updateUstazProfile, updateUstazPassword, registerStudent, updateStudent, updateStudentScores } from '../controllers/ustazController.js'
-import { markAttendance, updateAttendance, getAttendanceByDate } from '../controllers/attendanceController.js'
+import { markAttendance, updateAttendance, getAttendanceByDate, resetAttendance } from '../controllers/attendanceController.js'
 import { getMyExams, createMyExam, updateMyExam, deleteMyExam } from '../controllers/examController.js'
 
 // Ustaz-only routes
@@ -17,6 +17,7 @@ router.put('/students/:id/scores', protect, ustazOnly, updateStudentScores)
 router.post('/attendance', protect, ustazOnly, markAttendance)
 router.put('/attendance', protect, ustazOnly, updateAttendance)
 router.get('/attendance', protect, ustazOnly, getAttendanceByDate)
+router.delete('/attendance', protect, ustazOnly, resetAttendance)
 router.get('/attendance/weekly', protect, ustazOnly, getWeeklyAttendance)
 
 // Ustaz Exam Management (per-ustaz scoped)
