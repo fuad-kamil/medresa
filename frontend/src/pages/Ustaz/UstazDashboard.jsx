@@ -46,6 +46,7 @@ export default function UstazDashboard() {
   const kitabAllowedDates = user?.stream === 'kitab' ? getKitabAllowedDates() : [];
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
   const fetchData = async () => {
@@ -139,12 +140,16 @@ export default function UstazDashboard() {
     }
   };
 
-  const handleResetAttendance = async () => {
-    if (!window.confirm("Are you sure you want to reset attendance for this date? This will delete all records for this day.")) return;
-    
+  const handleResetClick = () => {
+    setIsResetModalOpen(true);
+  };
+
+  const confirmResetAttendance = async () => {
+    setIsResetModalOpen(false);
     try {
       await axiosInstance.delete(`/ustaz/attendance?date=${selectedDate}`);
       setSuccessMessage("✅ Attendance reset successfully!");
+      setIsEditMode(false); // Instantly change button back to Submit
       setTimeout(() => setSuccessMessage(""), 4000);
       
       // Refresh weekly stats and current date
@@ -486,7 +491,7 @@ export default function UstazDashboard() {
           </button>
           {isEditMode && (
             <button
-              onClick={handleResetAttendance}
+              onClick={handleResetClick}
               className="flex-1 md:max-w-xs font-bold py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-all text-xl"
             >
               Reset Attendance
@@ -526,6 +531,44 @@ export default function UstazDashboard() {
                   className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
                 >
                   Yes, {isEditMode ? "Update" : "Submit"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                Confirm Reset?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Are you sure you want to reset attendance for this date? This will delete all records for this day and cannot be undone.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsResetModalOpen(false)}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmResetAttendance}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
+                >
+                  Yes, Reset
                 </button>
               </div>
             </div>
