@@ -139,6 +139,23 @@ export default function UstazDashboard() {
     }
   };
 
+  const handleResetAttendance = async () => {
+    if (!window.confirm("Are you sure you want to reset attendance for this date? This will delete all records for this day.")) return;
+    
+    try {
+      await axiosInstance.delete(`/ustaz/attendance?date=${selectedDate}`);
+      setSuccessMessage("✅ Attendance reset successfully!");
+      setTimeout(() => setSuccessMessage(""), 4000);
+      
+      // Refresh weekly stats and current date
+      fetchData();
+      fetchAttendanceForDate(selectedDate, students);
+    } catch (err) {
+      console.error("Attendance reset error:", err);
+      alert(err.response?.data?.message || "Failed to reset attendance");
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;
   }
@@ -455,17 +472,27 @@ export default function UstazDashboard() {
       </div>
 
       {students.length > 0 && (
-        <button
-          onClick={handleSubmitClick}
-          disabled={isBlocked}
-          className={`w-full font-bold py-5 rounded-2xl shadow-lg transition-all text-xl mb-10 ${
-            isBlocked
-              ? "bg-gray-300 dark:bg-gray-800 text-gray-500 dark:text-gray-600 cursor-not-allowed shadow-none"
-              : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
-          }`}
-        >
-          {isBlocked ? "Attendance Locked" : isEditMode ? "Update Attendance" : "Submit Attendance"}
-        </button>
+        <div className="flex flex-col md:flex-row gap-4 mb-10">
+          <button
+            onClick={handleSubmitClick}
+            disabled={isBlocked}
+            className={`flex-1 font-bold py-5 rounded-2xl shadow-lg transition-all text-xl ${
+              isBlocked
+                ? "bg-gray-300 dark:bg-gray-800 text-gray-500 dark:text-gray-600 cursor-not-allowed shadow-none"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+            }`}
+          >
+            {isBlocked ? "Attendance Locked" : isEditMode ? "Update Attendance" : "Submit Attendance"}
+          </button>
+          {isEditMode && (
+            <button
+              onClick={handleResetAttendance}
+              className="flex-1 md:max-w-xs font-bold py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-all text-xl"
+            >
+              Reset Attendance
+            </button>
+          )}
+        </div>
       )}
 
       {/* Confirmation Modal */}
