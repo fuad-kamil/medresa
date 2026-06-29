@@ -50,8 +50,18 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
           <div className="flex items-center gap-4">
             <img src="/medresa_icon.jpg" alt="Medresa Logo" className="w-20 h-20 object-contain rounded-full border-2 border-emerald-100" onError={(e) => { e.target.style.display = 'none'; }} />
             <div>
-              <h1 className="text-3xl font-extrabold text-emerald-800 uppercase tracking-wider">{medresaName || "Ali Medresa"}</h1>
-              <p className="text-lg text-gray-500 font-medium tracking-wide mt-1">የተማሪ ዉጤት ካርድ</p>
+              <h1 
+                className="text-4xl font-extrabold text-emerald-800 tracking-wider"
+                style={{ fontFamily: '"Amiri", "Scheherazade New", "Traditional Arabic", serif' }}
+              >
+                مدرسة علي
+              </h1>
+              <h2 className="text-sm font-bold text-emerald-600/90 uppercase tracking-[0.2em] mt-1 mb-2">
+                {medresaName || "Ali Medresa"}
+              </h2>
+              <p className="text-sm bg-gray-100 text-gray-600 font-bold tracking-wide py-1 px-3 rounded-full inline-block">
+                የተማሪ ዉጤት ካርድ
+              </p>
             </div>
           </div>
           <div className="text-right">
