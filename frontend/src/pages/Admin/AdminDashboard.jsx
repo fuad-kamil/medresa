@@ -4,7 +4,7 @@ import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, Arr
 import useAuthStore from "../../store/authStore";
 
 export default function AdminDashboard() {
-  const { token } = useAuthStore();
+  const { token, language } = useAuthStore();
   const [students, setStudents] = useState([]);
   const [ustazs, setUstazs] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
@@ -278,7 +278,8 @@ export default function AdminDashboard() {
                             `}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${ day.taken ? 'bg-emerald-500' : 'bg-red-400' }`} />
-                            {day.dayName}{day.isToday ? ' (Today)' : ''}
+                            {new Date(day.date).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'short' })}
+                            {day.isToday ? (language === 'am' ? ' (ዛሬ)' : ' (Today)') : ''}
                           </span>
                         ))}
                       </div>
@@ -417,7 +418,7 @@ export default function AdminDashboard() {
                       <div key={record._id} className="flex justify-between items-center p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950/50">
                         <div>
                           <p className="font-semibold text-gray-800 dark:text-white">
-                            {new Date(record.date).toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            {new Date(record.date).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">Recorded by: {record.ustaz?.name || "Unknown"}</p>
                         </div>

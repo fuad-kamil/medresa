@@ -4,7 +4,7 @@ import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
 
 export default function UstazDashboard() {
-  const { user } = useAuthStore();
+  const { user, language } = useAuthStore();
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [loading, setLoading] = useState(true);
@@ -254,7 +254,7 @@ export default function UstazDashboard() {
             >
               {kitabAllowedDates.map(d => {
                 const dateStr = d.toISOString().split('T')[0];
-                const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+                const dayName = d.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' });
                 return (
                   <option key={dateStr} value={dateStr}>
                     {dayName}, {dateStr}

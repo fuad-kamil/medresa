@@ -4,6 +4,7 @@ const useAuthStore = create((set) => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
     theme: localStorage.getItem('theme') || 'light',
+    language: localStorage.getItem('language') || 'en',
 
     login: (userData, token) => {
         localStorage.setItem('user', JSON.stringify(userData));
@@ -24,6 +25,11 @@ const useAuthStore = create((set) => ({
         localStorage.setItem('theme', newTheme);
         document.documentElement.classList.toggle('dark', newTheme === 'dark');
         set({ theme: newTheme });
+    },
+
+    setLanguage: (lang) => {
+        localStorage.setItem('language', lang);
+        set({ language: lang });
     },
 }));
 

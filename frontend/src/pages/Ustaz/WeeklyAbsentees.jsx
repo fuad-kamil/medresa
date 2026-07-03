@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { CalendarX, Search } from "lucide-react";
+import useAuthStore from "../../store/authStore";
 
 export default function WeeklyAbsentees() {
   const [absentees, setAbsentees] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const language = useAuthStore(state => state.language);
 
   useEffect(() => {
     const fetchAbsentees = async () => {
@@ -26,7 +28,7 @@ export default function WeeklyAbsentees() {
             };
           }
           const dateObj = new Date(record.date);
-          const dateStr = dateObj.toLocaleDateString("en-US", {
+          const dateStr = dateObj.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', {
             weekday: "long",
             month: "short",
             day: "numeric",

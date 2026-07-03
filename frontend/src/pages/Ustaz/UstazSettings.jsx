@@ -1,10 +1,10 @@
 import { useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { User, Lock, Moon, Sun, Save } from "lucide-react";
+import { User, Lock, Moon, Sun, Save, Globe } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
 export default function UstazSettings() {
-  const { user, login, theme, toggleTheme, token } = useAuthStore();
+  const { user, login, theme, toggleTheme, token, language, setLanguage } = useAuthStore();
 
   // Profile Form State
   const [profileData, setProfileData] = useState({
@@ -84,6 +84,21 @@ export default function UstazSettings() {
         >
           {theme === "dark" ? <Sun size={24} className="text-amber-500" /> : <Moon size={24} className="text-emerald-600" />}
           {theme === "dark" ? "Light Mode" : "Dark Mode"}
+        </button>
+      </div>
+
+      {/* Language Toggle */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-1">Language</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Select system language</p>
+        </div>
+        <button
+          onClick={() => setLanguage(language === "en" ? "am" : "en")}
+          className="p-4 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center gap-3 font-semibold w-40 justify-center"
+        >
+          <Globe size={24} className="text-blue-500" />
+          {language === "en" ? "English" : "አማርኛ"}
         </button>
       </div>
 

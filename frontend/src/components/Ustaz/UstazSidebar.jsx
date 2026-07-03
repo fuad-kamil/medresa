@@ -6,7 +6,7 @@ import useAuthStore from "../../store/authStore";
 
 export default function UstazSidebar() {
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const { user, logout, language } = useAuthStore();
   const [yesterdayAbsentees, setYesterdayAbsentees] = useState([]);
   const [weeklyAbsentees, setWeeklyAbsentees] = useState({});
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function UstazSidebar() {
             grouped[studentName] = [];
           }
           // Format date to local string e.g. "Mon, May 15"
-          const dateStr = new Date(record.date).toLocaleDateString("en-US", {
+          const dateStr = new Date(record.date).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', {
             weekday: "short",
             month: "short",
             day: "numeric",
