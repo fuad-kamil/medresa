@@ -5,7 +5,6 @@ import useAuthStore from '../store/authStore';
 export const useLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('ustaz');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formErrors, setFormErrors] = useState({});
@@ -44,8 +43,7 @@ export const useLogin = () => {
         try {
             const res = await axiosInstance.post('/auth/login', {
                 email,
-                password,
-                role
+                password
             });
 
             storeLogin(res.data.user, res.data.token);
@@ -65,8 +63,6 @@ export const useLogin = () => {
         setEmail,
         password,
         setPassword,
-        role,
-        setRole,
         loading,
         error,
         formErrors,
