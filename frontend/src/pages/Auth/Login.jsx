@@ -6,10 +6,13 @@ import { useLogin } from "../../hooks/useLogin";
 export default function Login() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useAuthStore();
+  const {
     email,
     setEmail,
     password,
     setPassword,
+    role,
+    setRole,
     loading,
     error,
     formErrors,
@@ -121,6 +124,37 @@ export default function Login() {
                 )}
               </div>
 
+              {/* Role Selection */}
+              <div className="pt-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1 block">
+                  Select Role
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/60 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setRole("admin")}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                      role === "admin"
+                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_10px_rgb(0,0,0,0.05)] dark:shadow-[0_2px_10px_rgb(0,0,0,0.2)]"
+                        : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    <UserCog size={18} /> Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("ustaz")}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                      role === "ustaz"
+                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_10px_rgb(0,0,0,0.05)] dark:shadow-[0_2px_10px_rgb(0,0,0,0.2)]"
+                        : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    <BookOpen size={18} /> Ustaz
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
@@ -141,17 +175,19 @@ export default function Login() {
             </form>
 
             {/* Register Link */}
-            <div className="text-center mt-8">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                New here?{" "}
-                <Link
-                  to="/ustaz-register"
-                  className="font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-500/30 hover:decoration-emerald-500"
-                >
-                  Create an account
-                </Link>
-              </p>
-            </div>
+            {role === "ustaz" && (
+              <div className="text-center mt-8">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  New here?{" "}
+                  <Link
+                    to="/ustaz-register"
+                    className="font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-500/30 hover:decoration-emerald-500"
+                  >
+                    Create an account
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

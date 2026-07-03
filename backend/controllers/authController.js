@@ -43,7 +43,7 @@ export const registerUstaz = async (req, res) => {
 // Login
 export const login = async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { email, password, role } = req.body
         const normalizedEmail = email?.toLowerCase().trim()
 
         const user = await User.findOne({ email: normalizedEmail })
@@ -60,6 +60,13 @@ export const login = async (req, res) => {
         if (user.role === 'ustaz' && !user.isApproved) {
             return res.status(403).json({
                 message: 'Your account is not approved by admin yet.'
+            })
+        }
+
+        // Check role match
+        if (user.role !== role) {
+            return res.status(403).json({
+                message: `Access denied. You are not registered as ${role}.`
             })
         }
 
