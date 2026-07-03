@@ -3,10 +3,12 @@ import { LogOut, LayoutDashboard, AlertCircle, Menu, X, CalendarX, Settings, Use
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
+import useTranslation from "../../hooks/useTranslation";
 
 export default function UstazSidebar() {
   const location = useLocation();
-  const { user, logout, language } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const { t, language } = useTranslation();
   const [yesterdayAbsentees, setYesterdayAbsentees] = useState([]);
   const [weeklyAbsentees, setWeeklyAbsentees] = useState({});
   const [isOpen, setIsOpen] = useState(false);
@@ -120,8 +122,8 @@ export default function UstazSidebar() {
               className="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20"
             />
             <div>
-              <h1 className="text-xl font-bold">Ali Medresa</h1>
-              <p className="text-emerald-300 text-sm">Ustaz Portal</p>
+              <h1 className="text-xl font-bold">{t("Ali Medresa")}</h1>
+              <p className="text-emerald-300 text-sm">{t("Ustaz Portal")}</p>
             </div>
           </div>
         </div>
@@ -135,7 +137,7 @@ export default function UstazSidebar() {
             }`}
           >
             <LayoutDashboard size={20} />
-            Dashboard
+            {t("Dashboard")}
           </Link>
 
           <Link
@@ -146,7 +148,7 @@ export default function UstazSidebar() {
             }`}
           >
             <UserPlus size={20} />
-            Manage Students
+            {t("Manage Students")}
           </Link>
 
           {user?.stream === 'kitab' && (
@@ -158,14 +160,14 @@ export default function UstazSidebar() {
               }`}
             >
               <GraduationCap size={20} />
-              Exams
+              {t("Exams")}
             </Link>
           )}
 
           {/* Yesterday's Absentees Section */}
           <div className="mt-4 mb-2 px-2 flex items-center gap-2 text-emerald-300 font-semibold text-sm uppercase tracking-wider">
             <AlertCircle size={16} />
-            {user?.stream === 'kitab' ? "Previous Class Absentees" : "Yesterday's Absentees"}
+            {user?.stream === 'kitab' ? t("Previous Class Absentees") : t("Yesterday's Absentees")}
           </div>
           
           {yesterdayAbsentees.length === 0 ? (
@@ -190,7 +192,7 @@ export default function UstazSidebar() {
             }`}
           >
             <CalendarX size={20} />
-            Weekly Absentees
+            {t("Weekly Absentees")}
           </Link>
 
           <Link
@@ -201,7 +203,7 @@ export default function UstazSidebar() {
             }`}
           >
             <Settings size={20} />
-            Settings
+            {t("Settings")}
           </Link>
         </nav>
 
@@ -210,7 +212,7 @@ export default function UstazSidebar() {
             onClick={logout}
             className="flex items-center gap-3 w-full px-4 py-3 text-red-300 hover:bg-red-950/30 rounded-xl transition"
           >
-            <LogOut size={20} /> Logout
+            <LogOut size={20} /> {t("Logout")}
           </button>
         </div>
       </div>
