@@ -46,7 +46,7 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
         </style>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b-4 border-emerald-600 pb-4 mb-6">
+        <div className="flex items-start justify-between border-b-4 border-emerald-600 pb-6 mb-6">
           <div className="flex items-center gap-4">
             <img src="/medresa_icon.jpg" alt="Medresa Logo" className="w-20 h-20 object-contain rounded-full border-2 border-emerald-100" onError={(e) => { e.target.style.display = 'none'; }} />
             <div>
@@ -61,9 +61,22 @@ const ReportCardTemplate = forwardRef(({ student, exams, scores, medresaName, us
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">የተሰጠበት ቀን</p>
-            <p className="text-lg font-semibold text-gray-800">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          
+          <div className="flex items-start gap-8">
+            <div className="text-right mt-2">
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">የተሰጠበት ቀን</p>
+              <p className="text-lg font-semibold text-gray-800">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+            
+            {student.photo ? (
+              <div className="border border-gray-300 p-1 bg-white shadow-sm" style={{ width: '90px', height: '110px' }}>
+                <img src={student.photo} alt={student.fullName} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="border border-gray-300 p-1 bg-gray-50 flex items-center justify-center" style={{ width: '90px', height: '110px' }}>
+                <span className="text-xs font-bold text-gray-300 text-center uppercase tracking-widest">Photo</span>
+              </div>
+            )}
           </div>
         </div>
 
