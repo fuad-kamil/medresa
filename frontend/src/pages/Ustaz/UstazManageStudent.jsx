@@ -3,6 +3,7 @@ import axiosInstance from "../../utils/axiosInstance";
 import { UserPlus, UserCog, Search } from "lucide-react";
 import { SURAHS } from "../../utils/surahs";
 import useAuthStore from "../../store/authStore";
+import WebcamCapture from "../../components/WebcamCapture";
 
 export default function UstazManageStudent() {
   const { user } = useAuthStore();
@@ -26,6 +27,7 @@ export default function UstazManageStudent() {
   const [success, setSuccess] = useState({ show: false, message: "" });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [isWebcamOpen, setIsWebcamOpen] = useState(false);
 
   useEffect(() => {
     fetchMyStudents();
@@ -370,24 +372,15 @@ export default function UstazManageStudent() {
                       }}
                     />
                   </label>
-                  {/* Camera Capture */}
-                  <label className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-lg rounded-2xl border-2 border-dashed cursor-pointer transition-all hover:shadow-md ${isEditMode ? 'border-blue-300 hover:border-blue-500 dark:border-blue-800 dark:hover:border-blue-600' : 'border-emerald-300 hover:border-emerald-500 dark:border-emerald-800 dark:hover:border-emerald-600'} dark:bg-gray-800`}>
+                  {/* Camera / Webcam Capture */}
+                  <button
+                    type="button"
+                    onClick={() => setIsWebcamOpen(true)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-lg rounded-2xl border-2 border-dashed cursor-pointer transition-all hover:shadow-md ${isEditMode ? 'border-blue-300 hover:border-blue-500 dark:border-blue-800 dark:hover:border-blue-600' : 'border-emerald-300 hover:border-emerald-500 dark:border-emerald-800 dark:hover:border-emerald-600'} dark:bg-gray-800`}
+                  >
                     <span className="text-2xl">📷</span>
-                    <span className="font-semibold text-gray-600 dark:text-gray-300">Take Photo</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="user"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          setPhotoFile(file);
-                          setPhotoPreview(URL.createObjectURL(file));
-                        }
-                      }}
-                    />
-                  </label>
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">Use Camera</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -416,6 +409,15 @@ export default function UstazManageStudent() {
           {success.message}
         </div>
       )}
+
+      <WebcamCapture
+        isOpen={isWebcamOpen}
+        onClose={() => setIsWebcamOpen(false)}
+        onCapture={(file, preview) => {
+          setPhotoFile(file);
+          setPhotoPreview(preview);
+        }}
+      />
     </div>
   );
 }
