@@ -178,14 +178,23 @@ export default function AdminWeeklyAbsentees() {
                       </div>
 
                       <div className="z-10 bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Father</span>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.fatherPhone}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Mother</span>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.motherPhone}</span>
-                        </div>
+                        {studentData.stream === 'kitab' ? (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-500 dark:text-gray-400">Phone</span>
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.fatherPhone}</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-gray-500 dark:text-gray-400">Father</span>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.fatherPhone}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-gray-500 dark:text-gray-400">Mother</span>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.motherPhone}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       <div className="z-10 mt-auto">
