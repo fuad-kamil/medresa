@@ -21,7 +21,8 @@ import {
     updateStudentScores,
     updateAdminProfile,
     updateAdminPassword,
-    getUstazAttendanceStatus
+    getUstazAttendanceStatus,
+    getAdminWeeklyAbsentees
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
@@ -45,6 +46,7 @@ router.patch('/students/:id/transfer', protect, adminOnly, transferStudent)
 
 // Attendance
 router.get('/attendance/today', protect, adminOnly, getTodayAttendance)
+router.get('/weekly-absentees', protect, adminOnly, getAdminWeeklyAbsentees)
 
 // Exams — Admin can view/manage per-ustaz exam columns
 router.get('/exams/ustaz/:ustazId', protect, adminOnly, getExamsByUstaz)

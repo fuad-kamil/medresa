@@ -373,3 +373,50 @@ export const getUstazAttendanceStatus = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// Get Admin Weekly Absentees
+export const getAdminWeeklyAbsentees = async (req, res) => {
+    try {
+        let { year, month, week } = req.query;
+        
+        const currentDate = new Date();
+        year = year ? parseInt(year) : currentDate.getFullYear();
+        month = month ? parseInt(month) : currentDate.getMonth() + 1; // 1-12
+        
+        if (!week) {
+            const currentDay = currentDate.getDate();
+            if (currentDay <= 7) week = 1;
+            else if (currentDay <= 14) week = 2;
+            else if (currentDay <= 21) week = 3;
+            else week = 4;
+        } else {
+            week = parseInt(week);
+        }
+        
+        // Define week boundaries
+        let startDay, endDay;
+        if (week === 1) { startDay = 1; endDay = 7; }
+        else if (week === 2) { startDay = 8; endDay = 14; }
+        else if (week === 3) { startDay = 15; endDay = 21; }
+        else if (week === 4) { 
+            startDay = 22; 
+            endDay = new Date(year, month, 0).getDate(); // last day of the month
+        } else {
+            return res.status(400).json({ message: 'Invalid week number' });
+        }
+
+        const startDate = new Date(year, month - 1, startDay, 0, 0, 0, 0);
+        const endDate = new Date(year, month - 1, endDay, 23, 59, 59, 999);
+
+        const attendanceRecords = await Attendance.find({
+            date: { $gte: startDate, $lte: endDate },
+            status: 'absent'
+        })
+        .populate('student', 'fullName surah fatherPhone motherPhone stream')
+        .populate('ustaz', 'name stream kitabName');
+
+        res.json(attendanceRecords);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

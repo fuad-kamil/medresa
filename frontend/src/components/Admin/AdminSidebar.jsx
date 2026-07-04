@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   GraduationCap,
+  CalendarX,
 } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 import { useState, useEffect } from "react";
@@ -38,6 +39,7 @@ export default function AdminSidebar() {
     },
     { name: "All Students", path: "/admin/students", icon: Users },
     { name: "Unassigned Students", path: "/admin/unassigned-students", icon: UserMinus },
+    { name: "Weekly Absentees", path: "/admin/weekly-absentees", icon: CalendarX },
     { name: "Exams", path: "/admin/exams", icon: GraduationCap },
   ];
 
