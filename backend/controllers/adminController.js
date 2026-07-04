@@ -50,7 +50,7 @@ export const registerStudent = async (req, res) => {
             fatherPhone,
             motherPhone,
             address,
-            assignedUstaz,
+            assignedUstaz: assignedUstaz || undefined,
             stream: stream || 'quran',
             photo: photo || undefined
         })
@@ -282,7 +282,14 @@ export const updateStudent = async (req, res) => {
         const { id } = req.params;
         const { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream } = req.body;
         
-        const updateData = { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream: stream || 'quran' };
+        const updateData = { fullName, surah, fatherPhone, motherPhone, address, stream: stream || 'quran' };
+        
+        if (assignedUstaz) {
+            updateData.assignedUstaz = assignedUstaz;
+        } else {
+            updateData.$unset = { assignedUstaz: "" };
+        }
+
         if (req.file) {
             updateData.photo = req.file.path;
         }
