@@ -396,22 +396,56 @@ export default function RegisterStudent() {
               <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
                 Student Photo (Optional)
               </label>
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col gap-4">
                 {photoPreview && (
-                  <img src={photoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl shadow-md border border-gray-200 dark:border-gray-700" />
+                  <div className="flex items-center gap-4">
+                    <img src={photoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl shadow-md border border-gray-200 dark:border-gray-700" />
+                    <button
+                      type="button"
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                      className="text-sm font-bold text-red-500 hover:text-red-700 transition"
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      setPhotoFile(file);
-                      setPhotoPreview(URL.createObjectURL(file));
-                    }
-                  }}
-                  className={`flex-1 px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 dark:file:bg-gray-700 dark:file:text-gray-200 ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* File Picker */}
+                  <label className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-lg rounded-2xl border-2 border-dashed cursor-pointer transition-all hover:shadow-md ${isEditMode ? 'border-blue-300 hover:border-blue-500 dark:border-blue-800 dark:hover:border-blue-600' : 'border-emerald-300 hover:border-emerald-500 dark:border-emerald-800 dark:hover:border-emerald-600'} dark:bg-gray-800`}>
+                    <span className="text-2xl">📁</span>
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">Choose from Files</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setPhotoFile(file);
+                          setPhotoPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                  </label>
+                  {/* Camera Capture */}
+                  <label className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-lg rounded-2xl border-2 border-dashed cursor-pointer transition-all hover:shadow-md ${isEditMode ? 'border-blue-300 hover:border-blue-500 dark:border-blue-800 dark:hover:border-blue-600' : 'border-emerald-300 hover:border-emerald-500 dark:border-emerald-800 dark:hover:border-emerald-600'} dark:bg-gray-800`}>
+                    <span className="text-2xl">📷</span>
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">Take Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setPhotoFile(file);
+                          setPhotoPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           </div>
