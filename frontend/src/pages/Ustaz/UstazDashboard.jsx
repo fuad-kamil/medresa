@@ -409,7 +409,8 @@ export default function UstazDashboard() {
                     {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
                   </p>
                 </div>
-                {takenTodayMap[student._id] ? (
+              </div>
+              {takenTodayMap[student._id] ? (
                   <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                     Taken
                   </span>
