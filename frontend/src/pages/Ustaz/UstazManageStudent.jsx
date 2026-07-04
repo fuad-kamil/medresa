@@ -24,6 +24,8 @@ export default function UstazManageStudent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState({ show: false, message: "" });
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   useEffect(() => {
     fetchMyStudents();
@@ -48,6 +50,8 @@ export default function UstazManageStudent() {
         motherPhone: "",
         address: "",
       });
+      setPhotoFile(null);
+      setPhotoPreview(null);
       return;
     }
 
@@ -60,6 +64,8 @@ export default function UstazManageStudent() {
         motherPhone: student.motherPhone || "",
         address: student.address || "",
       });
+      setPhotoFile(null);
+      setPhotoPreview(student.photo || null);
     }
   };
 
@@ -75,21 +81,31 @@ export default function UstazManageStudent() {
       motherPhone: "",
       address: "",
     });
+    setPhotoFile(null);
+    setPhotoPreview(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const submitData = new FormData();
+      Object.keys(formData).forEach(key => {
+        submitData.append(key, formData[key]);
+      });
+      submitData.append("stream", user?.stream || 'quran');
+      if (photoFile) {
+        submitData.append("photo", photoFile);
+      }
+
       if (isEditMode) {
         if (!selectedStudentId) {
           alert("Please select a student to update");
           setLoading(false);
           return;
         }
-        await axiosInstance.put(`/ustaz/students/${selectedStudentId}`, {
-          ...formData,
-          stream: user?.stream || 'quran'
+        await axiosInstance.put(`/ustaz/students/${selectedStudentId}`, submitData, {
+          headers: { "Content-Type": "multipart/form-data" }
         });
         setSuccess({ show: true, message: "✅ Student Updated Successfully!" });
         // Refresh student list
@@ -97,10 +113,10 @@ export default function UstazManageStudent() {
       } else {
         // For kitab stream in register mode, auto-fill surah from the ustaz's kitabName
         const surahValue = user?.stream === 'kitab' ? (user?.kitabName || formData.surah) : formData.surah;
-        await axiosInstance.post("/ustaz/students", {
-          ...formData,
-          surah: surahValue,
-          stream: user?.stream || 'quran'
+        submitData.set("surah", surahValue); // overwrite surah if needed
+
+        await axiosInstance.post("/ustaz/students", submitData, {
+          headers: { "Content-Type": "multipart/form-data" }
         });
         setSuccess({ show: true, message: "✅ Student Registered Successfully!" });
         fetchMyStudents(); // Refresh list so new student appears in edit mode
@@ -111,6 +127,8 @@ export default function UstazManageStudent() {
           motherPhone: "",
           address: "",
         });
+        setPhotoFile(null);
+        setPhotoPreview(null);
       }
       
       setTimeout(() => setSuccess({ show: false, message: "" }), 4000);
@@ -315,6 +333,29 @@ export default function UstazManageStudent() {
                 className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
                 required
               />
+            </div>
+
+            <div className="col-span-1 md:col-span-2">
+              <label className="text-lg font-medium mb-3 block text-gray-700 dark:text-gray-300">
+                Student Photo (Optional)
+              </label>
+              <div className="flex items-center gap-6">
+                {photoPreview && (
+                  <img src={photoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl shadow-md border border-gray-200 dark:border-gray-700" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setPhotoFile(file);
+                      setPhotoPreview(URL.createObjectURL(file));
+                    }
+                  }}
+                  className={`flex-1 px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 dark:file:bg-gray-700 dark:file:text-gray-200 ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
+                />
+              </div>
             </div>
           </div>
 

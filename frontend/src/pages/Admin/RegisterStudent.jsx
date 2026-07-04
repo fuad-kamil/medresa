@@ -4,6 +4,9 @@ import { UserPlus, UserCog, Search } from "lucide-react";
 import { SURAHS } from "../../utils/surahs";
 
 export default function RegisterStudent() {
+  const capitalizeWords = (value) =>
+    value.replace(/(?:^|\s)\S/g, (char) => char.toUpperCase());
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -230,7 +233,7 @@ export default function RegisterStudent() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
+                  setFormData({ ...formData, fullName: capitalizeWords(e.target.value) })
                 }
                 className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
                 required
@@ -305,7 +308,7 @@ export default function RegisterStudent() {
                     value={formData.surah}
                     placeholder="Enter Kitab Name (e.g. Ajrumiyyah)"
                     onChange={(e) =>
-                      setFormData({ ...formData, surah: e.target.value })
+                      setFormData({ ...formData, surah: capitalizeWords(e.target.value) })
                     }
                     className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
                     required
@@ -381,7 +384,7 @@ export default function RegisterStudent() {
                 name="address"
                 value={formData.address}
                 onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
+                  setFormData({ ...formData, address: capitalizeWords(e.target.value) })
                 }
                 placeholder="Enter Student Address"
                 className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
