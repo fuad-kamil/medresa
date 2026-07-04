@@ -238,7 +238,8 @@ export default function AllStudents() {
                 filteredStudents.map((student) => (
                   <tr
                     key={student._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
+                    onClick={() => navigate(`/admin/students/${student._id}`)}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition cursor-pointer"
                   >
                     <td className="p-6 font-medium text-gray-800 dark:text-white">
                       {student.fullName}
@@ -289,7 +290,11 @@ export default function AllStudents() {
           </div>
         ) : (
           filteredStudents.map((student) => (
-            <div key={student._id} className="bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3 relative">
+            <div 
+              key={student._id} 
+              onClick={() => navigate(`/admin/students/${student._id}`)}
+              className="bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3 relative cursor-pointer hover:shadow-md transition"
+            >
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>

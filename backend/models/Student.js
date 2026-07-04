@@ -6,6 +6,10 @@ const studentSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        photo: {
+            type: String,
+            required: false
+        },
         surah: {
             type: String,
             required: false

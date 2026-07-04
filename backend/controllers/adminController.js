@@ -42,6 +42,7 @@ export const approveUstaz = async (req, res) => {
 export const registerStudent = async (req, res) => {
     try {
         const { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream } = req.body
+        const photo = req.file ? req.file.path : null;
 
         const student = await Student.create({
             fullName,
@@ -50,7 +51,8 @@ export const registerStudent = async (req, res) => {
             motherPhone,
             address,
             assignedUstaz,
-            stream: stream || 'quran'
+            stream: stream || 'quran',
+            photo: photo || undefined
         })
 
         res.status(201).json({
@@ -106,6 +108,36 @@ export const getAllStudents = async (req, res) => {
 
 // Get All Students WITH attendance stats (alias - same as getAllStudents, kept for compatibility)
 export const getAllStudentsWithStats = getAllStudents;
+
+// Get Single Student
+export const getStudentById = async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id)
+            .populate('assignedUstaz', 'name email stream')
+            .lean();
+            
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        const stats = await Attendance.aggregate([
+            { $match: { student: student._id } },
+            {
+                $group: {
+                    _id: null,
+                    presentCount: { $sum: { $cond: [{ $eq: ['$status', 'present'] }, 1, 0] } },
+                    absentCount: { $sum: { $cond: [{ $eq: ['$status', 'absent'] }, 1, 0] } },
+                    excusedCount: { $sum: { $cond: [{ $eq: ['$status', 'excused'] }, 1, 0] } }
+                }
+            }
+        ]);
+
+        const s = stats.length > 0 ? stats[0] : { presentCount: 0, absentCount: 0, excusedCount: 0 };
+        res.json({ ...student, ...s });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
 
 // Get Today's Attendance
 export const getTodayAttendance = async (req, res) => {
@@ -249,10 +281,15 @@ export const updateStudent = async (req, res) => {
     try {
         const { id } = req.params;
         const { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream } = req.body;
+        
+        const updateData = { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream: stream || 'quran' };
+        if (req.file) {
+            updateData.photo = req.file.path;
+        }
 
         const student = await Student.findByIdAndUpdate(
             id,
-            { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream: stream || 'quran' },
+            updateData,
             { new: true }
         ).populate('assignedUstaz', 'name email');
 

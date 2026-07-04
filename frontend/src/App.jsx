@@ -12,6 +12,7 @@ import AllStudents from "./pages/Admin/AllStudents";
 import UnassignedStudents from "./pages/Admin/UnassignedStudents";
 import AdminSettings from "./pages/Admin/AdminSettings";
 import AdminWeeklyAbsentees from "./pages/Admin/AdminWeeklyAbsentees";
+import AdminStudentProfile from "./pages/Admin/AdminStudentProfile";
 import AdminLayout from "./components/Layout/AdminLayout";
 
 // Ustaz
@@ -62,6 +63,14 @@ function App() {
           element={
             <AdminLayout>
               <AllStudents />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/students/:id"
+          element={
+            <AdminLayout>
+              <AdminStudentProfile />
             </AdminLayout>
           }
         />

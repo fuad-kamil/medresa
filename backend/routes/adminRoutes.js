@@ -4,6 +4,7 @@ const router = express.Router()
 
 import protect from '../middleware/auth.js'
 import adminOnly from '../middleware/adminOnly.js'
+import upload from '../middleware/upload.js'
 
 import {
     getAllUstazs,
@@ -11,6 +12,7 @@ import {
     deleteUstaz,
     registerStudent,
     getAllStudents,
+    getStudentById,
     getAllStudentsWithStats,
     getTodayAttendance,
     getStudentAttendanceHistory,
@@ -34,12 +36,13 @@ router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
 router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
 
 // Student management
-router.post('/students', protect, adminOnly, registerStudent)
+router.post('/students', protect, adminOnly, upload.single('photo'), registerStudent)
 router.get('/students', protect, adminOnly, getAllStudents)
 router.get('/students/with-stats', protect, adminOnly, getAllStudentsWithStats)
+router.get('/students/:id', protect, adminOnly, getStudentById)
 router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceHistory)
 router.delete('/students/:id/attendance', protect, adminOnly, resetStudentAttendance)
-router.put('/students/:id', protect, adminOnly, updateStudent)
+router.put('/students/:id', protect, adminOnly, upload.single('photo'), updateStudent)
 router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)
 router.delete('/students/:id', protect, adminOnly, deleteStudent)
 router.patch('/students/:id/transfer', protect, adminOnly, transferStudent)
