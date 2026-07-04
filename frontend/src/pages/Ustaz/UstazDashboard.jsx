@@ -295,6 +295,7 @@ export default function UstazDashboard() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300 w-16 text-center">No.</th>
                 <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Student Name</th>
                 <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">
                   {user?.stream === 'kitab' ? "Phone Number" : "Parents' Phones"}
@@ -308,13 +309,14 @@ export default function UstazDashboard() {
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-10 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="5" className="p-10 text-center text-gray-500 dark:text-gray-400">
                     No students assigned to you yet.
                   </td>
                 </tr>
               ) : (
-                students.map((student) => (
+                students.map((student, index) => (
                   <tr key={student._id} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                    <td className="p-5 font-bold text-gray-500 dark:text-gray-400 text-center text-lg">{index + 1}</td>
                     <td className="p-5 font-medium text-gray-800 dark:text-gray-200">
                       <div className="flex flex-col gap-1">
                         <span>{student.fullName}</span>
@@ -394,11 +396,15 @@ export default function UstazDashboard() {
             No students assigned to you yet.
           </div>
         ) : (
-          students.map((student) => (
+          students.map((student, index) => (
             <div key={student._id} className="bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center font-black text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5 border border-emerald-200 dark:border-emerald-800/50">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
                   </p>

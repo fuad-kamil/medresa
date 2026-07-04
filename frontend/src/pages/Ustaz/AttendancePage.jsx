@@ -112,14 +112,16 @@ export default function AttendancePage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300 w-16 text-center">No.</th>
                 <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Student Name</th>
                 <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Surah</th>
                 <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Status</th>
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {students.map((student, index) => (
                 <tr key={student._id} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td className="p-5 font-bold text-gray-500 dark:text-gray-400 text-center">{index + 1}</td>
                   <td className="p-5 font-medium text-gray-800 dark:text-gray-200">{student.fullName}</td>
                   <td className="p-5 text-gray-600 dark:text-gray-400">{student.surah}</td>
                   <td className="p-5">
