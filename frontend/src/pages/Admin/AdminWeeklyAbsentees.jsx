@@ -154,12 +154,12 @@ export default function AdminWeeklyAbsentees() {
             .map(([ustazName, ustazData], idx) => (
               <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-3xl border border-gray-200 dark:border-gray-700">
                 <div className="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
-                   <div>
-                       <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{ustazName}</h2>
-                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 capitalize">
-                           Stream: {ustazData.stream} {ustazData.stream === 'kitab' && ustazData.kitabName ? \` - \${ustazData.kitabName}\` : ''}
-                       </p>
-                   </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{ustazName}</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                            Stream: {ustazData.stream} {ustazData.stream === 'kitab' && ustazData.kitabName ? ` - ${ustazData.kitabName}` : ''}
+                        </p>
+                    </div>
                    <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-4 py-2 rounded-xl text-sm font-bold">
                        {Object.keys(ustazData.students).length} Absent Student(s)
                    </div>
