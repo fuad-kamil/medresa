@@ -10,40 +10,30 @@ export default function UstazDashboard() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [takenTodayMap, setTakenTodayMap] = useState({});
-  const getInitialDate = () => {
+  const getValidDates = () => {
     const u = useAuthStore.getState().user;
-    if (u?.stream === 'kitab') {
-      let curr = new Date();
-      while (true) {
-        const day = curr.getDay();
-        if (day === 4 || day === 5 || day === 6) return curr.toISOString().split('T')[0];
-        curr.setDate(curr.getDate() - 1);
-      }
-    }
-    return new Date().toISOString().split('T')[0];
-  };
-
-  const [selectedDate, setSelectedDate] = useState(getInitialDate());
-  const [allRecords, setAllRecords] = useState([]);
-
-  const selectedDayOfWeek = new Date(selectedDate).getDay(); // 0 = Sun, 1 = Mon, ..., 4 = Thu, 5 = Fri, 6 = Sat
-  const isKitabDay = selectedDayOfWeek === 4 || selectedDayOfWeek === 5 || selectedDayOfWeek === 6;
-  const isBlocked = user?.stream === 'kitab' && !isKitabDay;
-
-  const getKitabAllowedDates = () => {
+    const teachingDays = u?.teachingDays || [0, 1, 2, 3, 4, 5, 6];
+    const teachingDaysSet = new Set(teachingDays);
     const dates = [];
     let curr = new Date();
+    curr.setHours(0, 0, 0, 0);
+
     while (dates.length < 4) {
-      const day = curr.getDay();
-      if (day === 4 || day === 5 || day === 6) {
-        dates.push(new Date(curr));
+      if (teachingDaysSet.has(curr.getDay())) {
+        const offsetDate = new Date(curr.getTime() - (curr.getTimezoneOffset() * 60000));
+        dates.push(offsetDate.toISOString().split('T')[0]);
       }
       curr.setDate(curr.getDate() - 1);
     }
     return dates;
   };
 
-  const kitabAllowedDates = user?.stream === 'kitab' ? getKitabAllowedDates() : [];
+  const validDates = getValidDates();
+  const [selectedDate, setSelectedDate] = useState(validDates[0] || new Date().toISOString().split('T')[0]);
+  const [allRecords, setAllRecords] = useState([]);
+
+  // The user can only select valid dates, so it's never blocked.
+  const isBlocked = false;
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -246,48 +236,26 @@ export default function UstazDashboard() {
         </h2>
         <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 w-max">
           <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">Date:</label>
-          {user?.stream === 'kitab' ? (
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer"
-            >
-              {kitabAllowedDates.map(d => {
-                const dateStr = d.toISOString().split('T')[0];
-                const dayName = d.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' });
-                return (
-                  <option key={dateStr} value={dateStr}>
-                    {dayName}, {dateStr}
-                  </option>
-                );
-              })}
-            </select>
-          ) : (
-            <input
-              type="date"
-              min={new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-              max={new Date().toISOString().split('T')[0]}
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none"
-            />
-          )}
+          <select
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer min-w-[160px]"
+          >
+            {validDates.map(dateStr => {
+              const [y, m, d] = dateStr.split('-');
+              const dateObj = new Date(y, m - 1, d);
+              const dayName = dateObj.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' });
+              return (
+                <option key={dateStr} value={dateStr}>
+                  {dayName}, {dateStr}
+                </option>
+              );
+            })}
+          </select>
         </div>
       </div>
 
-      {isBlocked && (
-        <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-400 rounded-3xl flex flex-col md:flex-row items-center gap-4 shadow-sm animate-in fade-in slide-in-from-top-4">
-          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-            <AlertTriangle size={24} />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg mb-1">Kitab Attendance Restricted</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-md">
-              Kitab classes are only scheduled on <strong>Thursdays</strong>, <strong>Fridays</strong>, and <strong>Saturdays</strong>. Attendance marking is disabled for this day.
-            </p>
-          </div>
-        </div>
-      )}
+
       
       {/* Desktop Table View */}
       <div className="hidden lg:block bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-10">
