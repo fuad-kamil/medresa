@@ -9,7 +9,7 @@ export const getNotifications = async (req, res) => {
     let query = {}
     if (user.role !== 'admin') {
       // Ustaz: only notifications where ustazId matches
-      query = { ustazId: user._id }
+      query = { ustazId: user.id }
     }
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
@@ -23,7 +23,7 @@ export const getNotifications = async (req, res) => {
       ustazName: n.ustazName,
       message: n.message,
       createdAt: n.createdAt,
-      isRead: n.readBy && n.readBy.includes(user._id)
+      isRead: n.readBy && n.readBy.some(id => id && id.toString() === user.id)
     }))
     res.json(formatted)
   } catch (err) {
@@ -36,7 +36,7 @@ export const getNotifications = async (req, res) => {
 export const markNotificationRead = async (req, res) => {
   try {
     const { id } = req.params
-    const userId = req.user._id
+    const userId = req.user.id
     const notif = await Notification.findById(id)
     if (!notif) return res.status(404).json({ message: 'Notification not found' })
     // Only allow owner or admin to mark
@@ -44,7 +44,7 @@ export const markNotificationRead = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' })
     }
     // Avoid duplicate entries
-    if (!notif.readBy.includes(userId)) {
+    if (!notif.readBy.some(id => id && id.toString() === userId)) {
       notif.readBy.push(userId)
       await notif.save()
     }
@@ -58,7 +58,7 @@ export const markNotificationRead = async (req, res) => {
 // Mark all notifications for the current user as read
 export const markAllNotificationsRead = async (req, res) => {
   try {
-    const userId = req.user._id
+    const userId = req.user.id
     const filter = req.user.role === 'admin' ? {} : { ustazId: userId }
     await Notification.updateMany(filter, { $addToSet: { readBy: userId } })
     res.json({ message: 'All notifications marked as read' })
