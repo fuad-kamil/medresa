@@ -308,19 +308,17 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
             </div>
           ) : (
             <div className="flex items-center justify-center gap-8 relative">
-              {flashSupported && (
-                <button
-                  onClick={toggleFlash}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition absolute left-0 ${
-                    isFlashOn 
-                      ? "bg-yellow-500 text-black" 
-                      : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
-                  }`}
-                  title={isFlashOn ? "Turn Flash Off" : "Turn Flash On"}
-                >
-                  {isFlashOn ? <Zap size={22} className="fill-current" /> : <ZapOff size={22} />}
-                </button>
-              )}
+              <button
+                onClick={toggleFlash}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition absolute left-0 ${
+                  isFlashOn 
+                    ? "bg-yellow-500 text-black" 
+                    : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                }`}
+                title={isFlashOn ? "Turn Flash Off" : "Turn Flash On"}
+              >
+                {isFlashOn ? <Zap size={22} className="fill-current" /> : <ZapOff size={22} />}
+              </button>
               
               <button
                 onClick={takeSnapshot}
