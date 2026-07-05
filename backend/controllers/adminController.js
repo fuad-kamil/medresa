@@ -217,6 +217,21 @@ export const resetStudentAttendance = async (req, res) => {
     }
 }
 
+// Clear All Unassigned Students
+export const clearUnassignedStudents = async (req, res) => {
+    try {
+        const result = await Student.deleteMany({
+            $or: [
+                { assignedUstaz: { $exists: false } },
+                { assignedUstaz: null }
+            ]
+        });
+        res.json({ message: `Successfully deleted ${result.deletedCount} unassigned students` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 // Delete Student
 export const deleteStudent = async (req, res) => {
     try {

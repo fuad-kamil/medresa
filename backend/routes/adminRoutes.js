@@ -12,6 +12,7 @@ import {
     deleteUstaz,
     registerStudent,
     bulkImportStudents,
+    clearUnassignedStudents,
     getAllStudents,
     getStudentById,
     getAllStudentsWithStats,
@@ -46,6 +47,7 @@ router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceH
 router.delete('/students/:id/attendance', protect, adminOnly, resetStudentAttendance)
 router.put('/students/:id', protect, adminOnly, upload.single('photo'), updateStudent)
 router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)
+router.delete('/students/unassigned/clear', protect, adminOnly, clearUnassignedStudents)
 router.delete('/students/:id', protect, adminOnly, deleteStudent)
 router.patch('/students/:id/transfer', protect, adminOnly, transferStudent)
 

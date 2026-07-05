@@ -24,6 +24,10 @@ export default function UnassignedStudents() {
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Clear All Modal State
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+  const [clearAllLoading, setClearAllLoading] = useState(false);
+
   // Success Notification State
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -83,6 +87,25 @@ export default function UnassignedStudents() {
     }
   };
 
+  const handleClearAllClick = () => {
+    if (students.length === 0) return alert("No unassigned students to clear.");
+    setIsClearAllModalOpen(true);
+  };
+
+  const confirmClearAll = async () => {
+    setClearAllLoading(true);
+    try {
+      await axiosInstance.delete("/admin/students/unassigned/clear");
+      setStudents([]);
+      setIsClearAllModalOpen(false);
+      showSuccess("All unassigned students cleared successfully!");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to clear students.");
+    } finally {
+      setClearAllLoading(false);
+    }
+  };
+
   const openAssignModal = (student) => {
     setSelectedStudent(student);
     setSelectedUstazId("");
@@ -132,7 +155,7 @@ export default function UnassignedStudents() {
           </p>
         </div>
 
-        {/* Search */}
+        {/* Search & Actions */}
         <div className="mt-6 md:mt-0 flex flex-col sm:flex-row gap-4 w-full md:w-auto">
           <div className="relative flex-1 w-full sm:w-auto">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -146,6 +169,15 @@ export default function UnassignedStudents() {
               className="w-full pl-12 pr-5 py-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-600 text-lg min-w-[250px]"
             />
           </div>
+          {students.length > 0 && (
+            <button
+              onClick={handleClearAllClick}
+              className="flex items-center justify-center gap-2 px-6 py-4 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 rounded-2xl transition font-bold whitespace-nowrap"
+            >
+              <Trash2 size={20} />
+              Clear All
+            </button>
+          )}
         </div>
       </div>
 
@@ -421,6 +453,46 @@ export default function UnassignedStudents() {
                   disabled={deleteLoading}
                 >
                   {deleteLoading ? "Deleting..." : "Yes, Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Confirmation Modal */}
+      {isClearAllModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100">
+            
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                Clear All Unassigned?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+                Are you sure you want to permanently delete <span className="font-bold text-red-600 dark:text-red-400">ALL {students.length} unassigned students</span>? This action cannot be undone.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsClearAllModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-bold transition-all shadow-sm"
+                  disabled={clearAllLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmClearAll}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-md shadow-red-500/30 transition-all disabled:opacity-70"
+                  disabled={clearAllLoading}
+                >
+                  {clearAllLoading ? "Clearing..." : "Yes, Clear All"}
                 </button>
               </div>
             </div>
