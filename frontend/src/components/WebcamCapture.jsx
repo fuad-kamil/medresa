@@ -35,7 +35,11 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { 
+          facingMode: { ideal: facing }, 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 } 
+        },
         audio: false,
       });
       streamRef.current = stream;
@@ -45,10 +49,14 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
 
       // Check if torch is supported
       const track = stream.getVideoTracks()[0];
-      const capabilities = track.getCapabilities();
-      if (capabilities.torch) {
-        setFlashSupported(true);
-      }
+      // wait a moment before checking capabilities, some browsers need it
+      setTimeout(() => {
+        const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+        if (capabilities.torch) {
+          setFlashSupported(true);
+        }
+      }, 500);
+
     } catch (err) {
       console.error("Camera error:", err);
       setError("Could not access camera. Make sure camera permissions are allowed.");
@@ -70,22 +78,23 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
   const toggleFlash = async () => {
     if (!streamRef.current) return;
     const track = streamRef.current.getVideoTracks()[0];
+    const enable = !isFlashOn;
     try {
       // Standard way to enable torch
       await track.applyConstraints({
-        advanced: [{ torch: !isFlashOn }]
+        advanced: [{ torch: enable }]
       });
-      setIsFlashOn(!isFlashOn);
+      setIsFlashOn(enable);
     } catch (err) {
       try {
         // Fallback for some older Android browsers
         await track.applyConstraints({
-          torch: !isFlashOn
+          torch: enable
         });
-        setIsFlashOn(!isFlashOn);
+        setIsFlashOn(enable);
       } catch (err2) {
         console.error("Failed to toggle flash:", err2);
-        alert("Your camera doesn't seem to support flash directly via the browser. Please ensure you're using the back camera.");
+        alert(`Flash Error: ${err.message || err.name || 'Not supported'}.\n\nBrowsers do not ask for separate flash permission. If it fails, your browser restricts hardware flash control for web apps.`);
       }
     }
   };
