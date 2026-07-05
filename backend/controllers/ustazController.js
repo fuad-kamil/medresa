@@ -77,6 +77,9 @@ export const updateUstazProfile = async (req, res) => {
         if (user.stream === 'kitab' && req.body.kitabName !== undefined) {
             user.kitabName = req.body.kitabName;
         }
+        if (req.body.teachingDays !== undefined) {
+            user.teachingDays = req.body.teachingDays;
+        }
 
         const updatedUser = await user.save();
 
@@ -90,7 +93,8 @@ export const updateUstazProfile = async (req, res) => {
                 role: updatedUser.role,
                 isApproved: updatedUser.isApproved,
                 stream: updatedUser.stream,
-                kitabName: updatedUser.kitabName
+                kitabName: updatedUser.kitabName,
+                teachingDays: updatedUser.teachingDays
             }
         });
     } catch (error) {

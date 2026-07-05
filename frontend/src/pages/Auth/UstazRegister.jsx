@@ -12,6 +12,7 @@ export default function UstazRegister() {
     phone: "",
     stream: "quran",
     kitabName: "",
+    teachingDays: [0, 1, 2, 3, 4, 5, 6],
   });
 
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,8 @@ export default function UstazRegister() {
       return "Passwords do not match";
     if (formData.stream === "kitab" && !formData.kitabName.trim())
       return "Kitab name is required for Kitab teachers";
+    if (formData.teachingDays.length === 0)
+      return "Please select at least one teaching day";
     return null;
   };
 
@@ -43,6 +46,27 @@ export default function UstazRegister() {
     const { name, value } = e.target;
     const newValue = TEXT_FIELDS.includes(name) ? capitalizeWords(value) : value;
     setFormData({ ...formData, [name]: newValue });
+  };
+
+  const DAYS_OF_WEEK = [
+    { id: 1, label: "Mon" },
+    { id: 2, label: "Tue" },
+    { id: 3, label: "Wed" },
+    { id: 4, label: "Thu" },
+    { id: 5, label: "Fri" },
+    { id: 6, label: "Sat" },
+    { id: 0, label: "Sun" },
+  ];
+
+  const handleDayToggle = (dayId) => {
+    setFormData((prev) => {
+      const currentDays = prev.teachingDays;
+      if (currentDays.includes(dayId)) {
+        return { ...prev, teachingDays: currentDays.filter(d => d !== dayId) };
+      } else {
+        return { ...prev, teachingDays: [...currentDays, dayId].sort() };
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -65,6 +89,7 @@ export default function UstazRegister() {
         phone: formData.phone.trim(),
         stream: formData.stream,
         kitabName: formData.stream === "kitab" ? formData.kitabName.trim() : undefined,
+        teachingDays: formData.teachingDays,
       });
 
       setSuccess(true);
@@ -209,6 +234,29 @@ export default function UstazRegister() {
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This will be auto-assigned to all students you register.</p>
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Teaching Days <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map(day => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      onClick={() => handleDayToggle(day.id)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                        formData.teachingDays.includes(day.id)
+                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/30"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Select all the days you will be teaching.</p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -12,6 +12,7 @@ export default function UstazSettings() {
     email: user?.email || "",
     phone: user?.phone || "",
     kitabName: user?.kitabName || "",
+    teachingDays: user?.teachingDays || [0, 1, 2, 3, 4, 5, 6],
   });
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
@@ -24,6 +25,28 @@ export default function UstazSettings() {
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState({ text: "", type: "" });
+
+  const DAYS_OF_WEEK = [
+    { id: 1, label: "Mon" },
+    { id: 2, label: "Tue" },
+    { id: 3, label: "Wed" },
+    { id: 4, label: "Thu" },
+    { id: 5, label: "Fri" },
+    { id: 6, label: "Sat" },
+    { id: 0, label: "Sun" },
+  ];
+
+  const handleDayToggle = (dayId) => {
+    setProfileData((prev) => {
+      const currentDays = prev.teachingDays;
+      if (currentDays.includes(dayId)) {
+        if (currentDays.length === 1) return prev; // prevent unselecting all
+        return { ...prev, teachingDays: currentDays.filter(d => d !== dayId) };
+      } else {
+        return { ...prev, teachingDays: [...currentDays, dayId].sort() };
+      }
+    });
+  };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -157,6 +180,29 @@ export default function UstazSettings() {
                 />
               </div>
             )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Your Teaching Days
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {DAYS_OF_WEEK.map(day => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    onClick={() => handleDayToggle(day.id)}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                      profileData.teachingDays.includes(day.id)
+                        ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/30"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Update your teaching schedule to fix attendance reporting.</p>
+            </div>
 
             {profileMsg && (
               <div className={`p-3 rounded-lg text-sm font-medium ${profileMsg.includes('success') ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>

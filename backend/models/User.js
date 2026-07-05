@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    teachingDays: {
+        type: [Number],
+        default: [0, 1, 2, 3, 4, 5, 6]
+    },
     isApproved: {
         type: Boolean,
         default: false
