@@ -166,7 +166,7 @@ async function checkConsecutiveAbsences(studentIds) {
                             studentName: student.fullName,
                             ustazId: student.assignedUstaz._id,
                             ustazName,
-                            message: `${student.fullName} missed 3 consecutive classes under Ustaz ${ustazName}.`
+                            message: `ተማሪ ${student.fullName} ከኡስታዝ ${ustazName} ትምህርት 3 ተከታታይ ቀናት ቀርቷል።`
                         });
                     }
                 } catch (notifErr) {

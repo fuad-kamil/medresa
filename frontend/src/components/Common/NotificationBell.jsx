@@ -91,7 +91,7 @@ export default function NotificationBell({ role = "ustaz" }) {
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse">
+          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 text-white text-[11px] font-black rounded-full flex items-center justify-center shadow-md border-2 border-white dark:border-gray-900">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -99,7 +99,7 @@ export default function NotificationBell({ role = "ustaz" }) {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 top-12 w-96 max-h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-50 flex flex-col overflow-hidden">
+        <div className="absolute right-[-60px] sm:right-0 top-14 w-[90vw] sm:w-96 max-w-[400px] max-h-[80vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-50 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2">
