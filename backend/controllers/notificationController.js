@@ -67,3 +67,42 @@ export const markAllNotificationsRead = async (req, res) => {
     res.status(500).json({ message: err.message })
   }
 }
+
+// Delete a single notification
+export const deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params
+    const userId = req.user.id
+    const notif = await Notification.findById(id)
+    if (!notif) return res.status(404).json({ message: 'Notification not found' })
+    // Only allow owner or admin to delete
+    if (req.user.role !== 'admin' && String(notif.ustazId) !== String(userId)) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+    await Notification.findByIdAndDelete(id)
+    res.json({ message: 'Notification deleted' })
+  } catch (err) {
+    console.error('Error deleting notification', err)
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// Delete multiple notifications by IDs
+export const deleteMultipleNotifications = async (req, res) => {
+  try {
+    const { ids } = req.body  // array of notification IDs
+    const userId = req.user.id
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'No IDs provided' })
+    }
+    const filter =
+      req.user.role === 'admin'
+        ? { _id: { $in: ids } }
+        : { _id: { $in: ids }, ustazId: userId }
+    await Notification.deleteMany(filter)
+    res.json({ message: 'Selected notifications deleted' })
+  } catch (err) {
+    console.error('Error deleting multiple notifications', err)
+    res.status(500).json({ message: err.message })
+  }
+}
