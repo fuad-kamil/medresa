@@ -71,12 +71,22 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
     if (!streamRef.current) return;
     const track = streamRef.current.getVideoTracks()[0];
     try {
+      // Standard way to enable torch
       await track.applyConstraints({
         advanced: [{ torch: !isFlashOn }]
       });
       setIsFlashOn(!isFlashOn);
     } catch (err) {
-      console.error("Failed to toggle flash:", err);
+      try {
+        // Fallback for some older Android browsers
+        await track.applyConstraints({
+          torch: !isFlashOn
+        });
+        setIsFlashOn(!isFlashOn);
+      } catch (err2) {
+        console.error("Failed to toggle flash:", err2);
+        alert("Your camera doesn't seem to support flash directly via the browser. Please ensure you're using the back camera.");
+      }
     }
   };
 
