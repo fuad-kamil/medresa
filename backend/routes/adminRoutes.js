@@ -11,6 +11,7 @@ import {
     approveUstaz,
     deleteUstaz,
     registerStudent,
+    bulkImportStudents,
     getAllStudents,
     getStudentById,
     getAllStudentsWithStats,
@@ -37,6 +38,7 @@ router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
 
 // Student management
 router.post('/students', protect, adminOnly, upload.single('photo'), registerStudent)
+router.post('/students/bulk', protect, adminOnly, bulkImportStudents)
 router.get('/students', protect, adminOnly, getAllStudents)
 router.get('/students/with-stats', protect, adminOnly, getAllStudentsWithStats)
 router.get('/students/:id', protect, adminOnly, getStudentById)
