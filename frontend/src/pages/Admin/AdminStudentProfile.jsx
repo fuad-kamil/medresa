@@ -131,7 +131,9 @@ export default function AdminStudentProfile() {
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Father</span>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {student.stream === 'kitab' ? 'Phone Number' : 'Father'}
+                    </span>
                     <span className="font-bold text-gray-800 dark:text-gray-200">{student.fatherPhone || "N/A"}</span>
                   </div>
                   
