@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, X, RefreshCw, Check } from "lucide-react";
+import { Camera, X, RefreshCw, Check, Crop } from "lucide-react";
+import Cropper from "react-easy-crop";
 
 export default function WebcamCapture({ isOpen, onClose, onCapture }) {
   const videoRef = useRef(null);
@@ -9,13 +10,22 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState("user");
 
+  // Cropper states
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
+
   const startCamera = useCallback(async (facing) => {
     // Stop any existing stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
     setCaptured(null);
+    setIsCropping(false);
     setError(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -28,7 +38,7 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
       }
     } catch (err) {
       console.error("Camera error:", err);
-      setError("Could not access camera. Make sure DroidCam is running and camera permissions are allowed.");
+      setError("Could not access camera. Make sure camera permissions are allowed.");
     }
   }, []);
 
@@ -54,8 +64,9 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    const dataUrl = canvas.toDataURL("image/jpeg", 1.0);
     setCaptured(dataUrl);
+    setIsCropping(true);
 
     // Stop video while reviewing
     if (streamRef.current) {
@@ -63,22 +74,67 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
     }
   };
 
-  const confirmCapture = () => {
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const createCroppedImage = async () => {
+    try {
+      const canvas = document.createElement("canvas");
+      const image = new Image();
+      image.src = captured;
+      
+      await new Promise(resolve => { image.onload = resolve; });
+
+      canvas.width = croppedAreaPixels.width;
+      canvas.height = croppedAreaPixels.height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(
+        image,
+        croppedAreaPixels.x,
+        croppedAreaPixels.y,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height,
+        0,
+        0,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height
+      );
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      return dataUrl;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
+  const confirmCapture = async () => {
     if (!captured) return;
+    
+    let finalImage = captured;
+    if (isCropping && croppedAreaPixels) {
+      finalImage = await createCroppedImage();
+    }
+
+    if (!finalImage) return;
+
     // Convert dataURL to File
-    const arr = captured.split(",");
+    const arr = finalImage.split(",");
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
     while (n--) u8arr[n] = bstr.charCodeAt(n);
     const file = new File([u8arr], `student_photo_${Date.now()}.jpg`, { type: mime });
-    onCapture(file, captured);
+    onCapture(file, finalImage);
     handleClose();
   };
 
   const retake = () => {
     setCaptured(null);
+    setIsCropping(false);
     startCamera(facingMode);
   };
 
@@ -92,6 +148,7 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
       streamRef.current = null;
     }
     setCaptured(null);
+    setIsCropping(false);
     setError(null);
     onClose();
   };
@@ -99,15 +156,17 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8 bg-black/80 backdrop-blur-md">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-4xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-              <Camera size={20} className="text-emerald-600 dark:text-emerald-400" />
+              {isCropping ? <Crop size={20} className="text-emerald-600 dark:text-emerald-400" /> : <Camera size={20} className="text-emerald-600 dark:text-emerald-400" />}
             </div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Take Photo</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              {isCropping ? "Edit Photo" : "Take Photo"}
+            </h2>
           </div>
           <button
             onClick={handleClose}
@@ -117,8 +176,8 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
           </button>
         </div>
 
-        {/* Camera View */}
-        <div className="relative bg-black aspect-[4/3] flex items-center justify-center">
+        {/* Viewport */}
+        <div className="relative bg-black flex-1 min-h-[50vh] flex items-center justify-center overflow-hidden">
           {error ? (
             <div className="text-center p-8">
               <p className="text-red-400 font-medium text-lg mb-4">{error}</p>
@@ -129,8 +188,19 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
                 Try Again
               </button>
             </div>
-          ) : captured ? (
-            <img src={captured} alt="Captured" className="w-full h-full object-contain" />
+          ) : isCropping && captured ? (
+            <div className="absolute inset-0">
+              <Cropper
+                image={captured}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+                classes={{ containerClassName: "w-full h-full" }}
+              />
+            </div>
           ) : (
             <video
               ref={videoRef}
@@ -144,26 +214,41 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
         </div>
 
         {/* Controls */}
-        <div className="p-5 flex items-center justify-center gap-4">
-          {captured ? (
-            <>
-              <button
-                onClick={retake}
-                className="flex-1 flex items-center justify-center gap-2 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-              >
-                <RefreshCw size={20} />
-                Retake
-              </button>
-              <button
-                onClick={confirmCapture}
-                className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition"
-              >
-                <Check size={20} />
-                Use This Photo
-              </button>
-            </>
+        <div className="p-5 bg-white dark:bg-gray-900 flex flex-col gap-4">
+          {isCropping && captured ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4 px-4">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Zoom</span>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setZoom(e.target.value)}
+                  className="flex-1 accent-emerald-600"
+                />
+              </div>
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={retake}
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                >
+                  <RefreshCw size={20} />
+                  Retake Photo
+                </button>
+                <button
+                  onClick={confirmCapture}
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition"
+                >
+                  <Check size={20} />
+                  Done Editing
+                </button>
+              </div>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center justify-center gap-4">
               <button
                 onClick={toggleCamera}
                 className="w-14 h-14 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition"
@@ -179,7 +264,7 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
                 <Camera size={32} />
               </button>
               <div className="w-14 h-14" /> {/* Spacer for centering */}
-            </>
+            </div>
           )}
         </div>
       </div>
