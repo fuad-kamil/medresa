@@ -44,14 +44,27 @@ export const registerStudent = async (req, res) => {
         const { fullName, surah, fatherPhone, motherPhone, address, assignedUstaz, stream } = req.body
         const photo = req.file ? req.file.path : null;
 
+        let finalSurah = surah;
+        let finalStream = stream || 'quran';
+
+        if (assignedUstaz) {
+            const ustaz = await User.findById(assignedUstaz);
+            if (ustaz) {
+                finalStream = ustaz.stream || 'quran';
+                if (ustaz.stream === 'kitab') {
+                    finalSurah = ustaz.kitabName || surah;
+                }
+            }
+        }
+
         const student = await Student.create({
             fullName,
-            surah,
+            surah: finalSurah,
             fatherPhone,
             motherPhone,
             address,
             assignedUstaz: assignedUstaz || undefined,
-            stream: stream || 'quran',
+            stream: finalStream,
             photo: photo || undefined
         })
 
@@ -253,9 +266,21 @@ export const transferStudent = async (req, res) => {
         const { id } = req.params;
         const { assignedUstaz } = req.body;
 
+        const updateData = { assignedUstaz };
+        
+        if (assignedUstaz) {
+            const ustaz = await User.findById(assignedUstaz);
+            if (ustaz) {
+                updateData.stream = ustaz.stream || 'quran';
+                if (ustaz.stream === 'kitab') {
+                    updateData.surah = ustaz.kitabName || '';
+                }
+            }
+        }
+
         const student = await Student.findByIdAndUpdate(
             id,
-            { assignedUstaz },
+            updateData,
             { new: true }
         ).populate('assignedUstaz', 'name email');
 
@@ -337,6 +362,13 @@ export const updateStudent = async (req, res) => {
         
         if (assignedUstaz) {
             updateData.assignedUstaz = assignedUstaz;
+            const ustaz = await User.findById(assignedUstaz);
+            if (ustaz) {
+                updateData.stream = ustaz.stream || 'quran';
+                if (ustaz.stream === 'kitab') {
+                    updateData.surah = ustaz.kitabName || surah;
+                }
+            }
         } else {
             updateData.$unset = { assignedUstaz: "" };
         }
