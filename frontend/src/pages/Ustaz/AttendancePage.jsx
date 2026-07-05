@@ -8,6 +8,8 @@ export default function AttendancePage() {
   const [attendance, setAttendance] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [validDates, setValidDates] = useState([]);
+  const { user } = useAuthStore();
 
   // Load students once on mount
   useEffect(() => {
@@ -18,6 +20,28 @@ export default function AttendancePage() {
       })
       .catch((err) => console.error(err));
   }, []);
+
+  // Compute the last 4 valid teaching dates based on ustaz settings
+  useEffect(() => {
+    const teachingDays = user?.teachingDays || [0, 1, 2, 3, 4, 5, 6];
+    const teachingDaysSet = new Set(teachingDays);
+    const days = [];
+    const cursor = new Date();
+    cursor.setHours(0, 0, 0, 0);
+
+    while (days.length < 4) {
+      if (teachingDaysSet.has(cursor.getDay())) {
+        const offsetDate = new Date(cursor.getTime() - (cursor.getTimezoneOffset() * 60000));
+        days.push(offsetDate.toISOString().split('T')[0]);
+      }
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    
+    setValidDates(days);
+    if (!days.includes(selectedDate)) {
+      setSelectedDate(days[0]);
+    }
+  }, [user]);
 
   // Load existing attendance whenever date or student list changes
   useEffect(() => {
@@ -88,37 +112,32 @@ export default function AttendancePage() {
     }
   };
 
-  const minDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const maxDate = new Date().toISOString().split('T')[0];
-
-  const { user } = useAuthStore();
-  const selectedDayOfWeek = new Date(selectedDate).getDay();
-  const teachingDays = user?.teachingDays || [0, 1, 2, 3, 4, 5, 6];
-  const isTeachingDay = teachingDays.includes(selectedDayOfWeek);
-
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <h1 className="text-3xl font-bold dark:text-white">Mark Attendance</h1>
         <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">Date:</label>
-          <input
-            type="date"
-            min={minDate}
-            max={maxDate}
+          <select
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none"
-          />
+            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none cursor-pointer min-w-[160px]"
+          >
+            {validDates.map((date) => {
+              // Parse date string securely as local time
+              const [y, m, d] = date.split('-');
+              const dateObj = new Date(y, m - 1, d);
+              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+              const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              return (
+                <option key={date} value={date}>
+                  {dayName}, {dateStr}
+                </option>
+              );
+            })}
+          </select>
         </div>
       </div>
-
-      {!isTeachingDay && (
-        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-700 dark:text-amber-400 text-sm font-medium flex items-center gap-3">
-          <span className="text-xl">⚠️</span>
-          Warning: The selected date is not one of your regular teaching days.
-        </div>
-      )}
 
       <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
