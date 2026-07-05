@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, X, RefreshCw, Check, Crop } from "lucide-react";
+import { Camera, X, RefreshCw, Check, Crop, Zap, ZapOff } from "lucide-react";
 import Cropper from "react-easy-crop";
 
 export default function WebcamCapture({ isOpen, onClose, onCapture }) {
@@ -8,13 +8,17 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
   const streamRef = useRef(null);
   const [captured, setCaptured] = useState(null);
   const [error, setError] = useState(null);
-  const [facingMode, setFacingMode] = useState("user");
+  const [facingMode, setFacingMode] = useState("environment"); // Usually back camera has flash
 
   // Cropper states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
+
+  // Flash states
+  const [flashSupported, setFlashSupported] = useState(false);
+  const [isFlashOn, setIsFlashOn] = useState(false);
 
   const startCamera = useCallback(async (facing) => {
     // Stop any existing stream
@@ -26,6 +30,8 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
     setError(null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
+    setFlashSupported(false);
+    setIsFlashOn(false);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -35,6 +41,13 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+      }
+
+      // Check if torch is supported
+      const track = stream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities();
+      if (capabilities.torch) {
+        setFlashSupported(true);
       }
     } catch (err) {
       console.error("Camera error:", err);
@@ -54,7 +67,23 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
     };
   }, [isOpen, facingMode, startCamera]);
 
-  const takeSnapshot = () => {
+  const toggleFlash = async () => {
+    if (!streamRef.current) return;
+    const track = streamRef.current.getVideoTracks()[0];
+    try {
+      await track.applyConstraints({
+        advanced: [{ torch: !isFlashOn }]
+      });
+      setIsFlashOn(!isFlashOn);
+    } catch (err) {
+      console.error("Failed to toggle flash:", err);
+    }
+  };
+
+  const takeSnapshot = async () => {
+    // If flash is enabled, maybe ensure it's on just before snapshot if we want
+    // But we let the user control the torch state manually
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
@@ -68,9 +97,14 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
     setCaptured(dataUrl);
     setIsCropping(true);
 
-    // Stop video while reviewing
+    // Stop video and turn off flash
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      const track = streamRef.current.getVideoTracks()[0];
+      if (isFlashOn && track.getCapabilities()?.torch) {
+        await track.applyConstraints({ advanced: [{ torch: false }] }).catch(console.error);
+        setIsFlashOn(false);
+      }
+      streamRef.current.getTracks().forEach(t => t.stop());
     }
   };
 
@@ -144,46 +178,52 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
 
   const handleClose = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      const track = streamRef.current.getVideoTracks()[0];
+      if (isFlashOn && track?.getCapabilities()?.torch) {
+        track.applyConstraints({ advanced: [{ torch: false }] }).catch(console.error);
+      }
+      streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
     setCaptured(null);
     setIsCropping(false);
     setError(null);
+    setFlashSupported(false);
+    setIsFlashOn(false);
     onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8 bg-black/80 backdrop-blur-md">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-4xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-full">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8 bg-black/90 backdrop-blur-md">
+      <div className="bg-[#1c1c1e] rounded-3xl shadow-2xl w-full max-w-4xl border border-gray-800 overflow-hidden flex flex-col max-h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between p-4 border-b border-gray-800/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-              {isCropping ? <Crop size={20} className="text-emerald-600 dark:text-emerald-400" /> : <Camera size={20} className="text-emerald-600 dark:text-emerald-400" />}
+            <div className="w-10 h-10 bg-yellow-500/10 rounded-full flex items-center justify-center">
+              {isCropping ? <Crop size={20} className="text-yellow-500" /> : <Camera size={20} className="text-yellow-500" />}
             </div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-              {isCropping ? "Edit Photo" : "Take Photo"}
+            <h2 className="text-xl font-bold text-white tracking-wide">
+              {isCropping ? "Crop Photo" : "Capture Photo"}
             </h2>
           </div>
           <button
             onClick={handleClose}
-            className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            className="w-10 h-10 rounded-full bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Viewport */}
-        <div className="relative bg-black flex-1 min-h-[50vh] flex items-center justify-center overflow-hidden">
+        <div className="relative bg-black flex-1 min-h-[55vh] flex items-center justify-center overflow-hidden">
           {error ? (
             <div className="text-center p-8">
               <p className="text-red-400 font-medium text-lg mb-4">{error}</p>
               <button
                 onClick={() => startCamera(facingMode)}
-                className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition"
+                className="px-6 py-3 bg-yellow-600 text-white font-bold rounded-xl hover:bg-yellow-700 transition"
               >
                 Try Again
               </button>
@@ -198,27 +238,46 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
                 onCropChange={setCrop}
                 onCropComplete={onCropComplete}
                 onZoomChange={setZoom}
-                classes={{ containerClassName: "w-full h-full" }}
+                showGrid={true}
+                cropShape="rect"
+                classes={{ 
+                  containerClassName: "w-full h-full",
+                  cropAreaClassName: "border-2 border-yellow-500 rounded-lg shadow-[0_0_0_9999em_rgba(0,0,0,0.85)]",
+                }}
               />
             </div>
           ) : (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              {/* Optional: Add a subtle overlay grid for the camera view */}
+              <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 opacity-20">
+                <div className="border-r border-b border-white"></div>
+                <div className="border-r border-b border-white"></div>
+                <div className="border-b border-white"></div>
+                <div className="border-r border-b border-white"></div>
+                <div className="border-r border-b border-white"></div>
+                <div className="border-b border-white"></div>
+                <div className="border-r border-white"></div>
+                <div className="border-r border-white"></div>
+                <div></div>
+              </div>
+            </>
           )}
           <canvas ref={canvasRef} className="hidden" />
         </div>
 
         {/* Controls */}
-        <div className="p-5 bg-white dark:bg-gray-900 flex flex-col gap-4">
+        <div className="p-6 bg-[#1c1c1e] flex flex-col gap-5">
           {isCropping && captured ? (
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-4 px-4">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Zoom</span>
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-4 px-6">
+                <span className="text-sm font-semibold text-gray-400">Zoom</span>
                 <input
                   type="range"
                   value={zoom}
@@ -227,43 +286,57 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
                   step={0.1}
                   aria-labelledby="Zoom"
                   onChange={(e) => setZoom(e.target.value)}
-                  className="flex-1 accent-emerald-600"
+                  className="flex-1 accent-yellow-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={retake}
-                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-gray-800 text-white font-bold rounded-2xl hover:bg-gray-700 transition"
                 >
                   <RefreshCw size={20} />
-                  Retake Photo
+                  Retake
                 </button>
                 <button
                   onClick={confirmCapture}
-                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-yellow-500 text-black font-bold rounded-2xl hover:bg-yellow-600 shadow-lg shadow-yellow-500/20 transition"
                 >
                   <Check size={20} />
-                  Done Editing
+                  Done
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-8 relative">
+              {flashSupported && (
+                <button
+                  onClick={toggleFlash}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center transition absolute left-0 ${
+                    isFlashOn 
+                      ? "bg-yellow-500 text-black" 
+                      : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                  }`}
+                  title={isFlashOn ? "Turn Flash Off" : "Turn Flash On"}
+                >
+                  {isFlashOn ? <Zap size={22} className="fill-current" /> : <ZapOff size={22} />}
+                </button>
+              )}
+              
+              <button
+                onClick={takeSnapshot}
+                disabled={!!error}
+                className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center hover:bg-gray-200 shadow-[0_0_0_6px_rgba(255,255,255,0.3)] transition disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
+              >
+                <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center bg-white" />
+              </button>
+
               <button
                 onClick={toggleCamera}
-                className="w-14 h-14 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                className="w-14 h-14 bg-gray-800 text-gray-300 rounded-full flex items-center justify-center hover:bg-gray-700 hover:text-white transition absolute right-0"
                 title="Switch Camera"
               >
                 <RefreshCw size={22} />
               </button>
-              <button
-                onClick={takeSnapshot}
-                disabled={!!error}
-                className="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 shadow-xl shadow-emerald-500/40 transition disabled:opacity-50 disabled:cursor-not-allowed ring-4 ring-emerald-200 dark:ring-emerald-900/50"
-              >
-                <Camera size={32} />
-              </button>
-              <div className="w-14 h-14" /> {/* Spacer for centering */}
             </div>
           )}
         </div>
