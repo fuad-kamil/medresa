@@ -36,7 +36,7 @@ const buildAbsenceEmail = (student, ustazName) => {
         <div style="padding: 24px;">
           ${student.photo ? `
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${student.photo}?t=${new Date().getTime()}" alt="${student.fullName}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #f44336; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+            <img src="${student.photo}?t=${new Date().getTime()}" alt="${student.fullName}" style="width: 150px; height: 150px; border-radius: 8px; object-fit: cover; border: 3px solid #f44336; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
           </div>
           ` : ''}
           <p style="font-size: 16px; color: #333; line-height: 1.6;">
