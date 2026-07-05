@@ -1,5 +1,6 @@
 import useAuthStore from "../../store/authStore";
 import ThemeToggle from "../Common/ThemeToggle";
+import NotificationBell from "../Common/NotificationBell";
 
 export default function AdminNavbar() {
   const { user } = useAuthStore();
@@ -14,6 +15,7 @@ export default function AdminNavbar() {
 
       <div className="flex items-center gap-5">
         <ThemeToggle />
+        <NotificationBell role="admin" />
 
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">

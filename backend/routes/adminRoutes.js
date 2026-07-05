@@ -30,6 +30,7 @@ import {
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
+import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../controllers/notificationController.js'
 
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
@@ -63,5 +64,10 @@ router.delete('/exams/:id', protect, adminOnly, deleteExam)
 // Admin Settings
 router.put('/settings/profile', protect, adminOnly, updateAdminProfile)
 router.put('/settings/password', protect, adminOnly, updateAdminPassword)
+
+// Notifications
+router.get('/notifications', protect, adminOnly, getNotifications)
+router.patch('/notifications/read-all', protect, adminOnly, markAllNotificationsRead)
+router.patch('/notifications/:id/read', protect, adminOnly, markNotificationRead)
 
 export default router

@@ -9,6 +9,7 @@ import upload from '../middleware/upload.js'
 import { getMyStudents, getWeeklyAttendance, updateUstazProfile, updateUstazPassword, registerStudent, updateStudent, updateStudentScores } from '../controllers/ustazController.js'
 import { markAttendance, updateAttendance, getAttendanceByDate, resetAttendance } from '../controllers/attendanceController.js'
 import { getMyExams, createMyExam, updateMyExam, deleteMyExam } from '../controllers/examController.js'
+import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../controllers/notificationController.js'
 
 // Ustaz-only routes
 router.get('/students', protect, ustazOnly, getMyStudents)
@@ -30,5 +31,10 @@ router.delete('/exams/:id', protect, ustazOnly, deleteMyExam)
 // Ustaz Settings
 router.put('/settings/profile', protect, ustazOnly, updateUstazProfile)
 router.put('/settings/password', protect, ustazOnly, updateUstazPassword)
+
+// Notifications
+router.get('/notifications', protect, ustazOnly, getNotifications)
+router.patch('/notifications/read-all', protect, ustazOnly, markAllNotificationsRead)
+router.patch('/notifications/:id/read', protect, ustazOnly, markNotificationRead)
 
 export default router

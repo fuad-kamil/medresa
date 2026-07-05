@@ -1,5 +1,6 @@
 import useAuthStore from "../../store/authStore";
 import ThemeToggle from "../Common/ThemeToggle";
+import NotificationBell from "../Common/NotificationBell";
 
 export default function UstazNavbar() {
   const { user } = useAuthStore();
@@ -14,6 +15,7 @@ export default function UstazNavbar() {
 
       <div className="flex items-center gap-4">
         <ThemeToggle />
+        <NotificationBell role="ustaz" />
 
         <div className="text-right">
           <p className="font-semibold text-sm text-gray-800 dark:text-white">

@@ -3,6 +3,7 @@ import Student from '../models/Student.js'
 import User from '../models/User.js'
 import sendEmail from '../utils/sendEmail.js'
 import buildAbsenceEmail from '../utils/absenceEmailTemplate.js'
+import Notification from '../models/Notification.js'
 
 // Mark Attendance
 export const markAttendance = async (req, res) => {
@@ -151,6 +152,26 @@ async function checkConsecutiveAbsences(studentIds) {
                     text: emailContent.text,
                     html: emailContent.html,
                 });
+
+                // Create in-app notification (non-blocking, won't fail the attendance save)
+                try {
+                    // Avoid duplicate notifications: only create if none exists in the last 24 hours for this student
+                    const recent = await Notification.findOne({
+                        studentId: student._id,
+                        createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+                    });
+                    if (!recent) {
+                        await Notification.create({
+                            studentId: student._id,
+                            studentName: student.fullName,
+                            ustazId: student.assignedUstaz._id,
+                            ustazName,
+                            message: `${student.fullName} missed 3 consecutive classes under Ustaz ${ustazName}.`
+                        });
+                    }
+                } catch (notifErr) {
+                    console.error('Failed to create notification:', notifErr);
+                }
             }
         } catch (err) {
             console.error(`Error in checkConsecutiveAbsences for student ${studentId}:`, err);
