@@ -7,6 +7,7 @@ export default function AdminStudentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,6 +20,16 @@ export default function AdminStudentProfile() {
       setLoading(true);
       const res = await axiosInstance.get(`/admin/students/${id}`);
       setStudent(res.data);
+      
+      // Fetch dynamic exams created by the assigned Ustaz
+      if (res.data.assignedUstaz && res.data.assignedUstaz._id) {
+        try {
+          const examsRes = await axiosInstance.get(`/admin/exams/ustaz/${res.data.assignedUstaz._id}`);
+          setExams(examsRes.data);
+        } catch (examErr) {
+          console.error("Failed to fetch exams:", examErr);
+        }
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to load student profile.");
@@ -177,18 +188,26 @@ export default function AdminStudentProfile() {
                 <div className="mt-8">
                   <h4 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">Exam Scores</h4>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <span className="font-medium text-gray-600 dark:text-gray-300">First Exam</span>
-                      <span className="font-bold text-gray-800 dark:text-white">{student.firstExam || 0}%</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <span className="font-medium text-gray-600 dark:text-gray-300">Second Exam</span>
-                      <span className="font-bold text-gray-800 dark:text-white">{student.secondExam || 0}%</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <span className="font-medium text-gray-600 dark:text-gray-300">Final Exam</span>
-                      <span className="font-bold text-gray-800 dark:text-white">{student.finalExam || 0}%</span>
-                    </div>
+                    {exams.length > 0 ? (
+                      exams.map(exam => {
+                        const scoreMap = student.examScores || {};
+                        const examKey = String(exam._id);
+                        const score = scoreMap[examKey] ?? 0;
+                        
+                        return (
+                          <div key={exam._id} className="flex justify-between items-center p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <span className="font-medium text-gray-600 dark:text-gray-300">{exam.name}</span>
+                            <span className="font-bold text-gray-800 dark:text-white">
+                              {score} / {exam.maxScore}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-4 text-center bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">No exams defined by the assigned Ustaz yet.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
