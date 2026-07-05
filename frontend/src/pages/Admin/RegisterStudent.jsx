@@ -32,6 +32,7 @@ export default function RegisterStudent() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
   const [bulkStudents, setBulkStudents] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     fetchUstazs();
@@ -167,10 +168,8 @@ export default function RegisterStudent() {
     XLSX.writeFile(wb, "Student_Bulk_Import_Template.xlsx");
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  const processFile = (file) => {
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (evt) => {
       const bstr = evt.target.result;
@@ -191,6 +190,29 @@ export default function RegisterStudent() {
       setBulkStudents(mappedData);
     };
     reader.readAsBinaryString(file);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFile(e.dataTransfer.files[0]);
+    }
   };
 
   const handleBulkSubmit = async (e) => {
@@ -282,7 +304,16 @@ export default function RegisterStudent() {
               </button>
             </div>
 
-            <div className="border-2 border-dashed border-purple-300 dark:border-purple-800/50 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl p-8 text-center transition-all hover:border-purple-500 dark:hover:border-purple-600">
+            <div 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+                isDragging 
+                  ? "border-purple-500 bg-purple-100 dark:bg-purple-900/40" 
+                  : "border-purple-300 dark:border-purple-800/50 bg-purple-50/50 dark:bg-purple-900/10 hover:border-purple-500 dark:hover:border-purple-600"
+              }`}
+            >
               <input
                 type="file"
                 accept=".xlsx, .xls, .csv"
