@@ -139,10 +139,8 @@ if (token && token !== 'your_bot_token_here') {
 
     bot.onText(/\/start/, (msg) => {
         const chatId = msg.chat.id;
-        bot.sendMessage(
-            chatId,
-            "Assalamu Alaikum! Welcome to Ali Medresa Bot. 📚\n\nPlease send your registered phone number (e.g. 0911234567) to receive your child's report card."
-        );
+        const welcomeMessage = `እንኳን ወደ አሊ መድረሳ ቦት በደህና መጡ። 📚\n\nእባክዎ የተመዘገበውን ስልክ ቁጥር (ለምሳሌ 0911234567) ይላኩ የሪፖርት ካርድዎን ለማግኘት።`;
+        bot.sendMessage(chatId, welcomeMessage);
     });
 
     bot.on('message', async (msg) => {
