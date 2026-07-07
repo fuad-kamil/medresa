@@ -32,7 +32,6 @@ async function fetchAndEmbedImage(pdfDoc, url) {
 
 // Cached font bytes to avoid re-downloading on every request
 let cachedEthiopicFontBytes = null;
-let cachedArabicFontBytes = null;
 
 async function getEthiopicFont() {
     if (cachedEthiopicFontBytes) return cachedEthiopicFontBytes;
@@ -40,14 +39,6 @@ async function getEthiopicFont() {
     const FONT_URL = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansEthiopic/NotoSansEthiopic-Regular.ttf';
     cachedEthiopicFontBytes = await fetchBytes(FONT_URL);
     return cachedEthiopicFontBytes;
-}
-
-async function getArabicFont() {
-    if (cachedArabicFontBytes) return cachedArabicFontBytes;
-    // Noto Naskh Arabic font for Arabic support
-    const FONT_URL = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Bold.ttf';
-    cachedArabicFontBytes = await fetchBytes(FONT_URL);
-    return cachedArabicFontBytes;
 }
 
 export async function generateReportPDF(student, exams, scores, rank, totalStudents, ustazName, kitabName) {
@@ -71,16 +62,7 @@ export async function generateReportPDF(student, exams, scores, rank, totalStude
         }
     }
 
-    // Embed Arabic font
-    let arFont = boldFont; // fallback
-    const arabicBytes = await getArabicFont();
-    if (arabicBytes) {
-        try {
-            arFont = await pdfDoc.embedFont(arabicBytes);
-        } catch (e) {
-            console.error("Failed to embed Arabic font:", e.message);
-        }
-    }
+
 
     // Colors matching the frontend
     const emerald600 = rgb(5 / 255, 150 / 255, 105 / 255);
@@ -103,9 +85,8 @@ export async function generateReportPDF(student, exams, scores, rank, totalStude
         page.drawImage(logoImage, { x: 40, y: y - 40, width: 60, height: 60 });
     }
 
-    // Arabic title مدرسة علي (Hardcoded reshaped and reversed for RTL rendering)
-    // ﻲﻠﻋ ﺔﺳﺭﺪﻣ
-    page.drawText('\uFEF2\uFEDE\uFEEB \uFE94\uFEB3\uFEAE\uFEA9\uFEE3', { x: 120, y: y, size: 26, font: arFont, color: emerald600 });
+    // Amharic title አሊ መድረሳ
+    page.drawText('አሊ መድረሳ', { x: 120, y: y, size: 26, font: amFont, color: emerald600 });
     
     // የተማሪ ዉጤት ካርድ
     page.drawText('\u12E8\u1270\u121B\u122A \u12CD\u1324\u1275 \u12AB\u122D\u12F5', { x: 120, y: y - 24, size: 11, font: amFont, color: gray500 }); 
