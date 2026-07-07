@@ -63,9 +63,17 @@ const getOrGenerateReport = async (student) => {
 
     const currentHash = computeScoresHash(plainScores);
 
-    // Hash match → return existing URL instantly
+    // Hash match → fetch existing PDF from Cloudinary and return as buffer
     if (student.reportCardUrl && student.reportScoresHash === currentHash) {
-        return { type: 'url', data: student.reportCardUrl };
+        try {
+            const response = await fetch(student.reportCardUrl);
+            if (!response.ok) throw new Error(`Cloudinary responded with ${response.status}`);
+            const arrayBuffer = await response.arrayBuffer();
+            return { type: 'buffer', data: Buffer.from(arrayBuffer) };
+        } catch (error) {
+            console.error('Failed to fetch existing PDF from Cloudinary, falling back to regeneration:', error);
+            // Fall back to regeneration if fetch fails
+        }
     }
 
     // Hash mismatch (or no PDF yet) → regenerate
