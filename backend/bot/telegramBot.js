@@ -76,7 +76,14 @@ const getOrGenerateReport = async (student) => {
         }
     }
 
-    // Hash mismatch (or no PDF yet) → regenerate
+    // If the report was never released (no URL), we should not generate it here.
+    // The Admin/Ustaz must explicitly press the "Send" button on the dashboard first.
+    if (!student.reportCardUrl) {
+        throw new Error("NOT_RELEASED");
+    }
+
+    // Hash mismatch → regenerate (because it was previously released, but scores changed)
+    console.log(`Generating fresh PDF for ${student.fullName} due to score update...`);
     const allUstazStudents = await Student.find({ assignedUstaz: ustazId });
     const studentsWithTotals = allUstazStudents.map(s => {
         let total = 0;
@@ -193,7 +200,11 @@ if (token && token !== 'your_bot_token_here') {
                     }
                 } catch (err) {
                     console.error(`Bot: Failed to generate report for ${student.fullName}:`, err);
-                    await bot.sendMessage(chatId, `⚠️ Could not generate report for ${student.fullName}. Error: ${err.message}`);
+                    if (err.message === "NOT_RELEASED") {
+                        await bot.sendMessage(chatId, `⚠️ The report card for ${student.fullName} has not been released yet. Please wait for the school to send it.`);
+                    } else {
+                        await bot.sendMessage(chatId, `⚠️ Could not generate report for ${student.fullName}. Error: ${err.message}`);
+                    }
                 }
             }
         } catch (error) {
