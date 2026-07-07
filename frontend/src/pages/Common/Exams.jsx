@@ -18,7 +18,8 @@ import {
   Users,
   FileText,
   AlertTriangle,
-  FileDown
+  FileDown,
+  Send
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useReactToPrint } from "react-to-print";
@@ -61,6 +62,19 @@ export default function Exams() {
   const [editingExamId, setEditingExamId] = useState(null);
   const [editingExamName, setEditingExamName] = useState("");
   const [configActionLoading, setConfigActionLoading] = useState(false);
+
+  // Telegram PDF Report states (Admin Only)
+  const [sendingReportId, setSendingReportId] = useState(null);
+  const [sentReportId, setSentReportId] = useState(null);
+  const [sendingAllReports, setSendingAllReports] = useState(false);
+  const [sendAllProgress, setSendAllProgress] = useState(null);
+  
+  // Toast Notification
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
   
   // Custom Delete Modal State
   const [deleteModalData, setDeleteModalData] = useState(null);
@@ -273,6 +287,38 @@ export default function Exams() {
     }
   };
 
+  // Telegram PDF functions
+  const sendReportToTelegram = async (studentId) => {
+    setSendingReportId(studentId);
+    try {
+      const res = await axiosInstance.post(`/admin/students/${studentId}/send-report`);
+      setSentReportId(studentId);
+      setTimeout(() => setSentReportId(null), 3000);
+      showToast(res.data.message || 'Report card generated successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast(err.response?.data?.message || 'Failed to generate report card.', 'error');
+    } finally {
+      setSendingReportId(null);
+    }
+  };
+
+  const sendAllReportsToTelegram = async () => {
+    if (!selectedUstaz) return;
+    setSendingAllReports(true);
+    setSendAllProgress('Starting...');
+    try {
+      const res = await axiosInstance.post(`/admin/send-all-reports`, { ustazId: selectedUstaz });
+      showToast(`Done! ${res.data.successCount} generated, ${res.data.failCount} failed.`, res.data.failCount === 0 ? 'success' : 'warning');
+    } catch (err) {
+      console.error(err);
+      showToast(err.response?.data?.message || 'Failed to send all reports.', 'error');
+    } finally {
+      setSendingAllReports(false);
+      setSendAllProgress(null);
+    }
+  };
+
   const filteredStudents = students.filter((student) => {
     return student.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -433,6 +479,16 @@ export default function Exams() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl text-white font-semibold text-sm max-w-sm animate-in slide-in-from-top-2 fade-in duration-300 ${
+          toast.type === 'success' ? 'bg-emerald-600' :
+          toast.type === 'warning' ? 'bg-amber-500' : 'bg-red-600'
+        }`}>
+          <span className="text-lg">{toast.type === 'success' ? '✅' : toast.type === 'warning' ? '⚠️' : '❌'}</span>
+          {toast.message}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
         <div>
@@ -506,6 +562,17 @@ export default function Exams() {
                         <Download size={18} />
                         Export
                     </button>
+
+                    {isAdmin && selectedUstaz && (
+                        <button
+                            onClick={sendAllReportsToTelegram}
+                            disabled={sendingAllReports}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl transition font-semibold text-md shadow-md cursor-pointer whitespace-nowrap hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            {sendingAllReports ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                            {sendAllProgress || "Send All to Telegram"}
+                        </button>
+                    )}
 
                     {!isAdmin && (
                         <button
@@ -731,6 +798,17 @@ export default function Exams() {
                                           {savingId === student._id ? "Saving..." : "Save Scores"}
                                       </button>
                                   )}
+                                  
+                                  {isAdmin && (
+                                    <button
+                                        onClick={() => sendReportToTelegram(student._id)}
+                                        disabled={sendingReportId === student._id}
+                                        title="Send to Telegram"
+                                        className="p-3.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 text-blue-700 dark:text-blue-400 rounded-xl transition cursor-pointer shadow-sm"
+                                    >
+                                        {sendingReportId === student._id ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                                    </button>
+                                  )}
                               </div>
                           </div>
                       );
@@ -832,6 +910,17 @@ export default function Exams() {
                                         {downloadingPdfId === student._id ? <Loader2 size={18} className="animate-spin" /> : <FileDown size={18} />}
                                     </button>
                                     
+                                    {isAdmin && (
+                                      <button
+                                          onClick={() => sendReportToTelegram(student._id)}
+                                          disabled={sendingReportId === student._id}
+                                          title="Send Report to Telegram"
+                                          className="inline-flex items-center justify-center p-2.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 disabled:opacity-50 text-blue-700 dark:text-blue-400 rounded-xl transition shadow-sm cursor-pointer"
+                                      >
+                                          {sendingReportId === student._id ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                                      </button>
+                                    )}
+
                                     {savedSuccessId === student._id ? (
                                     <span className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm shadow-sm animate-pulse w-[88px]">
                                         <CheckCircle size={16} /> Saved

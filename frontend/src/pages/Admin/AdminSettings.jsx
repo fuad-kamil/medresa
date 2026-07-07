@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { User, Lock, Moon, Sun, Save, Globe } from "lucide-react";
+import { User, Lock, Moon, Sun, Save, Globe, Trash2, Loader2 } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
 export default function AdminSettings() {
@@ -61,6 +61,26 @@ export default function AdminSettings() {
       setPasswordMsg({ text: error.response?.data?.message || "Failed to update password.", type: "error" });
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupMsg, setCleanupMsg] = useState({ text: "", type: "" });
+
+  const handleCleanupSubmit = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL report card PDFs from Cloudinary? This action cannot be undone. PDFs will be regenerated on demand next time.")) {
+        return;
+    }
+    setCleanupLoading(true);
+    setCleanupMsg({ text: "", type: "" });
+    try {
+      const res = await axiosInstance.delete("/admin/cleanup-reports");
+      setCleanupMsg({ text: res.data.message || "Cleanup successful!", type: "success" });
+      setTimeout(() => setCleanupMsg({ text: "", type: "" }), 5000);
+    } catch (error) {
+      setCleanupMsg({ text: error.response?.data?.message || "Failed to cleanup reports.", type: "error" });
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -217,6 +237,39 @@ export default function AdminSettings() {
               {passwordLoading ? "Updating..." : "Update Password"}
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Data Management Settings */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-red-100 dark:border-red-900/30">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
+            <Trash2 size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Data Management</h2>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Delete All Report Card PDFs</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-xl">
+                    Manually delete <strong>all</strong> report card PDFs stored on Cloudinary. Use this to free up storage space. PDFs will be regenerated automatically next time a parent or admin requests them. Student photos are <strong>never</strong> deleted.
+                </p>
+                {cleanupMsg.text && (
+                <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${cleanupMsg.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {cleanupMsg.text}
+                </div>
+                )}
+            </div>
+            
+            <button
+                onClick={handleCleanupSubmit}
+                disabled={cleanupLoading}
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-xl transition font-medium text-lg shrink-0"
+            >
+                {cleanupLoading ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
+                {cleanupLoading ? "Cleaning..." : "Clean Up PDFs"}
+            </button>
         </div>
       </div>
     </div>

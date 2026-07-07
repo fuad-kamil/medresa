@@ -31,6 +31,7 @@ import {
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
 import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteMultipleNotifications } from '../controllers/notificationController.js'
+import { sendStudentReport, sendAllReports, cleanupOldReports } from '../controllers/reportController.js'
 
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
@@ -48,6 +49,12 @@ router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceH
 router.delete('/students/:id/attendance', protect, adminOnly, resetStudentAttendance)
 router.put('/students/:id', protect, adminOnly, upload.single('photo'), updateStudent)
 router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)
+
+// PDF Reports
+router.post('/students/:id/send-report', protect, adminOnly, sendStudentReport)
+router.post('/send-all-reports', protect, adminOnly, sendAllReports)
+router.delete('/cleanup-reports', protect, adminOnly, cleanupOldReports)
+
 router.delete('/students/unassigned/clear', protect, adminOnly, clearUnassignedStudents)
 router.delete('/students/:id', protect, adminOnly, deleteStudent)
 router.patch('/students/:id/transfer', protect, adminOnly, transferStudent)

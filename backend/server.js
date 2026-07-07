@@ -9,6 +9,7 @@ import protect from './middleware/auth.js';
 import adminOnly from './middleware/adminOnly.js';
 
 import connectDB from './config/db.js';
+import './bot/telegramBot.js'; // Import to start bot
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';

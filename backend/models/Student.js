@@ -58,6 +58,22 @@ const studentSchema = new mongoose.Schema(
             type: Map,
             of: Number,
             default: {}
+        },
+        reportCardUrl: {
+            type: String,
+            required: false
+        },
+        reportCardPublicId: {
+            type: String,
+            required: false
+        },
+        reportScoresHash: {
+            type: String,
+            required: false
+        },
+        reportCardGeneratedAt: {
+            type: Date,
+            required: false
         }
     },
     { timestamps: true }
