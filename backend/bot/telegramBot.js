@@ -5,6 +5,7 @@ import Attendance from '../models/Attendance.js';
 import crypto from 'crypto';
 import { generateReportPDF } from '../utils/generateReportPDF.js';
 import { v2 as cloudinary } from 'cloudinary';
+import User from '../models/User.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
