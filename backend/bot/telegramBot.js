@@ -65,7 +65,7 @@ const getOrGenerateReport = async (student) => {
 
     // Hash match → return existing URL instantly
     if (student.reportCardUrl && student.reportScoresHash === currentHash) {
-        return student.reportCardUrl;
+        return { type: 'url', data: student.reportCardUrl };
     }
 
     // Hash mismatch (or no PDF yet) → regenerate
@@ -88,8 +88,9 @@ const getOrGenerateReport = async (student) => {
     const kitabName = student.assignedUstaz?.kitabName || student.stream;
 
     const pdfBytes = await generateReportPDF(student, exams, plainScores, rank, totalStudents, ustazName, kitabName);
+    const pdfBuffer = Buffer.from(pdfBytes);
 
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 folder: 'medresa/report_cards',
@@ -114,11 +115,13 @@ const getOrGenerateReport = async (student) => {
                 student.reportCardGeneratedAt = new Date();
                 await student.save();
 
-                resolve(result.secure_url);
+                resolve();
             }
         );
-        uploadStream.end(Buffer.from(pdfBytes));
+        uploadStream.end(pdfBuffer);
     });
+
+    return { type: 'buffer', data: pdfBuffer };
 };
 
 let bot = null;
@@ -168,14 +171,23 @@ if (token && token !== 'your_bot_token_here') {
 
             for (const student of students) {
                 try {
-                    const pdfUrl = await getOrGenerateReport(student);
-                    await bot.sendDocument(chatId, pdfUrl, {
-                        caption: `📄 Report Card for *${student.fullName}*`,
-                        parse_mode: 'Markdown'
-                    });
+                    const report = await getOrGenerateReport(student);
+                    
+                    if (report.type === 'url') {
+                        await bot.sendDocument(chatId, report.data, {
+                            caption: `📄 Report Card for ${student.fullName}`
+                        });
+                    } else {
+                        await bot.sendDocument(
+                            chatId, 
+                            report.data, 
+                            { caption: `📄 Report Card for ${student.fullName}` }, 
+                            { filename: `Report_Card_${student.fullName.replace(/\s+/g, '_')}.pdf`, contentType: 'application/pdf' }
+                        );
+                    }
                 } catch (err) {
                     console.error(`Bot: Failed to generate report for ${student.fullName}:`, err);
-                    await bot.sendMessage(chatId, `⚠️ Could not generate report for ${student.fullName}. Please contact the school.`);
+                    await bot.sendMessage(chatId, `⚠️ Could not generate report for ${student.fullName}. Error: ${err.message}`);
                 }
             }
         } catch (error) {
