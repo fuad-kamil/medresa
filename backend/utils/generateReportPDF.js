@@ -103,8 +103,9 @@ export async function generateReportPDF(student, exams, scores, rank, totalStude
         page.drawImage(logoImage, { x: 40, y: y - 40, width: 60, height: 60 });
     }
 
-    // Arabic title مدرسة علي
-    page.drawText('مدرسة علي', { x: 120, y: y, size: 26, font: arFont, color: emerald600 });
+    // Arabic title مدرسة علي (Hardcoded reshaped and reversed for RTL rendering)
+    // ﻲﻠﻋ ﺔﺳﺭﺪﻣ
+    page.drawText('\uFEF2\uFEDE\uFEEB \uFE94\uFEB3\uFEAE\uFEA9\uFEE3', { x: 120, y: y, size: 26, font: arFont, color: emerald600 });
     
     // የተማሪ ዉጤት ካርድ
     page.drawText('\u12E8\u1270\u121B\u122A \u12CD\u1324\u1275 \u12AB\u122D\u12F5', { x: 120, y: y - 24, size: 11, font: amFont, color: gray500 }); 
