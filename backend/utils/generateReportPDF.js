@@ -32,13 +32,22 @@ async function fetchAndEmbedImage(pdfDoc, url) {
 
 // Cached font bytes to avoid re-downloading on every request
 let cachedEthiopicFontBytes = null;
+let cachedArabicFontBytes = null;
 
 async function getEthiopicFont() {
     if (cachedEthiopicFontBytes) return cachedEthiopicFontBytes;
-    // Noto Sans Ethiopic from Google Fonts CDN (reliable)
+    // Noto Sans Ethiopic from Google Fonts CDN
     const FONT_URL = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansEthiopic/NotoSansEthiopic-Regular.ttf';
     cachedEthiopicFontBytes = await fetchBytes(FONT_URL);
     return cachedEthiopicFontBytes;
+}
+
+async function getArabicFont() {
+    if (cachedArabicFontBytes) return cachedArabicFontBytes;
+    // Noto Naskh Arabic font for Arabic support
+    const FONT_URL = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Bold.ttf';
+    cachedArabicFontBytes = await fetchBytes(FONT_URL);
+    return cachedArabicFontBytes;
 }
 
 export async function generateReportPDF(student, exams, scores, rank, totalStudents, ustazName, kitabName) {
@@ -52,13 +61,24 @@ export async function generateReportPDF(student, exams, scores, rank, totalStude
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
     // Embed Ethiopic font for Amharic labels
-    let amFont = boldFont; // fallback to bold helvetica if download fails
+    let amFont = boldFont; // fallback
     const ethiopicBytes = await getEthiopicFont();
     if (ethiopicBytes) {
         try {
             amFont = await pdfDoc.embedFont(ethiopicBytes);
         } catch (e) {
             console.error("Failed to embed Ethiopic font:", e.message);
+        }
+    }
+
+    // Embed Arabic font
+    let arFont = boldFont; // fallback
+    const arabicBytes = await getArabicFont();
+    if (arabicBytes) {
+        try {
+            arFont = await pdfDoc.embedFont(arabicBytes);
+        } catch (e) {
+            console.error("Failed to embed Arabic font:", e.message);
         }
     }
 
@@ -83,10 +103,11 @@ export async function generateReportPDF(student, exams, scores, rank, totalStude
         page.drawImage(logoImage, { x: 40, y: y - 40, width: 60, height: 60 });
     }
 
-    // Arabic title مدرسة علي — use amFont which supports Arabic chars if available, else skip Arabic
-    // We draw in two lines like the website
-    page.drawText('\u0645\u062F\u0631\u0633\u0629 \u0639\u0644\u064A', { x: 120, y: y, size: 26, font: amFont, color: emerald600 }); // مدرسة علي
-    page.drawText('\u12E8\u1270\u121B\u122A \u12D8\u1275 \u12AB\u122D\u12F5', { x: 120, y: y - 24, size: 11, font: amFont, color: gray500 }); // የተማሪ ዉጤት ካርድ
+    // Arabic title مدرسة علي
+    page.drawText('مدرسة علي', { x: 120, y: y, size: 26, font: arFont, color: emerald600 });
+    
+    // የተማሪ ዉጤት ካርድ
+    page.drawText('\u12E8\u1270\u121B\u122A \u12CD\u1324\u1275 \u12AB\u122D\u12F5', { x: 120, y: y - 24, size: 11, font: amFont, color: gray500 }); 
 
     // Student Photo
     let photoImage = null;
@@ -134,7 +155,7 @@ export async function generateReportPDF(student, exams, scores, rank, totalStude
     y -= 88;
 
     // ── ACADEMIC PERFORMANCE ─────────────────────────────────
-    page.drawText('\u12E8\u1275\u121D\u1205\u122D\u1275 \u12D8\u1275', { x: 40, y: y, size: 13, font: amFont, color: emerald600 }); // የትምህርት ውጤት
+    page.drawText('\u12E8\u1275\u121D\u1205\u122D\u1275 \u12CD\u1324\u1275', { x: 40, y: y, size: 13, font: amFont, color: emerald600 }); // የትምህርት ውጤት
     y -= 14;
 
     // Table header row
