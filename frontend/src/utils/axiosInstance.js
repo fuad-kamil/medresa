@@ -7,6 +7,11 @@ if (apiURL && !apiURL.endsWith('/api') && !apiURL.endsWith('/api/')) {
     apiURL = apiURL.replace(/\/$/, '') + '/api';
 }
 
+// Warn in console if using fallback (helps catch missing env var on Vercel)
+if (!import.meta.env.VITE_API_URL) {
+    console.warn('⚠️ VITE_API_URL is not set. Falling back to:', apiURL, '— Set this in Vercel Environment Variables.');
+}
+
 const axiosInstance = axios.create({
     baseURL: apiURL,
     timeout: 30000,
@@ -14,6 +19,7 @@ const axiosInstance = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
 
 // Add token to every request
 axiosInstance.interceptors.request.use((config) => {
