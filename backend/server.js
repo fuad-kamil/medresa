@@ -155,7 +155,7 @@ app.get('/api/trigger-alerts', protect, adminOnly, async (req, res) => {
     }
 });
 
-// Test Route
+// Health-check route
 app.get('/', (req, res) => {
     res.send(`
     <h1>Ali Medresa Backend</h1>
@@ -163,7 +163,17 @@ app.get('/', (req, res) => {
   `);
 });
 
-// 404 Handler - Fixed
+// ── Telegram Webhook route ────────────────────────────────────────────────────
+// IMPORTANT: must be mounted BEFORE the 404 catch-all below.
+// initBot() returns { webhookPath, webhookHandler } on Render (webhook mode)
+// and null on local (polling mode).
+const botConfig = initBot();
+if (botConfig) {
+    app.post(botConfig.webhookPath, botConfig.webhookHandler);
+    console.log(`Telegram webhook route mounted at POST ${botConfig.webhookPath}`);
+}
+
+// 404 Handler
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -188,26 +198,21 @@ const startServer = async () => {
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
             console.log(` Ali Medresa Backend is Ready!`);
-
-            // Initialise Telegram bot AFTER the server is listening so the
-            // webhook route is already registered when Telegram first pings it.
-            initBot(app);
-
-            // ── Keep-alive: prevent Render free-tier dyno from sleeping ────────
-            // Render spins down free services after ~15 min of inactivity.
-            // Pinging our own health endpoint every 14 minutes keeps it awake.
-            const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
-            if (RENDER_URL) {
-                setInterval(async () => {
-                    try {
-                        await fetch(`${RENDER_URL}/`);
-                        console.log('Keep-alive ping sent.');
-                    } catch (e) {
-                        console.warn('Keep-alive ping failed:', e.message);
-                    }
-                }, 14 * 60 * 1000); // every 14 minutes
-            }
         });
+
+        // ── Keep-alive: prevent Render free-tier dyno from sleeping ──────────
+        // Pings our own health endpoint every 14 minutes to stay awake.
+        const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+        if (RENDER_URL) {
+            setInterval(async () => {
+                try {
+                    await fetch(`${RENDER_URL}/`);
+                    console.log('Keep-alive ping sent.');
+                } catch (e) {
+                    console.warn('Keep-alive ping failed:', e.message);
+                }
+            }, 14 * 60 * 1000);
+        }
     } catch (error) {
         console.error('Failed to start server:', error);
     }
