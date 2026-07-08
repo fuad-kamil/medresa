@@ -222,7 +222,9 @@ export default function AllStudents() {
               {loading ? (
                 <tr>
                   <td colSpan="6" className="text-center py-20">
-                    <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full mx-auto"></div>
+                    <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-gray-500 dark:text-gray-400">Loading student records…</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">If this takes long, the server may be waking up (up to 60s)</p>
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
@@ -281,8 +283,10 @@ export default function AllStudents() {
       {/* Mobile Card View */}
       <div className="lg:hidden grid grid-cols-1 gap-4">
         {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full"></div>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full mb-4"></div>
+            <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Server may be waking up (up to 60s)</p>
           </div>
         ) : filteredStudents.length === 0 ? (
           <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 rounded-3xl shadow-sm">

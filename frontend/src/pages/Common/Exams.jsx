@@ -43,6 +43,7 @@ export default function Exams() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUstaz, setSelectedUstaz] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [savedSuccessId, setSavedSuccessId] = useState(null);
@@ -99,12 +100,14 @@ export default function Exams() {
 
   const fetchUstazs = async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const res = await axiosInstance.get("/admin/ustazs");
       const approvedKitabUstazs = res.data.filter(u => u.isApproved && u.stream === 'kitab');
       setUstazs(approvedKitabUstazs);
     } catch (err) {
       console.error("Failed to fetch Ustazs", err);
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -112,6 +115,7 @@ export default function Exams() {
 
   const loadUstazData = async () => {
     setTableLoading(true);
+    setFetchError(false);
     try {
       const examsRes = await axiosInstance.get("/ustaz/exams");
       const activeExams = examsRes.data;
@@ -124,6 +128,7 @@ export default function Exams() {
       initializeScores(kitabStudents, activeExams);
     } catch (err) {
       console.error("Failed to load ustaz data", err);
+      setFetchError(true);
     } finally {
       setTableLoading(false);
       setLoading(false);
@@ -132,6 +137,7 @@ export default function Exams() {
 
   const loadAdminUstazData = async (ustazId) => {
     setTableLoading(true);
+    setFetchError(false);
     try {
       const examsRes = await axiosInstance.get(`/admin/exams/ustaz/${ustazId}`);
       const activeExams = examsRes.data;
@@ -144,6 +150,7 @@ export default function Exams() {
       initializeScores(ustazStudents, activeExams);
     } catch (err) {
       console.error("Failed to load admin ustaz data", err);
+      setFetchError(true);
     } finally {
       setTableLoading(false);
     }
@@ -471,8 +478,10 @@ export default function Exams() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex flex-col justify-center items-center h-64 gap-4">
         <div className="animate-spin w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full font-medium"></div>
+        <p className="text-gray-500 dark:text-gray-400">Loading exams data…</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">If this takes long, the server may be waking up (up to 60s)</p>
       </div>
     );
   }
@@ -501,6 +510,21 @@ export default function Exams() {
           </p>
         </div>
       </div>
+
+      {fetchError && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <p className="font-bold text-amber-800 dark:text-amber-300">⚠️ Could not connect to the server</p>
+            <p className="text-sm text-amber-700 dark:text-amber-400 mt-0.5">The server may still be starting up. Wait a few seconds then retry.</p>
+          </div>
+          <button
+            onClick={isAdmin ? (selectedUstaz ? () => loadAdminUstazData(selectedUstaz) : fetchUstazs) : loadUstazData}
+            className="shrink-0 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition text-sm"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Admin Dropdown Section */}
       {isAdmin && (
