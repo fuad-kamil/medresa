@@ -1,8 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { User, Lock, Moon, Sun, Save, Globe, Trash2, Loader2 } from "lucide-react";
+import { User, Lock, Moon, Sun, Save, Globe, Trash2, Loader2, Bot, ShieldOff, ShieldCheck, AlertTriangle, X } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
+// ─── Reusable styled confirmation modal ───────────────────────────────────────
+function ConfirmModal({ open, onConfirm, onCancel, title, description, confirmLabel = "Confirm", danger = false }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Card */}
+      <div className="relative z-10 bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 max-w-md w-full p-8 animate-fadeIn">
+        {/* Icon */}
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 ${danger ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+          <AlertTriangle size={32} className={danger ? "text-red-500" : "text-amber-500"} />
+        </div>
+        {/* Close */}
+        <button
+          onClick={onCancel}
+          className="absolute top-5 right-5 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition"
+        >
+          <X size={20} />
+        </button>
+
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white text-center mb-2">{title}</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-8 leading-relaxed">{description}</p>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 py-3 rounded-xl font-medium text-white transition ${
+              danger
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-amber-500 hover:bg-amber-600"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Settings Page ────────────────────────────────────────────────────────
 export default function AdminSettings() {
   const { user, login, theme, toggleTheme, token, language, setLanguage } = useAuthStore();
 
@@ -24,13 +75,39 @@ export default function AdminSettings() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState({ text: "", type: "" });
 
+  // Cleanup PDF State
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupMsg, setCleanupMsg] = useState({ text: "", type: "" });
+  const [showCleanupModal, setShowCleanupModal] = useState(false);
+
+  // Bot Lock State
+  const [botLocked, setBotLocked] = useState(false);
+  const [botLockLoading, setBotLockLoading] = useState(false);
+  const [botStatusLoading, setBotStatusLoading] = useState(true);
+  const [botMsg, setBotMsg] = useState({ text: "", type: "" });
+  const [showBotLockModal, setShowBotLockModal] = useState(false);
+
+  // Fetch current bot lock status on mount
+  useEffect(() => {
+    const fetchBotStatus = async () => {
+      try {
+        const res = await axiosInstance.get("/admin/bot-status");
+        setBotLocked(res.data.locked);
+      } catch (err) {
+        console.error("Failed to fetch bot status:", err);
+      } finally {
+        setBotStatusLoading(false);
+      }
+    };
+    fetchBotStatus();
+  }, []);
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileLoading(true);
     setProfileMsg("");
     try {
       const res = await axiosInstance.put("/admin/settings/profile", profileData);
-      // Update local storage and zustand store with the updated user info
       login(res.data.user, token);
       setProfileMsg("Profile updated successfully!");
       setTimeout(() => setProfileMsg(""), 3000);
@@ -64,13 +141,9 @@ export default function AdminSettings() {
     }
   };
 
-  const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [cleanupMsg, setCleanupMsg] = useState({ text: "", type: "" });
-
+  // Called after modal confirms
   const handleCleanupSubmit = async () => {
-    if (!window.confirm("Are you sure you want to delete ALL report card PDFs from Cloudinary? This action cannot be undone. PDFs will be regenerated on demand next time.")) {
-        return;
-    }
+    setShowCleanupModal(false);
     setCleanupLoading(true);
     setCleanupMsg({ text: "", type: "" });
     try {
@@ -84,8 +157,50 @@ export default function AdminSettings() {
     }
   };
 
+  // Called after bot lock/unlock modal confirms
+  const handleBotLockToggle = async () => {
+    setShowBotLockModal(false);
+    setBotLockLoading(true);
+    setBotMsg({ text: "", type: "" });
+    try {
+      const res = await axiosInstance.post("/admin/bot-lock", { locked: !botLocked });
+      setBotLocked(res.data.locked);
+      setBotMsg({ text: res.data.message, type: "success" });
+      setTimeout(() => setBotMsg({ text: "", type: "" }), 4000);
+    } catch (error) {
+      setBotMsg({ text: error.response?.data?.message || "Failed to update bot status.", type: "error" });
+    } finally {
+      setBotLockLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* Confirmation Modals */}
+      <ConfirmModal
+        open={showCleanupModal}
+        onCancel={() => setShowCleanupModal(false)}
+        onConfirm={handleCleanupSubmit}
+        danger
+        title="Delete All Report PDFs?"
+        description="This will permanently delete ALL report card PDFs from Cloudinary. PDFs will be regenerated automatically the next time a parent or admin requests them. Student photos are never deleted."
+        confirmLabel="Yes, Delete All"
+      />
+
+      <ConfirmModal
+        open={showBotLockModal}
+        onCancel={() => setShowBotLockModal(false)}
+        onConfirm={handleBotLockToggle}
+        danger={!botLocked}
+        title={botLocked ? "Activate the Bot?" : "Lock the Bot?"}
+        description={
+          botLocked
+            ? "The Telegram bot will start responding to parent messages again immediately."
+            : "Parents will not be able to receive report cards via the Telegram bot until you re-activate it."
+        }
+        confirmLabel={botLocked ? "Yes, Activate" : "Yes, Lock Bot"}
+      />
+
       <div>
         <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">Settings</h1>
         <p className="text-gray-600 dark:text-gray-400">Manage your admin profile and system preferences.</p>
@@ -163,7 +278,7 @@ export default function AdminSettings() {
             </div>
 
             {profileMsg && (
-              <div className={`p-3 rounded-lg text-sm font-medium ${profileMsg.includes('success') ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+              <div className={`p-3 rounded-lg text-sm font-medium ${profileMsg.includes("success") ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
                 {profileMsg}
               </div>
             )}
@@ -223,7 +338,7 @@ export default function AdminSettings() {
             </div>
 
             {passwordMsg.text && (
-              <div className={`p-3 rounded-lg text-sm font-medium ${passwordMsg.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+              <div className={`p-3 rounded-lg text-sm font-medium ${passwordMsg.type === "success" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
                 {passwordMsg.text}
               </div>
             )}
@@ -240,6 +355,66 @@ export default function AdminSettings() {
         </div>
       </div>
 
+      {/* Telegram Bot Control */}
+      <div className={`bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border ${botLocked ? "border-red-200 dark:border-red-900/40" : "border-emerald-100 dark:border-emerald-900/30"}`}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className={`p-3 rounded-xl ${botLocked ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"}`}>
+            <Bot size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Telegram Bot Control</h2>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Bot Status</h3>
+              {botStatusLoading ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500">
+                  <Loader2 size={12} className="animate-spin" /> Loading…
+                </span>
+              ) : botLocked ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                  <ShieldOff size={12} /> Locked
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                  <ShieldCheck size={12} /> Active
+                </span>
+              )}
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xl">
+              {botLocked
+                ? "The Telegram bot is currently locked. Parents cannot receive report cards via Telegram."
+                : "The Telegram bot is active. Parents can send their phone number to receive report cards."}
+            </p>
+            {botMsg.text && (
+              <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${botMsg.type === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"}`}>
+                {botMsg.text}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setShowBotLockModal(true)}
+            disabled={botLockLoading || botStatusLoading}
+            className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition font-medium text-lg shrink-0 text-white disabled:opacity-50 ${
+              botLocked
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
+          >
+            {botLockLoading
+              ? <Loader2 size={20} className="animate-spin" />
+              : botLocked
+              ? <ShieldCheck size={20} />
+              : <ShieldOff size={20} />}
+            {botLockLoading ? "Updating…" : botLocked ? "Activate Bot" : "Lock Bot"}
+          </button>
+        </div>
+      </div>
+
       {/* Data Management Settings */}
       <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-red-100 dark:border-red-900/30">
         <div className="flex items-center gap-3 mb-6">
@@ -250,26 +425,26 @@ export default function AdminSettings() {
         </div>
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Delete All Report Card PDFs</h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-xl">
-                    Manually delete <strong>all</strong> report card PDFs stored on Cloudinary. Use this to free up storage space. PDFs will be regenerated automatically next time a parent or admin requests them. Student photos are <strong>never</strong> deleted.
-                </p>
-                {cleanupMsg.text && (
-                <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${cleanupMsg.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    {cleanupMsg.text}
-                </div>
-                )}
-            </div>
-            
-            <button
-                onClick={handleCleanupSubmit}
-                disabled={cleanupLoading}
-                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-xl transition font-medium text-lg shrink-0"
-            >
-                {cleanupLoading ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
-                {cleanupLoading ? "Cleaning..." : "Clean Up PDFs"}
-            </button>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">Delete All Report Card PDFs</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-xl">
+              Manually delete <strong>all</strong> report card PDFs stored on Cloudinary. Use this to free up storage space. PDFs will be regenerated automatically next time a parent or admin requests them. Student photos are <strong>never</strong> deleted.
+            </p>
+            {cleanupMsg.text && (
+              <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${cleanupMsg.type === "success" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                {cleanupMsg.text}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setShowCleanupModal(true)}
+            disabled={cleanupLoading}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-xl transition font-medium text-lg shrink-0"
+          >
+            {cleanupLoading ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
+            {cleanupLoading ? "Cleaning..." : "Clean Up PDFs"}
+          </button>
         </div>
       </div>
     </div>
