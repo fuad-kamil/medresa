@@ -32,7 +32,6 @@ import {
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
 import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteMultipleNotifications } from '../controllers/notificationController.js'
 import { sendStudentReport, sendAllReports, cleanupOldReports } from '../controllers/reportController.js'
-import { getBotLocked, setBotLocked } from '../bot/telegramBot.js'
 
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
@@ -79,18 +78,5 @@ router.patch('/notifications/read-all', protect, adminOnly, markAllNotifications
 router.patch('/notifications/:id/read', protect, adminOnly, markNotificationRead)
 router.delete('/notifications/bulk', protect, adminOnly, deleteMultipleNotifications)
 router.delete('/notifications/:id', protect, adminOnly, deleteNotification)
-
-// Telegram Bot Lock
-router.get('/bot-status',  protect, adminOnly, (req, res) => {
-    res.json({ success: true, locked: getBotLocked() })
-})
-router.post('/bot-lock', protect, adminOnly, (req, res) => {
-    const { locked } = req.body
-    if (typeof locked !== 'boolean') {
-        return res.status(400).json({ success: false, message: 'locked must be a boolean' })
-    }
-    setBotLocked(locked)
-    res.json({ success: true, locked, message: locked ? 'Bot has been locked.' : 'Bot is now active.' })
-})
 
 export default router

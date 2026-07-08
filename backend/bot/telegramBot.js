@@ -16,12 +16,6 @@ cloudinary.config({
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
-// ─── Bot lock state (in-memory; persists for the lifetime of the process) ─────
-let _botLocked = false;
-
-export const getBotLocked   = () => _botLocked;
-export const setBotLocked   = (val) => { _botLocked = !!val; };
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const computeScoresHash = (scores) => {
@@ -84,11 +78,11 @@ const getOrGenerateReport = async (student) => {
         return { id: s._id.toString(), total };
     }).sort((a, b) => b.total - a.total);
 
-    const rankIndex     = studentsWithTotals.findIndex(s => s.id === student._id.toString());
-    const rank          = rankIndex >= 0 ? rankIndex + 1 : null;
+    const rankIndex    = studentsWithTotals.findIndex(s => s.id === student._id.toString());
+    const rank         = rankIndex >= 0 ? rankIndex + 1 : null;
     const totalStudents = allUstazStudents.length;
-    const ustazName     = student.assignedUstaz?.name;
-    const kitabName     = student.assignedUstaz?.kitabName || student.stream;
+    const ustazName    = student.assignedUstaz?.name;
+    const kitabName    = student.assignedUstaz?.kitabName || student.stream;
 
     const pdfBytes  = await generateReportPDF(student, exams, plainScores, rank, totalStudents, ustazName, kitabName);
     const pdfBuffer = Buffer.from(pdfBytes);
@@ -131,15 +125,6 @@ const handleMessage = async (bot, msg) => {
         return;
     }
     if (text.startsWith('/')) return;
-
-    // ── Check if bot is locked by admin ──────────────────────────────────────
-    if (_botLocked) {
-        await bot.sendMessage(
-            chatId,
-            '🔒 The bot is currently unavailable. Please try again later or contact the school directly.'
-        );
-        return;
-    }
 
     let phone = text.replace(/\s+/g, '');
     if (phone.startsWith('+251') && phone.length === 13) phone = '0' + phone.slice(4);
@@ -188,7 +173,7 @@ const handleMessage = async (bot, msg) => {
 
 // ─── Bot initialisation ───────────────────────────────────────────────────────
 // Returns { webhookPath, webhookHandler } so server.js can mount the route
-// BEFORE the 404 catch-all.
+// in the correct position (BEFORE the 404 catch-all).
 
 export function initBot() {
     if (!token || token === 'your_bot_token_here') {
@@ -204,11 +189,13 @@ export function initBot() {
         const webhookPath = `/bot${token}`;
         const webhookUrl  = `${renderUrl}${webhookPath}`;
 
+        // Express route handler — server.js will mount this BEFORE the 404 handler
         const webhookHandler = (req, res) => {
             bot.processUpdate(req.body);
             res.sendStatus(200);
         };
 
+        // Register webhook with Telegram (with retries)
         const registerWebhook = async (attempt = 1) => {
             try {
                 await bot.setWebHook(webhookUrl);
@@ -230,7 +217,7 @@ export function initBot() {
         bot.on('polling_error', (err) => console.error('Telegram polling error:', err.message));
         bot.on('message', (msg) => handleMessage(bot, msg));
         console.log('✅ Telegram Bot started in POLLING mode (local dev).');
-        return null;
+        return null; // no webhook route needed locally
     }
 }
 
