@@ -9,19 +9,19 @@ if (apiURL && !apiURL.endsWith('/api') && !apiURL.endsWith('/api/')) {
 
 // Warn in console if using fallback (helps catch missing env var on Vercel)
 if (!import.meta.env.VITE_API_URL) {
-    console.warn('⚠️ VITE_API_URL is not set. Falling back to:', apiURL, '— Set this in Vercel Environment Variables.');
+    console.warn('⚠️ VITE_API_URL is not set. Falling back to:', apiURL);
 }
 
 const axiosInstance = axios.create({
     baseURL: apiURL,
-    timeout: 30000,
+    // 60s timeout — Render free-tier cold starts can take up to 50 seconds
+    timeout: 60000,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-
-// Add token to every request
+// ── Auth token interceptor ────────────────────────────────────────────────────
 axiosInstance.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -29,5 +29,47 @@ axiosInstance.interceptors.request.use((config) => {
     }
     return config;
 });
+
+// ── Auto-retry on network errors (Render cold-start) ─────────────────────────
+// Retries up to 3 times with exponential backoff (2s, 4s, 8s).
+// Only retries on network-level failures (ERR_CONNECTION_CLOSED, timeout, etc.)
+// NOT on 4xx/5xx responses (those are real errors that should surface to UI).
+axiosInstance.interceptors.response.use(
+    // Success — pass through unchanged
+    (response) => response,
+
+    async (error) => {
+        const config = error.config;
+
+        // Don't retry if:
+        // 1. We already retried the max number of times
+        // 2. The server returned an actual HTTP error (4xx/5xx) — only retry true network failures
+        // 3. No config (shouldn't happen, but guard anyway)
+        const isNetworkError = !error.response && (
+            error.code === 'ERR_NETWORK' ||
+            error.code === 'ERR_CONNECTION_CLOSED' ||
+            error.code === 'ECONNABORTED' ||
+            error.message === 'Network Error'
+        );
+
+        if (!config || !isNetworkError) {
+            return Promise.reject(error);
+        }
+
+        config._retryCount = config._retryCount || 0;
+        const MAX_RETRIES = 3;
+
+        if (config._retryCount >= MAX_RETRIES) {
+            return Promise.reject(error);
+        }
+
+        config._retryCount += 1;
+        const delayMs = 2000 * config._retryCount; // 2s, 4s, 6s
+        console.warn(`🔄 Network error — retrying request (${config._retryCount}/${MAX_RETRIES}) in ${delayMs / 1000}s…`, config.url);
+
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        return axiosInstance(config);
+    }
+);
 
 export default axiosInstance;

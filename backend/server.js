@@ -155,13 +155,18 @@ app.get('/api/trigger-alerts', protect, adminOnly, async (req, res) => {
     }
 });
 
-// Health-check route
+// Health-check route — used by keep-alive ping and UptimeRobot
 app.get('/', (req, res) => {
     res.send(`
     <h1>Ali Medresa Backend</h1>
     <p>Server is running successfully!</p>
   `);
 });
+
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 
 // ── Telegram Webhook route ────────────────────────────────────────────────────
 // IMPORTANT: must be mounted BEFORE the 404 catch-all below.
@@ -201,17 +206,19 @@ const startServer = async () => {
         });
 
         // ── Keep-alive: prevent Render free-tier dyno from sleeping ──────────
-        // Pings our own health endpoint every 14 minutes to stay awake.
+        // Pings our own /health endpoint every 10 minutes.
+        // NOTE: For reliable uptime, also add this URL to UptimeRobot (free):
+        //   https://uptimerobot.com  → Monitor URL: <RENDER_URL>/health
         const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
         if (RENDER_URL) {
             setInterval(async () => {
                 try {
-                    await fetch(`${RENDER_URL}/`);
-                    console.log('Keep-alive ping sent.');
+                    const res = await fetch(`${RENDER_URL}/health`);
+                    console.log(`Keep-alive ping → ${res.status} ${res.statusText}`);
                 } catch (e) {
                     console.warn('Keep-alive ping failed:', e.message);
                 }
-            }, 14 * 60 * 1000);
+            }, 10 * 60 * 1000); // every 10 minutes
         }
     } catch (error) {
         console.error('Failed to start server:', error);
