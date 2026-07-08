@@ -80,26 +80,32 @@ export const registerStudent = async (req, res) => {
 // Bulk Import Students
 export const bulkImportStudents = async (req, res) => {
     try {
-        const studentsData = req.body; 
-        
+        const studentsData = req.body;
+
         if (!Array.isArray(studentsData) || studentsData.length === 0) {
             return res.status(400).json({ message: 'No valid students data provided' });
         }
 
         // Validate and sanitize incoming JSON
+        // Kitab rows: frontend maps "Phone" → fatherPhone (motherPhone stays empty)
+        // Quran rows: frontend maps "Father Phone" → fatherPhone, "Mother Phone" → motherPhone
         const validStudents = studentsData.map(s => {
+            const stream = (s.stream && s.stream.toString().toLowerCase() === 'kitab') ? 'kitab' : 'quran';
             return {
-                fullName: s.fullName,
-                stream: (s.stream && s.stream.toString().toLowerCase() === 'kitab') ? 'kitab' : 'quran',
-                fatherPhone: s.fatherPhone,
-                motherPhone: s.motherPhone || '',
-                address: s.address || '',
-                status: 'active'
+                fullName:    s.fullName,
+                stream,
+                surah:       s.surah || '',
+                fatherPhone: s.fatherPhone || '',
+                motherPhone: stream === 'kitab' ? '' : (s.motherPhone || ''),
+                address:     s.address || '',
+                status:      'active'
             };
-        }).filter(s => s.fullName && s.fatherPhone); // Only keep rows with required fields
+        }).filter(s => s.fullName && s.fatherPhone); // fatherPhone is always set (mapped from "Phone" for kitab)
 
         if (validStudents.length === 0) {
-            return res.status(400).json({ message: 'No valid students found in the upload. Please check required columns (Full Name, Father Phone).' });
+            return res.status(400).json({
+                message: 'No valid students found. Quran template needs: Full Name + Father Phone. Kitab template needs: Full Name + Phone.'
+            });
         }
 
         const inserted = await Student.insertMany(validStudents);

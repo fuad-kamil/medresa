@@ -159,13 +159,23 @@ export default function RegisterStudent() {
     }
   };
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.json_to_sheet([
-      { "Full Name": "Ahmad Ali", "Stream": "quran", "Kitab Name / Surah": "Al-Baqarah", "Father Phone": "0911223344", "Mother Phone": "0911223355", "Address": "Addis Ababa" }
-    ]);
+  const downloadTemplate = (stream) => {
+    let rows, filename;
+    if (stream === 'kitab') {
+      rows = [
+        { "Full Name": "Ahmad Ali", "Stream": "kitab", "Kitab Name": "Ajrumiyyah", "Phone": "0911223344", "Address": "Addis Ababa" }
+      ];
+      filename = "Kitab_Students_Import_Template.xlsx";
+    } else {
+      rows = [
+        { "Full Name": "Ahmad Ali", "Stream": "quran", "Surah": "Al-Baqarah", "Father Phone": "0911223344", "Mother Phone": "0911223355", "Address": "Addis Ababa" }
+      ];
+      filename = "Quran_Students_Import_Template.xlsx";
+    }
+    const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
-    XLSX.writeFile(wb, "Student_Bulk_Import_Template.xlsx");
+    XLSX.writeFile(wb, filename);
   };
 
   const processFile = (file) => {
@@ -177,15 +187,28 @@ export default function RegisterStudent() {
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       const data = XLSX.utils.sheet_to_json(ws);
-      
-      const mappedData = data.map(row => ({
-        fullName: row["Full Name"] || "",
-        stream: row["Stream"] || "",
-        surah: row["Kitab Name / Surah"] || "",
-        fatherPhone: row["Father Phone"] ? String(row["Father Phone"]) : "",
-        motherPhone: row["Mother Phone"] ? String(row["Mother Phone"]) : "",
-        address: row["Address"] || ""
-      })).filter(s => s.fullName && s.fatherPhone);
+
+      const mappedData = data.map(row => {
+        const stream = (row["Stream"] || "").toString().toLowerCase().trim();
+        const isKitab = stream === "kitab";
+
+        // Kitab template uses "Phone"; Quran template uses "Father Phone" + "Mother Phone"
+        const phone       = row["Phone"]         ? String(row["Phone"])         : "";
+        const fatherPhone = row["Father Phone"]  ? String(row["Father Phone"])  : phone;
+        const motherPhone = row["Mother Phone"]  ? String(row["Mother Phone"])  : "";
+
+        // Surah / Kitab name column — support both old merged column and new split columns
+        const surah = row["Surah"] || row["Kitab Name"] || row["Kitab Name / Surah"] || "";
+
+        return {
+          fullName:    row["Full Name"] || "",
+          stream:      isKitab ? "kitab" : "quran",
+          surah:       String(surah),
+          fatherPhone,
+          motherPhone,
+          address:     row["Address"] || ""
+        };
+      }).filter(s => s.fullName && s.fatherPhone); // fatherPhone is always populated (from Phone col for kitab)
 
       setBulkStudents(mappedData);
     };
@@ -290,18 +313,48 @@ export default function RegisterStudent() {
         {isBulkMode ? (
           <form onSubmit={handleBulkSubmit} className="space-y-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Import Multiple Students</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Import Multiple Students</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-xl mx-auto">
-                Download the template below, fill it with your students' data, and upload the saved file to register them all at once.
+                Download the correct template for your stream, fill it with student data, then upload the file.
               </p>
-              <button
-                type="button"
-                onClick={downloadTemplate}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition"
-              >
-                <Download size={20} />
-                Download Excel Template
-              </button>
+
+              {/* Two template download buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={() => downloadTemplate('quran')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-300 font-bold rounded-xl transition"
+                >
+                  <Download size={18} />
+                  Quran Template
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadTemplate('kitab')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 font-bold rounded-xl transition"
+                >
+                  <Download size={18} />
+                  Kitab Template
+                </button>
+              </div>
+
+              {/* Column guide */}
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-2xl mx-auto">
+                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl p-4">
+                  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2 uppercase tracking-wide">Quran Template Columns</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono leading-relaxed">
+                    Full Name · Stream · Surah<br/>
+                    Father Phone · Mother Phone · Address
+                  </p>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl p-4">
+                  <p className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-2 uppercase tracking-wide">Kitab Template Columns</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono leading-relaxed">
+                    Full Name · Stream · Kitab Name<br/>
+                    Phone · Address
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div 
