@@ -9,7 +9,7 @@ import protect from './middleware/auth.js';
 import adminOnly from './middleware/adminOnly.js';
 
 import connectDB from './config/db.js';
-import './bot/telegramBot.js'; // Import to start bot
+import { initBot } from './bot/telegramBot.js';
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
@@ -188,6 +188,25 @@ const startServer = async () => {
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
             console.log(` Ali Medresa Backend is Ready!`);
+
+            // Initialise Telegram bot AFTER the server is listening so the
+            // webhook route is already registered when Telegram first pings it.
+            initBot(app);
+
+            // ── Keep-alive: prevent Render free-tier dyno from sleeping ────────
+            // Render spins down free services after ~15 min of inactivity.
+            // Pinging our own health endpoint every 14 minutes keeps it awake.
+            const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+            if (RENDER_URL) {
+                setInterval(async () => {
+                    try {
+                        await fetch(`${RENDER_URL}/`);
+                        console.log('Keep-alive ping sent.');
+                    } catch (e) {
+                        console.warn('Keep-alive ping failed:', e.message);
+                    }
+                }, 14 * 60 * 1000); // every 14 minutes
+            }
         });
     } catch (error) {
         console.error('Failed to start server:', error);
