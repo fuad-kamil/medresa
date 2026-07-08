@@ -31,9 +31,9 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 // ── Auto-retry on network errors (Render cold-start) ─────────────────────────
-// Retries up to 3 times with exponential backoff (2s, 4s, 8s).
-// Only retries on network-level failures (ERR_CONNECTION_CLOSED, timeout, etc.)
-// NOT on 4xx/5xx responses (those are real errors that should surface to UI).
+// Retries up to 4 times: 5s, 10s, 15s, 20s delays.
+// Render free-tier cold starts take 30-50 seconds — we need longer waits than typical.
+// Only retries on network-level failures, NOT on 4xx/5xx HTTP errors.
 axiosInstance.interceptors.response.use(
     // Success — pass through unchanged
     (response) => response,
@@ -49,6 +49,7 @@ axiosInstance.interceptors.response.use(
             error.code === 'ERR_NETWORK' ||
             error.code === 'ERR_CONNECTION_CLOSED' ||
             error.code === 'ECONNABORTED' ||
+            error.code === 'ECONNRESET' ||
             error.message === 'Network Error'
         );
 
@@ -57,15 +58,15 @@ axiosInstance.interceptors.response.use(
         }
 
         config._retryCount = config._retryCount || 0;
-        const MAX_RETRIES = 3;
+        const MAX_RETRIES = 4;
 
         if (config._retryCount >= MAX_RETRIES) {
             return Promise.reject(error);
         }
 
         config._retryCount += 1;
-        const delayMs = 2000 * config._retryCount; // 2s, 4s, 6s
-        console.warn(`🔄 Network error — retrying request (${config._retryCount}/${MAX_RETRIES}) in ${delayMs / 1000}s…`, config.url);
+        const delayMs = 5000 * config._retryCount; // 5s, 10s, 15s, 20s
+        console.warn(`🔄 Network error — retrying (${config._retryCount}/${MAX_RETRIES}) in ${delayMs / 1000}s…`, config.url);
 
         await new Promise(resolve => setTimeout(resolve, delayMs));
         return axiosInstance(config);

@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [ustazAttendanceStatus, setUstazAttendanceStatus] = useState({});
   const [expandedUstazId, setExpandedUstazId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   // History Modal State
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -33,27 +34,37 @@ export default function AdminDashboard() {
   const [isDeleteUstazModalOpen, setIsDeleteUstazModalOpen] = useState(false);
   const [ustazToDelete, setUstazToDelete] = useState(null);
 
+  const fetchData = async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      // Use allSettled so a single failing request doesn't kill the whole dashboard
+      const [studentsRes, ustazsRes, attendanceRes, attStatusRes] = await Promise.allSettled([
+        axiosInstance.get("/admin/students"),
+        axiosInstance.get("/admin/ustazs"),
+        axiosInstance.get("/admin/attendance/today"),
+        axiosInstance.get("/admin/ustazs/attendance-status"),
+      ]);
+
+      if (studentsRes.status === 'fulfilled')   setStudents(studentsRes.value.data);
+      if (ustazsRes.status === 'fulfilled')     setUstazs(ustazsRes.value.data);
+      if (attendanceRes.status === 'fulfilled') setTodayAttendance(attendanceRes.value.data);
+      if (attStatusRes.status === 'fulfilled')  setUstazAttendanceStatus(attStatusRes.value.data);
+
+      // Show error banner only if ALL requests failed (server is completely unreachable)
+      const allFailed = [studentsRes, ustazsRes, attendanceRes, attStatusRes]
+        .every(r => r.status === 'rejected');
+      if (allFailed) setFetchError(true);
+
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [studentsRes, ustazsRes, attendanceRes, attStatusRes] = await Promise.all([
-          axiosInstance.get("/admin/students"),
-          axiosInstance.get("/admin/ustazs"),
-          axiosInstance.get("/admin/attendance/today"),
-          axiosInstance.get("/admin/ustazs/attendance-status"),
-        ]);
-
-        setStudents(studentsRes.data);
-        setUstazs(ustazsRes.data);
-        setTodayAttendance(attendanceRes.data);
-        setUstazAttendanceStatus(attStatusRes.data);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (token) fetchData();
   }, [token]);
 
@@ -183,7 +194,13 @@ export default function AdminDashboard() {
     attendancePercentage = Math.round((presentCount / totalStudents) * 100);
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;
+  if (loading) return (
+    <div className="text-center py-20">
+      <div className="inline-block w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+      <p className="text-gray-500 dark:text-gray-400">Loading dashboard…</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">If this takes long, the server may be waking up (up to 60s)</p>
+    </div>
+  );
 
   const approvedUstazs = ustazs.filter(u => u.isApproved);
   const quranUstazsCount = ustazs.filter(u => u.stream === 'quran' || !u.stream).length;
@@ -191,6 +208,21 @@ export default function AdminDashboard() {
 
   return (
     <div>
+      {/* Server waking up banner */}
+      {fetchError && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <p className="font-bold text-amber-800 dark:text-amber-300">⚠️ Could not connect to the server</p>
+            <p className="text-sm text-amber-700 dark:text-amber-400 mt-0.5">The server may still be starting up. Wait a few seconds then retry.</p>
+          </div>
+          <button
+            onClick={fetchData}
+            className="shrink-0 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div className="mb-10">
         <h1 className="text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-400 pb-2">
           Assalamu Alaikum
@@ -199,7 +231,6 @@ export default function AdminDashboard() {
           Welcome to your dashboard
         </p>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow border border-gray-100 dark:border-gray-700 hover:shadow-xl transition">
           <div className="flex justify-between items-start">
