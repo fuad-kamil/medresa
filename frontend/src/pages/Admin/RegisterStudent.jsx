@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { UserPlus, UserCog, Search, Upload, Download, FileSpreadsheet, Check } from "lucide-react";
+import toast from 'react-hot-toast';
 import { SURAHS } from "../../utils/surahs";
 import WebcamCapture from "../../components/WebcamCapture";
 import * as XLSX from "xlsx";
@@ -27,7 +28,6 @@ export default function RegisterStudent() {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState({ show: false, message: "" });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
@@ -92,7 +92,6 @@ export default function RegisterStudent() {
 
   const toggleMode = (newMode) => {
     setMode(newMode);
-    setSuccess({ show: false, message: "" });
     setSelectedStudentId("");
     setSearchTerm("");
     setFormData({
@@ -123,20 +122,20 @@ export default function RegisterStudent() {
 
       if (isEditMode) {
         if (!selectedStudentId) {
-          alert("Please select a student to update");
+          toast.error("Please select a student to update");
           setLoading(false);
           return;
         }
         await axiosInstance.put(`/admin/students/${selectedStudentId}`, submitData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-        setSuccess({ show: true, message: "✅ Student Updated Successfully!" });
+        toast.success("Student Updated Successfully!");
         fetchAllStudents();
       } else {
         await axiosInstance.post("/admin/students", submitData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-        setSuccess({ show: true, message: "✅ Student Registered Successfully!" });
+        toast.success("Student Registered Successfully!");
         fetchAllStudents();
         setFormData({
           fullName: "",
@@ -150,10 +149,8 @@ export default function RegisterStudent() {
         setPhotoFile(null);
         setPhotoPreview(null);
       }
-      
-      setTimeout(() => setSuccess({ show: false, message: "" }), 4000);
     } catch (err) {
-      alert(err.response?.data?.message || (isEditMode ? "Update failed" : "Registration failed"));
+      toast.error(err.response?.data?.message || (isEditMode ? "Update failed" : "Registration failed"));
     } finally {
       setLoading(false);
     }
@@ -244,12 +241,11 @@ export default function RegisterStudent() {
     setLoading(true);
     try {
       const res = await axiosInstance.post("/admin/students/bulk", bulkStudents);
-      setSuccess({ show: true, message: `✅ ${res.data.count} Students Imported Successfully!` });
+      toast.success(`${res.data.count} Students Imported Successfully!`);
       fetchAllStudents();
       setBulkStudents([]);
-      setTimeout(() => setSuccess({ show: false, message: "" }), 5000);
     } catch (err) {
-      alert(err.response?.data?.message || "Bulk import failed");
+      toast.error(err.response?.data?.message || "Bulk import failed");
     } finally {
       setLoading(false);
     }
@@ -680,17 +676,7 @@ export default function RegisterStudent() {
         )}
       </div>
 
-      {success.show && (
-        <div className={`mt-8 p-5 rounded-2xl text-center text-lg font-bold border shadow-sm transition-all ${
-          isEditMode 
-            ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400" 
-            : isBulkMode
-            ? "bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400"
-            : "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400"
-        }`}>
-          {success.message}
-        </div>
-      )}
+
 
       <WebcamCapture
         isOpen={isWebcamOpen}

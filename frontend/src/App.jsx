@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from 'react-hot-toast';
 // Trigger Vercel Build
 
 // Auth
@@ -29,6 +30,7 @@ import Exams from "./pages/Common/Exams";
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/ustaz-register" element={<UstazRegister />} />

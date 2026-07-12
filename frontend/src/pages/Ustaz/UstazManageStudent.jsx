@@ -4,6 +4,7 @@ import { UserPlus, UserCog, Search } from "lucide-react";
 import { SURAHS } from "../../utils/surahs";
 import useAuthStore from "../../store/authStore";
 import WebcamCapture from "../../components/WebcamCapture";
+import toast from 'react-hot-toast';
 
 export default function UstazManageStudent() {
   const { user } = useAuthStore();
@@ -24,7 +25,6 @@ export default function UstazManageStudent() {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState({ show: false, message: "" });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
@@ -73,7 +73,6 @@ export default function UstazManageStudent() {
 
   const toggleMode = (mode) => {
     setIsEditMode(mode);
-    setSuccess({ show: false, message: "" });
     setSelectedStudentId("");
     setSearchTerm("");
     setFormData({
@@ -102,14 +101,14 @@ export default function UstazManageStudent() {
 
       if (isEditMode) {
         if (!selectedStudentId) {
-          alert("Please select a student to update");
+          toast.error("Please select a student to update");
           setLoading(false);
           return;
         }
         await axiosInstance.put(`/ustaz/students/${selectedStudentId}`, submitData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-        setSuccess({ show: true, message: "✅ Student Updated Successfully!" });
+        toast.success("Student Updated Successfully!");
         // Refresh student list
         fetchMyStudents();
       } else {
@@ -120,7 +119,7 @@ export default function UstazManageStudent() {
         await axiosInstance.post("/ustaz/students", submitData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-        setSuccess({ show: true, message: "✅ Student Registered Successfully!" });
+        toast.success("Student Registered Successfully!");
         fetchMyStudents(); // Refresh list so new student appears in edit mode
         setFormData({
           fullName: "",
@@ -132,10 +131,8 @@ export default function UstazManageStudent() {
         setPhotoFile(null);
         setPhotoPreview(null);
       }
-      
-      setTimeout(() => setSuccess({ show: false, message: "" }), 4000);
     } catch (err) {
-      alert(err.response?.data?.message || (isEditMode ? "Update failed" : "Registration failed"));
+      toast.error(err.response?.data?.message || (isEditMode ? "Update failed" : "Registration failed"));
     } finally {
       setLoading(false);
     }
@@ -400,15 +397,7 @@ export default function UstazManageStudent() {
         </form>
       </div>
 
-      {success.show && (
-        <div className={`mt-8 p-5 rounded-2xl text-center text-lg font-bold border shadow-sm transition-all ${
-          isEditMode 
-            ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400" 
-            : "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400"
-        }`}>
-          {success.message}
-        </div>
-      )}
+
 
       <WebcamCapture
         isOpen={isWebcamOpen}

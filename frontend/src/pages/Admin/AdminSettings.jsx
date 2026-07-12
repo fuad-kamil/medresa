@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { User, Lock, Moon, Sun, Save, Globe, Trash2, Loader2, Bot, ShieldOff, ShieldCheck, AlertTriangle, X } from "lucide-react";
+import toast from 'react-hot-toast';
 import useAuthStore from "../../store/authStore";
 
 // ─── Reusable styled confirmation modal ───────────────────────────────────────
@@ -64,7 +65,6 @@ export default function AdminSettings() {
     phone: user?.phone || "",
   });
   const [profileLoading, setProfileLoading] = useState(false);
-  const [profileMsg, setProfileMsg] = useState("");
 
   // Password Form State
   const [passwordData, setPasswordData] = useState({
@@ -73,18 +73,15 @@ export default function AdminSettings() {
     confirmPassword: "",
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState({ text: "", type: "" });
 
   // Cleanup PDF State
   const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [cleanupMsg, setCleanupMsg] = useState({ text: "", type: "" });
   const [showCleanupModal, setShowCleanupModal] = useState(false);
 
   // Bot Lock State
   const [botLocked, setBotLocked] = useState(false);
   const [botLockLoading, setBotLockLoading] = useState(false);
   const [botStatusLoading, setBotStatusLoading] = useState(true);
-  const [botMsg, setBotMsg] = useState({ text: "", type: "" });
   const [showBotLockModal, setShowBotLockModal] = useState(false);
 
   // Fetch current bot lock status on mount
@@ -105,14 +102,12 @@ export default function AdminSettings() {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileLoading(true);
-    setProfileMsg("");
     try {
       const res = await axiosInstance.put("/admin/settings/profile", profileData);
       login(res.data.user, token);
-      setProfileMsg("Profile updated successfully!");
-      setTimeout(() => setProfileMsg(""), 3000);
+      toast.success("Profile updated successfully!");
     } catch (error) {
-      setProfileMsg(error.response?.data?.message || "Failed to update profile.");
+      toast.error(error.response?.data?.message || "Failed to update profile.");
     } finally {
       setProfileLoading(false);
     }
@@ -121,21 +116,19 @@ export default function AdminSettings() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordMsg({ text: "New passwords do not match.", type: "error" });
+      toast.error("New passwords do not match.");
       return;
     }
     setPasswordLoading(true);
-    setPasswordMsg({ text: "", type: "" });
     try {
       const res = await axiosInstance.put("/admin/settings/password", {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      setPasswordMsg({ text: res.data.message || "Password updated successfully!", type: "success" });
+      toast.success(res.data.message || "Password updated successfully!");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setTimeout(() => setPasswordMsg({ text: "", type: "" }), 3000);
     } catch (error) {
-      setPasswordMsg({ text: error.response?.data?.message || "Failed to update password.", type: "error" });
+      toast.error(error.response?.data?.message || "Failed to update password.");
     } finally {
       setPasswordLoading(false);
     }
@@ -145,13 +138,11 @@ export default function AdminSettings() {
   const handleCleanupSubmit = async () => {
     setShowCleanupModal(false);
     setCleanupLoading(true);
-    setCleanupMsg({ text: "", type: "" });
     try {
       const res = await axiosInstance.delete("/admin/cleanup-reports");
-      setCleanupMsg({ text: res.data.message || "Cleanup successful!", type: "success" });
-      setTimeout(() => setCleanupMsg({ text: "", type: "" }), 5000);
+      toast.success(res.data.message || "Cleanup successful!");
     } catch (error) {
-      setCleanupMsg({ text: error.response?.data?.message || "Failed to cleanup reports.", type: "error" });
+      toast.error(error.response?.data?.message || "Failed to cleanup reports.");
     } finally {
       setCleanupLoading(false);
     }
@@ -161,14 +152,12 @@ export default function AdminSettings() {
   const handleBotLockToggle = async () => {
     setShowBotLockModal(false);
     setBotLockLoading(true);
-    setBotMsg({ text: "", type: "" });
     try {
       const res = await axiosInstance.post("/admin/bot-lock", { locked: !botLocked });
       setBotLocked(res.data.locked);
-      setBotMsg({ text: res.data.message, type: "success" });
-      setTimeout(() => setBotMsg({ text: "", type: "" }), 4000);
+      toast.success(res.data.message);
     } catch (error) {
-      setBotMsg({ text: error.response?.data?.message || "Failed to update bot status.", type: "error" });
+      toast.error(error.response?.data?.message || "Failed to update bot status.");
     } finally {
       setBotLockLoading(false);
     }
@@ -277,11 +266,7 @@ export default function AdminSettings() {
               />
             </div>
 
-            {profileMsg && (
-              <div className={`p-3 rounded-lg text-sm font-medium ${profileMsg.includes("success") ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                {profileMsg}
-              </div>
-            )}
+
 
             <button
               type="submit"
@@ -337,11 +322,7 @@ export default function AdminSettings() {
               />
             </div>
 
-            {passwordMsg.text && (
-              <div className={`p-3 rounded-lg text-sm font-medium ${passwordMsg.type === "success" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                {passwordMsg.text}
-              </div>
-            )}
+
 
             <button
               type="submit"
@@ -389,11 +370,7 @@ export default function AdminSettings() {
                 ? "The Telegram bot is currently locked. Parents cannot receive report cards via Telegram."
                 : "The Telegram bot is active. Parents can send their phone number to receive report cards."}
             </p>
-            {botMsg.text && (
-              <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${botMsg.type === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"}`}>
-                {botMsg.text}
-              </div>
-            )}
+
           </div>
 
           <button
@@ -430,11 +407,7 @@ export default function AdminSettings() {
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-xl">
               Manually delete <strong>all</strong> report card PDFs stored on Cloudinary. Use this to free up storage space. PDFs will be regenerated automatically next time a parent or admin requests them. Student photos are <strong>never</strong> deleted.
             </p>
-            {cleanupMsg.text && (
-              <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${cleanupMsg.type === "success" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                {cleanupMsg.text}
-              </div>
-            )}
+
           </div>
 
           <button

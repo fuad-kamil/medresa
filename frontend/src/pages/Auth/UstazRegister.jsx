@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { BookOpen, ArrowLeft, UserPlus } from "lucide-react";
+import toast from 'react-hot-toast';
 
 export default function UstazRegister() {
   const [formData, setFormData] = useState({
@@ -16,8 +17,6 @@ export default function UstazRegister() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
 
@@ -71,11 +70,9 @@ export default function UstazRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
@@ -92,40 +89,15 @@ export default function UstazRegister() {
         teachingDays: formData.teachingDays,
       });
 
-      setSuccess(true);
+      toast.success("Registration Successful! Please wait for Admin approval.");
       setTimeout(() => navigate("/"), 2500);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Registration failed. Please try again.",
-      );
+      toast.error(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Success Screen
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-teal-900 dark:from-gray-950 dark:to-black flex items-center justify-center p-6">
-        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-10 max-w-md text-center">
-          <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900 rounded-2xl flex items-center justify-center mb-6">
-            <UserPlus size={40} className="text-emerald-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-emerald-700 dark:text-emerald-500">
-            Registration Successful!
-          </h2>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Your account has been created successfully.
-            <br />
-            Please wait for Admin approval.
-          </p>
-          <p className="text-sm text-gray-500 mt-6">
-            Redirecting to login page...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 dark:from-gray-950 dark:via-slate-900 dark:to-black flex items-center justify-center p-6 relative overflow-hidden">
@@ -152,12 +124,6 @@ export default function UstazRegister() {
             >
               <ArrowLeft size={18} /> Back to Login
             </Link>
-
-            {error && (
-              <div className="mb-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-4 rounded-2xl text-center">
-                {error}
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { Search, UserMinus, UserCheck, Trash2, AlertCircle, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
+import toast from 'react-hot-toast';
 import useAuthStore from "../../store/authStore";
 
 export default function UnassignedStudents() {
@@ -28,13 +29,7 @@ export default function UnassignedStudents() {
   const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
 
-  // Success Notification State
-  const [successMessage, setSuccessMessage] = useState("");
 
-  const showSuccess = (msg) => {
-    setSuccessMessage(msg);
-    setTimeout(() => setSuccessMessage(""), 3000);
-  };
 
   useEffect(() => {
     if (!token) {
@@ -79,16 +74,19 @@ export default function UnassignedStudents() {
       setStudents(students.filter(s => s._id !== studentToDelete._id));
       setIsDeleteModalOpen(false);
       setStudentToDelete(null);
-      showSuccess("Student deleted successfully!");
+      toast.success("Student deleted successfully!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete student.");
+      toast.error(err.response?.data?.message || "Failed to delete student.");
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const handleClearAllClick = () => {
-    if (students.length === 0) return alert("No unassigned students to clear.");
+    if (students.length === 0) {
+      toast.error("No unassigned students to clear.");
+      return;
+    }
     setIsClearAllModalOpen(true);
   };
 
@@ -98,9 +96,9 @@ export default function UnassignedStudents() {
       await axiosInstance.delete("/admin/students/unassigned/clear");
       setStudents([]);
       setIsClearAllModalOpen(false);
-      showSuccess("All unassigned students cleared successfully!");
+      toast.success("All unassigned students cleared successfully!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to clear students.");
+      toast.error(err.response?.data?.message || "Failed to clear students.");
     } finally {
       setClearAllLoading(false);
     }
@@ -113,7 +111,10 @@ export default function UnassignedStudents() {
   };
 
   const handleAssignUstaz = async () => {
-    if (!selectedUstazId) return alert("Please select an Ustaz.");
+    if (!selectedUstazId) {
+      toast.error("Please select an Ustaz.");
+      return;
+    }
     
     setAssignLoading(true);
     try {
@@ -122,9 +123,9 @@ export default function UnassignedStudents() {
       });
       setIsAssignModalOpen(false);
       setStudents(students.filter(s => s._id !== selectedStudent._id));
-      showSuccess("Ustaz assigned successfully!");
+      toast.success("Ustaz assigned successfully!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to assign Ustaz.");
+      toast.error(err.response?.data?.message || "Failed to assign Ustaz.");
     } finally {
       setAssignLoading(false);
     }
@@ -181,13 +182,7 @@ export default function UnassignedStudents() {
         </div>
       </div>
 
-      {/* Success Message Toast */}
-      {successMessage && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
-          <CheckCircle size={24} />
-          <span className="font-semibold text-lg">{successMessage}</span>
-        </div>
-      )}
+
 
       {/* Error State */}
       {error && (

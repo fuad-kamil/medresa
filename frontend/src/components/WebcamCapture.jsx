@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, X, RefreshCw, Check, Crop, Zap, ZapOff } from "lucide-react";
 import Cropper from "react-easy-crop";
+import toast from 'react-hot-toast';
 
 export default function WebcamCapture({ isOpen, onClose, onCapture }) {
   const videoRef = useRef(null);
@@ -94,7 +95,7 @@ export default function WebcamCapture({ isOpen, onClose, onCapture }) {
         setIsFlashOn(enable);
       } catch (err2) {
         console.error("Failed to toggle flash:", err2);
-        alert(`Flash Error: ${err.message || err.name || 'Not supported'}.\n\nBrowsers do not ask for separate flash permission. If it fails, your browser restricts hardware flash control for web apps.`);
+        toast.error(`Flash Error: ${err.message || err.name || 'Not supported'}.\n\nBrowsers do not ask for separate flash permission. If it fails, your browser restricts hardware flash control for web apps.`);
       }
     }
   };

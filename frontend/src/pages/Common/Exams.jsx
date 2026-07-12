@@ -203,7 +203,7 @@ export default function Exams() {
       setTimeout(() => setSavedSuccessId(null), 3000);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to save exam scores");
+      toast.error(err.response?.data?.message || "Failed to save exam scores");
     } finally {
       setSavingId(null);
     }
@@ -235,7 +235,7 @@ export default function Exams() {
       });
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to create exam column");
+      toast.error(err.response?.data?.message || "Failed to create exam column");
     } finally {
       setConfigActionLoading(false);
     }
@@ -254,7 +254,7 @@ export default function Exams() {
       setEditingExamName("");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to rename exam");
+      toast.error(err.response?.data?.message || "Failed to rename exam");
     } finally {
       setConfigActionLoading(false);
     }
@@ -288,7 +288,7 @@ export default function Exams() {
       setDeleteModalData(null);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to delete exam column");
+      toast.error(err.response?.data?.message || "Failed to delete exam column");
     } finally {
       setConfigActionLoading(false);
     }
@@ -355,7 +355,7 @@ export default function Exams() {
     documentTitle: reportCardData ? `ReportCard_${reportCardData.fullName.replace(/\s+/g, '_')}` : 'Report_Card',
     onAfterPrint: () => setGeneratingPdfId(null),
     onPrintError: () => {
-      alert("Failed to generate PDF. Please try again.");
+      toast.error("Failed to generate PDF. Please try again.");
       setGeneratingPdfId(null);
     }
   });
@@ -408,7 +408,7 @@ export default function Exams() {
         pdf.save(`ReportCard_${student.fullName.replace(/\s+/g, '_')}.pdf`);
       } catch (err) {
         console.error('PDF download error:', err);
-        alert('Failed to download PDF. Please try again.');
+        toast.error('Failed to download PDF. Please try again.');
       } finally {
         setDownloadingPdfId(null);
       }
@@ -417,7 +417,7 @@ export default function Exams() {
 
   const downloadExcel = () => {
     if (filteredStudents.length === 0) {
-        alert("No student data available to export.");
+        toast.error("No student data available to export.");
         return;
     }
 

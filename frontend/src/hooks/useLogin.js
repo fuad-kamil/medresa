@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import useAuthStore from '../store/authStore';
+import toast from 'react-hot-toast';
 
 export const useLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
     const { login: storeLogin } = useAuthStore();
@@ -34,8 +35,6 @@ export const useLogin = () => {
     // Login Handler
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError('');
-
         if (!validateForm()) return;
 
         setLoading(true);
@@ -48,10 +47,11 @@ export const useLogin = () => {
 
             storeLogin(res.data.user, res.data.token);
 
+            toast.success("Login successful!");
             return { success: true, user: res.data.user };
         } catch (err) {
             const errorMsg = err.response?.data?.message || 'Invalid email or password';
-            setError(errorMsg);
+            toast.error(errorMsg);
             return { success: false, message: errorMsg };
         } finally {
             setLoading(false);
@@ -64,7 +64,6 @@ export const useLogin = () => {
         password,
         setPassword,
         loading,
-        error,
         formErrors,
         handleLogin,
     };

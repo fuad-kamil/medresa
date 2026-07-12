@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import UstazSidebar from "../../components/Ustaz/UstazSidebar";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
+import toast from 'react-hot-toast';
 
 export default function AttendancePage() {
   const [students, setStudents] = useState([]);
@@ -85,14 +86,14 @@ export default function AttendancePage() {
     try {
       if (isUpdateMode) {
         await axiosInstance.put("/ustaz/attendance", { attendance, date: selectedDate });
-        alert("Attendance updated successfully!");
+        toast.success("Attendance updated successfully!");
       } else {
         await axiosInstance.post("/ustaz/attendance", { attendance, date: selectedDate });
-        alert("Attendance marked successfully!");
+        toast.success("Attendance marked successfully!");
         setIsUpdateMode(true);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to submit attendance");
+      toast.error(err.response?.data?.message || "Failed to submit attendance");
     }
   };
 
@@ -101,14 +102,14 @@ export default function AttendancePage() {
     
     try {
       await axiosInstance.delete(`/ustaz/attendance?date=${selectedDate}`);
-      alert("Attendance reset successfully!");
+      toast.success("Attendance reset successfully!");
       
       const initial = {};
       students.forEach((s) => (initial[s._id] = "present"));
       setAttendance(initial);
       setIsUpdateMode(false);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to reset attendance");
+      toast.error(err.response?.data?.message || "Failed to reset attendance");
     }
   };
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { User, Lock, Moon, Sun, Save, Globe } from "lucide-react";
 import useAuthStore from "../../store/authStore";
+import toast from 'react-hot-toast';
 
 export default function UstazSettings() {
   const { user, login, theme, toggleTheme, token, language, setLanguage } = useAuthStore();
@@ -15,7 +16,6 @@ export default function UstazSettings() {
     teachingDays: user?.teachingDays || [0, 1, 2, 3, 4, 5, 6],
   });
   const [profileLoading, setProfileLoading] = useState(false);
-  const [profileMsg, setProfileMsg] = useState("");
 
   // Password Form State
   const [passwordData, setPasswordData] = useState({
@@ -24,7 +24,6 @@ export default function UstazSettings() {
     confirmPassword: "",
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState({ text: "", type: "" });
 
   const DAYS_OF_WEEK = [
     { id: 1, label: "Mon" },
@@ -51,15 +50,13 @@ export default function UstazSettings() {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileLoading(true);
-    setProfileMsg("");
     try {
       const res = await axiosInstance.put("/ustaz/settings/profile", profileData);
       // Update local storage and zustand store with the updated user info
       login(res.data.user, token);
-      setProfileMsg("Profile updated successfully!");
-      setTimeout(() => setProfileMsg(""), 3000);
+      toast.success("Profile updated successfully!");
     } catch (error) {
-      setProfileMsg(error.response?.data?.message || "Failed to update profile.");
+      toast.error(error.response?.data?.message || "Failed to update profile.");
     } finally {
       setProfileLoading(false);
     }
@@ -68,21 +65,19 @@ export default function UstazSettings() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordMsg({ text: "New passwords do not match.", type: "error" });
+      toast.error("New passwords do not match.");
       return;
     }
     setPasswordLoading(true);
-    setPasswordMsg({ text: "", type: "" });
     try {
       const res = await axiosInstance.put("/ustaz/settings/password", {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      setPasswordMsg({ text: res.data.message || "Password updated successfully!", type: "success" });
+      toast.success(res.data.message || "Password updated successfully!");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setTimeout(() => setPasswordMsg({ text: "", type: "" }), 3000);
     } catch (error) {
-      setPasswordMsg({ text: error.response?.data?.message || "Failed to update password.", type: "error" });
+      toast.error(error.response?.data?.message || "Failed to update password.");
     } finally {
       setPasswordLoading(false);
     }
@@ -204,11 +199,7 @@ export default function UstazSettings() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Update your teaching schedule to fix attendance reporting.</p>
             </div>
 
-            {profileMsg && (
-              <div className={`p-3 rounded-lg text-sm font-medium ${profileMsg.includes('success') ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                {profileMsg}
-              </div>
-            )}
+
 
             <button
               type="submit"
@@ -264,11 +255,7 @@ export default function UstazSettings() {
               />
             </div>
 
-            {passwordMsg.text && (
-              <div className={`p-3 rounded-lg text-sm font-medium ${passwordMsg.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                {passwordMsg.text}
-              </div>
-            )}
+
 
             <button
               type="submit"

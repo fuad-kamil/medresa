@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { CalendarCheck, CalendarX, Clock, CheckCircle2, AlertTriangle, X, Users } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
+import toast from 'react-hot-toast';
 
 export default function UstazDashboard() {
   const { user, language } = useAuthStore();
@@ -35,9 +36,7 @@ export default function UstazDashboard() {
   // The user can only select valid dates, so it's never blocked.
   const isBlocked = false;
 
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const fetchData = async () => {
     try {
@@ -114,19 +113,18 @@ export default function UstazDashboard() {
     try {
       if (isEditMode) {
         await axiosInstance.put("/ustaz/attendance", { attendance, date: selectedDate });
-        setSuccessMessage("✅ Attendance updated successfully!");
+        toast.success("Attendance updated successfully!");
       } else {
         await axiosInstance.post("/ustaz/attendance", { attendance, date: selectedDate });
-        setSuccessMessage("✅ Attendance marked successfully!");
+        toast.success("Attendance marked successfully!");
       }
-      setTimeout(() => setSuccessMessage(""), 4000);
       // Refresh weekly stats
       fetchData();
       // Refresh selected date attendance specifically to update state
       fetchAttendanceForDate(selectedDate, students);
     } catch (err) {
       console.error("Attendance submission error:", err);
-      alert(err.response?.data?.message || err.message || "Failed to submit attendance");
+      toast.error(err.response?.data?.message || err.message || "Failed to submit attendance");
     }
   };
 
@@ -138,16 +136,15 @@ export default function UstazDashboard() {
     setIsResetModalOpen(false);
     try {
       await axiosInstance.delete(`/ustaz/attendance?date=${selectedDate}`);
-      setSuccessMessage("✅ Attendance reset successfully!");
+      toast.success("Attendance reset successfully!");
       setIsEditMode(false); // Instantly change button back to Submit
-      setTimeout(() => setSuccessMessage(""), 4000);
       
       // Refresh weekly stats and current date
       fetchData();
       fetchAttendanceForDate(selectedDate, students);
     } catch (err) {
       console.error("Attendance reset error:", err);
-      alert(err.response?.data?.message || "Failed to reset attendance");
+      toast.error(err.response?.data?.message || "Failed to reset attendance");
     }
   };
 
@@ -171,17 +168,7 @@ export default function UstazDashboard() {
         </p>
       </div>
 
-      {successMessage && (
-        <div className="mb-8 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
-          <div className="flex items-center gap-3 font-semibold text-lg">
-            <CheckCircle2 size={24} />
-            {successMessage}
-          </div>
-          <button onClick={() => setSuccessMessage("")} className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300">
-            <X size={20} />
-          </button>
-        </div>
-      )}
+
 
       {/* Daily Stats */}
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">

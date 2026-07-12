@@ -14,7 +14,6 @@ export default function Login() {
     password,
     setPassword,
     loading,
-    error,
     formErrors,
     handleLogin,
   } = useLogin();
@@ -70,13 +69,6 @@ export default function Login() {
 
           {/* Form Area */}
           <div className="px-6 sm:px-8 pb-10">
-            {error && (
-              <div className="mb-6 bg-red-50/90 dark:bg-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl text-sm text-center flex items-center justify-center gap-2 animate-pulse">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-red-400 shrink-0"></div>
-                <span>{error}</span>
-              </div>
-            )}
-
             <form onSubmit={onSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1 flex items-center gap-2">

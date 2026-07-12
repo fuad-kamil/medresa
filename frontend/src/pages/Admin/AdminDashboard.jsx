@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle, RotateCcw } from "lucide-react";
+import toast from 'react-hot-toast';
 import useAuthStore from "../../store/authStore";
 
 export default function AdminDashboard() {
@@ -76,10 +77,10 @@ export default function AdminDashboard() {
     e.stopPropagation();
     try {
       await axiosInstance.patch(`/admin/ustaz/approve/${ustazId}`);
-      setUstazs(ustazs.map(u => u._id === ustazId ? { ...u, isApproved: true } : u));
+      toast.success("Ustaz approved successfully!");
     } catch (error) {
       console.error("Failed to approve ustaz:", error);
-      alert("Failed to approve Ustaz.");
+      toast.error("Failed to approve Ustaz.");
     }
   };
 
@@ -97,9 +98,10 @@ export default function AdminDashboard() {
       setStudents(students.filter(s => s._id !== studentToDelete._id));
       setIsDeleteModalOpen(false);
       setStudentToDelete(null);
+      toast.success("Student deleted successfully!");
     } catch (error) {
       console.error("Failed to delete student:", error);
-      alert("Failed to delete student.");
+      toast.error("Failed to delete student.");
     }
   };
 
@@ -117,9 +119,10 @@ export default function AdminDashboard() {
       setUstazs(ustazs.filter(u => u._id !== ustazToDelete._id));
       setIsDeleteUstazModalOpen(false);
       setUstazToDelete(null);
+      toast.success("Ustaz deleted successfully!");
     } catch (error) {
       console.error("Failed to delete ustaz:", error);
-      alert("Failed to delete Ustaz.");
+      toast.error("Failed to delete Ustaz.");
     }
   };
 
@@ -131,7 +134,10 @@ export default function AdminDashboard() {
   };
 
   const handleTransferStudent = async () => {
-    if (!newUstazId) return alert("Please select an Ustaz to transfer to.");
+    if (!newUstazId) {
+      toast.error("Please select an Ustaz to transfer to.");
+      return;
+    }
     
     try {
       const res = await axiosInstance.patch(`/admin/students/${transferStudentId}/transfer`, { assignedUstaz: newUstazId });
@@ -139,9 +145,10 @@ export default function AdminDashboard() {
       // Update local state
       setStudents(students.map(s => s._id === transferStudentId ? { ...s, assignedUstaz: res.data.student.assignedUstaz } : s));
       setIsTransferModalOpen(false);
+      toast.success("Student transferred successfully!");
     } catch (error) {
       console.error("Failed to transfer student:", error);
-      alert("Failed to transfer student.");
+      toast.error("Failed to transfer student.");
     }
   };
 
@@ -176,9 +183,10 @@ export default function AdminDashboard() {
       }));
 
       setIsResetModalOpen(false);
+      toast.success("Attendance history reset successfully!");
     } catch (error) {
       console.error("Failed to reset attendance history:", error);
-      alert("Failed to reset attendance history.");
+      toast.error("Failed to reset attendance history.");
     }
   };
 
