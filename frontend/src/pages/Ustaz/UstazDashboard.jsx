@@ -36,8 +36,8 @@ export default function UstazDashboard() {
   // The user can only select valid dates, so it's never blocked.
   const isBlocked = false;
 
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-
   const fetchData = async () => {
     try {
       const [studentsRes, weeklyRes] = await Promise.all([
