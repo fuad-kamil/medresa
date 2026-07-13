@@ -240,36 +240,44 @@ export default function AdminDashboard() {
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow border border-gray-100 dark:border-gray-700 hover:shadow-xl transition">
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 dark:text-gray-400">Total Students</p>
-              <p className="text-5xl font-bold mt-6 text-gray-800 dark:text-white">{totalStudents}</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Total Students</p>
+              <p className="text-4xl font-extrabold mt-4 text-slate-800 dark:text-white">{totalStudents}</p>
             </div>
-            <Users size={52} className="text-emerald-600/20" />
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-inner">
+              <Users size={22} />
+            </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow border border-gray-100 dark:border-gray-700 hover:shadow-xl transition">
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 dark:text-gray-400">Total Ustazs</p>
-              <p className="text-5xl font-bold mt-6 text-gray-800 dark:text-white">{ustazs.length}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 font-semibold">
-                Quran: <span className="text-emerald-600 dark:text-emerald-400">{quranUstazsCount}</span> | Kitab: <span className="text-blue-600 dark:text-blue-400">{kitabUstazsCount}</span>
-              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Total Ustazs</p>
+              <p className="text-4xl font-extrabold mt-4 text-slate-800 dark:text-white">{ustazs.length}</p>
+              <div className="flex items-center gap-2 mt-3 text-xs font-semibold text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-800/40 px-2 py-1 rounded-lg w-max border border-slate-100 dark:border-zinc-800/60">
+                <span>Quran: <strong className="text-emerald-600 dark:text-emerald-400">{quranUstazsCount}</strong></span>
+                <span className="text-slate-300 dark:text-zinc-700">|</span>
+                <span>Kitab: <strong className="text-blue-600 dark:text-blue-400">{kitabUstazsCount}</strong></span>
+              </div>
             </div>
-            <User size={52} className="text-blue-600/20" />
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-inner">
+              <User size={22} />
+            </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow border border-gray-100 dark:border-gray-700 hover:shadow-xl transition">
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 dark:text-gray-400">Today's Attendance</p>
-              <p className="text-5xl font-bold mt-6 text-gray-800 dark:text-white">{attendancePercentage}%</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Today's Attendance</p>
+              <p className="text-4xl font-extrabold mt-4 text-slate-800 dark:text-white">{attendancePercentage}%</p>
             </div>
-            <Calendar size={52} className="text-amber-600/20" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-inner">
+              <Calendar size={22} />
+            </div>
           </div>
         </div>
       </div>
@@ -284,10 +292,10 @@ export default function AdminDashboard() {
           const isExpanded = expandedUstazId === ustaz._id;
 
           return (
-            <div key={ustaz._id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div key={ustaz._id} className="bg-white/70 dark:bg-zinc-900/40 backdrop-blur-sm rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium overflow-hidden transition-all duration-300">
               <div
                 onClick={() => toggleUstaz(ustaz._id)}
-                className="w-full px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                className="w-full px-5 sm:px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition cursor-pointer"
               >
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                   <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-800/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center font-bold shrink-0">

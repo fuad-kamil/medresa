@@ -6,28 +6,30 @@ export default function UstazNavbar() {
   const { user } = useAuthStore();
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-700 h-16 flex items-center pl-16 pr-6 lg:px-8 fixed top-0 right-0 left-0 lg:left-64 z-10 shadow-sm">
+    <nav className="bg-white/80 dark:bg-zinc-950/85 backdrop-blur-md border-b border-slate-100 dark:border-zinc-900 h-20 flex items-center pl-20 pr-6 lg:pl-10 lg:pr-10 fixed top-0 right-0 left-0 lg:left-64 z-40 shadow-sm">
       <div className="flex-1">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
           Ustaz Dashboard
         </h2>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-5">
         <ThemeToggle />
         <NotificationBell role="ustaz" />
 
-        <div className="text-right">
-          <p className="font-semibold text-sm text-gray-800 dark:text-white">
-            {user?.name}
-          </p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">
-            Ustaz
-          </p>
-        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <p className="font-semibold text-sm text-slate-800 dark:text-white">
+              {user?.name}
+            </p>
+            <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              Ustaz
+            </p>
+          </div>
 
-        <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-800 rounded-full flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-semibold">
-          {user?.name?.charAt(0).toUpperCase() || "U"}
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md shadow-emerald-500/10 border border-emerald-400/20">
+            {user?.name?.charAt(0).toUpperCase() || "U"}
+          </div>
         </div>
       </div>
     </nav>

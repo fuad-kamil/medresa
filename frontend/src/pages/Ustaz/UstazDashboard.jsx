@@ -176,43 +176,43 @@ export default function UstazDashboard() {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* Total Students Card */}
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-blue-100 dark:border-gray-700 flex items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
-            <Users size={32} />
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300 flex items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+            <Users size={26} />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">My Students</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{students.length}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">My Students</p>
+            <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{students.length}</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-emerald-100 dark:border-gray-700 flex items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-            <CalendarCheck size={32} />
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300 flex items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <CalendarCheck size={26} />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Present</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{Object.values(attendance).filter(v => v === "present").length}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Present</p>
+            <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{Object.values(attendance).filter(v => v === "present").length}</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-red-100 dark:border-gray-700 flex items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-red-600 dark:text-red-400">
-            <CalendarX size={32} />
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300 flex items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 dark:bg-red-500/5 border border-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+            <CalendarX size={26} />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Absent</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{Object.values(attendance).filter(v => v === "absent").length}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Absent</p>
+            <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{Object.values(attendance).filter(v => v === "absent").length}</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-amber-100 dark:border-gray-700 flex items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400">
-            <Clock size={32} />
+        <div className="bg-white dark:bg-zinc-900/65 backdrop-blur-md p-6 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition duration-300 flex items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+            <Clock size={26} />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Excused</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">{Object.values(attendance).filter(v => v === "excused").length}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Excused</p>
+            <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{Object.values(attendance).filter(v => v === "excused").length}</p>
           </div>
         </div>
       </div>
@@ -245,33 +245,33 @@ export default function UstazDashboard() {
 
       
       {/* Desktop Table View */}
-      <div className="hidden lg:block bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-10">
+      <div className="hidden lg:block bg-white/70 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium overflow-hidden mb-10">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300 w-16 text-center">No.</th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Student Name</th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">
+              <tr className="bg-slate-50/50 dark:bg-zinc-800/20 border-b border-slate-100 dark:border-zinc-900">
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 w-16 text-center">No.</th>
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">Student Name</th>
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                   {user?.stream === 'kitab' ? "Phone Number" : "Parents' Phones"}
                 </th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                   {user?.stream === 'kitab' ? "Kitab Name" : "Surah"}
                 </th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Attendance Status</th>
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">Attendance Status</th>
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-10 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="5" className="p-10 text-center text-slate-400 dark:text-zinc-500">
                     No students assigned to you yet.
                   </td>
                 </tr>
               ) : (
                 students.map((student, index) => (
-                  <tr key={student._id} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-                    <td className="p-5 font-bold text-gray-500 dark:text-gray-400 text-center text-lg">{index + 1}</td>
+                  <tr key={student._id} className="border-b border-slate-50 dark:border-zinc-900 hover:bg-slate-50/30 dark:hover:bg-zinc-800/20 transition-all duration-200">
+                    <td className="p-5 font-bold text-slate-400 dark:text-zinc-600 text-center text-lg">{index + 1}</td>
                     <td className="p-5 font-medium text-gray-800 dark:text-gray-200">
                       <div className="flex flex-col gap-1">
                         <span>{student.fullName}</span>
@@ -347,30 +347,30 @@ export default function UstazDashboard() {
       {/* Mobile Card View */}
       <div className="lg:hidden grid grid-cols-1 gap-4 mb-10">
         {students.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="text-center py-10 text-slate-400 dark:text-zinc-500 bg-white/70 dark:bg-zinc-900/40 backdrop-blur-sm rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium">
             No students assigned to you yet.
           </div>
         ) : (
           students.map((student, index) => (
-            <div key={student._id} className="bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-4">
+            <div key={student._id} className="bg-white/70 dark:bg-zinc-900/40 backdrop-blur-sm p-5 rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium flex flex-col gap-4">
               <div className="flex justify-between items-start gap-4">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center font-black text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5 border border-emerald-200 dark:border-emerald-800/50">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold shrink-0 mt-0.5 shadow-md shadow-emerald-500/10 border border-emerald-400/20">
                     {index + 1}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-800 dark:text-white text-lg">{student.fullName}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
-                  </p>
+                    <h3 className="font-bold text-slate-800 dark:text-white text-lg">{student.fullName}</h3>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1 font-semibold uppercase tracking-wider">
+                      {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {takenTodayMap[student._id] ? (
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                {takenTodayMap[student._id] ? (
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-500/20">
                     Taken
                   </span>
                 ) : (
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 px-2 py-1 rounded-full border border-red-200 dark:border-red-800">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-red-600 bg-red-500/10 dark:text-red-400 dark:bg-red-950/40 px-2.5 py-1 rounded-full border border-red-500/20">
                     Not Taken
                   </span>
                 )}
