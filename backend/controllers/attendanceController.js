@@ -8,8 +8,13 @@ import Notification from '../models/Notification.js'
 // Mark Attendance
 export const markAttendance = async (req, res) => {
     try {
-        const { attendance, date } = req.body // { studentId: "present/absent/excused" }
         const ustazId = req.user.id
+        const ustaz = await User.findById(ustazId);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before marking attendance.' });
+        }
+
+        const { attendance, date } = req.body // { studentId: "present/absent/excused" }
 
         // Determine the date to use (default to today)
         const attendanceDate = date ? new Date(date) : new Date();
@@ -58,8 +63,13 @@ export const markAttendance = async (req, res) => {
 // Edit Attendance
 export const updateAttendance = async (req, res) => {
     try {
-        const { attendance, date } = req.body // { studentId: "present/absent/excused" }
         const ustazId = req.user.id
+        const ustaz = await User.findById(ustazId);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before modifying attendance.' });
+        }
+
+        const { attendance, date } = req.body // { studentId: "present/absent/excused" }
 
         const attendanceDate = date ? new Date(date) : new Date();
         const startOfDay = new Date(attendanceDate);
@@ -209,8 +219,13 @@ export const getAttendanceByDate = async (req, res) => {
 // Reset Attendance by Date for Logged-In Ustaz
 export const resetAttendance = async (req, res) => {
     try {
+        const ustazId = req.user.id
+        const ustaz = await User.findById(ustazId);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before resetting attendance.' });
+        }
+
         const { date } = req.query;
-        const ustazId = req.user.id;
 
         if (!date) {
             return res.status(400).json({ message: 'Date parameter is required.' });

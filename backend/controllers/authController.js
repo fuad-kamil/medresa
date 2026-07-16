@@ -88,7 +88,8 @@ export const login = async (req, res) => {
                 stream: user.stream,
                 kitabName: user.kitabName,
                 teachingDays: user.teachingDays,
-                studentPhoneOption: user.studentPhoneOption || 1
+                studentPhoneOption: user.studentPhoneOption || 1,
+                semesterStatus: user.semesterStatus || 'active'
             },
             token
         })

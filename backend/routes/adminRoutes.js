@@ -27,7 +27,9 @@ import {
     updateAdminPassword,
     getUstazAttendanceStatus,
     getAdminWeeklyAbsentees,
-    registerUstazByAdmin
+    registerUstazByAdmin,
+    resetUstazSemester,
+    getSemesterArchives
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
@@ -41,6 +43,8 @@ router.post('/ustazs', protect, adminOnly, registerUstazByAdmin)
 router.get('/ustazs/attendance-status', protect, adminOnly, getUstazAttendanceStatus)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
 router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
+router.post('/ustaz/:id/reset-semester', protect, adminOnly, resetUstazSemester)
+router.get('/semester-archives', protect, adminOnly, getSemesterArchives)
 
 // Student management
 router.post('/students', protect, adminOnly, upload.single('photo'), registerStudent)

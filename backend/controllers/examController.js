@@ -1,5 +1,6 @@
 import Exam from '../models/Exam.js';
 import Student from '../models/Student.js';
+import User from '../models/User.js';
 
 // ─── Ustaz: Get their own exam columns ────────────────────────────────────────
 export const getMyExams = async (req, res) => {
@@ -14,6 +15,11 @@ export const getMyExams = async (req, res) => {
 // ─── Ustaz: Create a new exam column (scoped to themselves) ───────────────────
 export const createMyExam = async (req, res) => {
     try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before creating exams.' });
+        }
+
         const { name, maxScore } = req.body;
         if (!name || !name.trim()) {
             return res.status(400).json({ message: 'Exam name is required' });
@@ -39,6 +45,11 @@ export const createMyExam = async (req, res) => {
 // ─── Ustaz: Update / Rename their own exam column ─────────────────────────────
 export const updateMyExam = async (req, res) => {
     try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before updating exams.' });
+        }
+
         const { id } = req.params;
         const { name, maxScore } = req.body;
 
@@ -68,6 +79,11 @@ export const updateMyExam = async (req, res) => {
 // ─── Ustaz: Delete their own exam column ──────────────────────────────────────
 export const deleteMyExam = async (req, res) => {
     try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before deleting exams.' });
+        }
+
         const { id } = req.params;
         const exam = await Exam.findOne({ _id: id, ustaz: req.user.id });
         if (!exam) {

@@ -19,6 +19,14 @@ const studentSchema = new mongoose.Schema(
             enum: ['quran', 'kitab'],
             default: 'quran'
         },
+        quranProgress: {
+            juz: { type: Number, default: 1 },
+            surah: { type: String, default: "Al-Fatiha" },
+            verseStart: { type: Number, default: 1 },
+            verseEnd: { type: Number, default: 7 },
+            type: { type: String, enum: ['hifz', 'murajaah', 'tilawah'], default: 'hifz' },
+            updatedAt: { type: Date, default: Date.now }
+        },
 
         fatherPhone: {
             type: String,

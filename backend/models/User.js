@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema({
         enum: [1, 2],
         default: 1
     },
+    semesterStatus: {
+        type: String,
+        enum: ['active', 'ended'],
+        default: 'active'
+    },
     isApproved: {
         type: Boolean,
         default: false

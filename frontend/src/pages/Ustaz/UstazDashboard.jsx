@@ -35,11 +35,12 @@ export default function UstazDashboard() {
   const [selectedDate, setSelectedDate] = useState(validDates[0] || new Date().toISOString().split('T')[0]);
   const [allRecords, setAllRecords] = useState([]);
 
-  // The user can only select valid dates, so it's never blocked.
-  const isBlocked = false;
+  const isSemesterEnded = user?.semesterStatus === 'ended';
+  const isBlocked = isSemesterEnded;
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isEndSemesterModalOpen, setIsEndSemesterModalOpen] = useState(false);
   const fetchData = async () => {
     try {
       const [studentsRes, weeklyRes] = await Promise.all([
@@ -150,24 +151,61 @@ export default function UstazDashboard() {
     }
   };
 
+  const handleEndSemesterClick = () => {
+    setIsEndSemesterModalOpen(true);
+  };
+
+  const confirmEndSemester = async () => {
+    setIsEndSemesterModalOpen(false);
+    try {
+      const res = await axiosInstance.post("/ustaz/end-semester");
+      toast.success(res.data.message || "Semester ended successfully!");
+      useAuthStore.getState().updateUser({ semesterStatus: 'ended' });
+    } catch (err) {
+      console.error("End semester error:", err);
+      toast.error(err.response?.data?.message || "Failed to end semester");
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;
   }
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white">
-          {user?.name || "Ustaz"}
-          {user?.stream === 'kitab' && user?.kitabName && (
-            <span className="ml-3 text-2xl lg:text-3xl font-semibold text-emerald-600 dark:text-emerald-400">
-              — {user.kitabName}
-            </span>
-          )}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-3 text-lg">
-          {t("Here is your weekly overview and today's class.")}
-        </p>
+      {isSemesterEnded && (
+        <div className="mb-8 p-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-3xl flex items-center gap-4 text-red-800 dark:text-red-400">
+          <AlertTriangle size={32} className="shrink-0" />
+          <div>
+            <h3 className="font-bold text-lg">{t("Semester Ended")}</h3>
+            <p className="text-sm mt-1">{t("You have marked this semester as ended. Your class is locked. Please wait for the admin to archive and reset your class.")}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white">
+            {user?.name || "Ustaz"}
+            {user?.stream === 'kitab' && user?.kitabName && (
+              <span className="ml-3 text-2xl lg:text-3xl font-semibold text-emerald-600 dark:text-emerald-400">
+                — {user.kitabName}
+              </span>
+            )}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-3 text-lg">
+            {t("Here is your weekly overview and today's class.")}
+          </p>
+        </div>
+
+        {!isSemesterEnded && (
+          <button
+            onClick={handleEndSemesterClick}
+            className="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-600/20 transition-all text-sm self-stretch md:self-auto hover:-translate-y-0.5"
+          >
+            {t("End Semester")}
+          </button>
+        )}
       </div>
 
 
@@ -462,7 +500,10 @@ export default function UstazDashboard() {
           {isEditMode && (
             <button
               onClick={handleResetClick}
-              className="flex-1 md:max-w-xs font-bold py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-all text-xl"
+              disabled={isBlocked}
+              className={`flex-1 md:max-w-xs font-bold py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-all text-xl ${
+                isBlocked ? "opacity-50 cursor-not-allowed bg-red-800" : ""
+              }`}
             >
               {t("Reset Attendance")}
             </button>
@@ -539,6 +580,44 @@ export default function UstazDashboard() {
                   className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
                 >
                   Yes, Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End Semester Confirmation Modal */}
+      {isEndSemesterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                {t("Confirm End Semester?")}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                {t("Are you sure you want to end this semester? Your class attendance and exam scores will be locked. You won't be able to change them until the admin resets the semester.")}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsEndSemesterModalOpen(false)}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  {t("Cancel")}
+                </button>
+                <button
+                  onClick={confirmEndSemester}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
+                >
+                  {t("Yes, End Semester")}
                 </button>
               </div>
             </div>

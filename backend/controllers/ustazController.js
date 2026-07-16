@@ -3,6 +3,7 @@ import Attendance from '../models/Attendance.js'
 import sendEmail from '../utils/sendEmail.js'
 import User from '../models/User.js'
 import bcrypt from 'bcryptjs'
+import QuranProgressLog from '../models/QuranProgressLog.js'
 
 // Get Students assigned to this Ustaz
 export const getMyStudents = async (req, res) => {
@@ -101,7 +102,8 @@ export const updateUstazProfile = async (req, res) => {
                 stream: updatedUser.stream,
                 kitabName: updatedUser.kitabName,
                 teachingDays: updatedUser.teachingDays,
-                studentPhoneOption: updatedUser.studentPhoneOption || 1
+                studentPhoneOption: updatedUser.studentPhoneOption || 1,
+                semesterStatus: updatedUser.semesterStatus || 'active'
             }
         });
     } catch (error) {
@@ -143,6 +145,11 @@ export const updateUstazPassword = async (req, res) => {
 // Register a new student (Assigned specifically to this Ustaz)
 export const registerStudent = async (req, res) => {
     try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before registering students.' });
+        }
+
         const { fullName, surah, fatherPhone, motherPhone, address, stream } = req.body;
         const photo = req.file ? req.file.path : null;
 
@@ -169,6 +176,11 @@ export const registerStudent = async (req, res) => {
 // Update an existing student (Only if assigned to this Ustaz)
 export const updateStudent = async (req, res) => {
     try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before updating students.' });
+        }
+
         const { id } = req.params;
         const { fullName, surah, fatherPhone, motherPhone, address, stream } = req.body;
 
@@ -197,6 +209,11 @@ export const updateStudent = async (req, res) => {
 // Update Student Exam Scores
 export const updateStudentScores = async (req, res) => {
     try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before updating scores.' });
+        }
+
         const { id } = req.params;
         const { firstExam, secondExam, finalExam, examScores } = req.body;
 
@@ -219,6 +236,97 @@ export const updateStudentScores = async (req, res) => {
         await student.save();
 
         res.json({ message: 'Exam scores updated successfully', student });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// Log student Quran progress (Quran stream only)
+export const logQuranProgress = async (req, res) => {
+    try {
+        const ustaz = await User.findById(req.user.id);
+        if (ustaz && ustaz.semesterStatus === 'ended') {
+            return res.status(400).json({ message: 'Your semester is currently ended. Please wait for the admin to reset it before logging progress.' });
+        }
+
+        const { id } = req.params;
+        const { juz, surah, verseStart, verseEnd, type, notes } = req.body;
+
+        // Ensure student belongs to this Ustaz
+        const student = await Student.findOne({ _id: id, assignedUstaz: req.user.id });
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found or not assigned to you' });
+        }
+
+        if (student.stream !== 'quran') {
+            return res.status(400).json({ message: 'Only Quran stream students support progress tracking.' });
+        }
+
+        // Create log entry
+        const log = await QuranProgressLog.create({
+            student: id,
+            ustaz: req.user.id,
+            juz: Number(juz),
+            surah,
+            verseStart: Number(verseStart),
+            verseEnd: Number(verseEnd),
+            type,
+            notes
+        });
+
+        // Update latest progress on Student document
+        student.quranProgress = {
+            juz: Number(juz),
+            surah,
+            verseStart: Number(verseStart),
+            verseEnd: Number(verseEnd),
+            type,
+            updatedAt: new Date()
+        };
+        // Also update the main 'surah' field for general grids/views
+        student.surah = surah;
+
+        await student.save();
+
+        res.status(201).json({ message: 'Quran progress logged successfully', log, student });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// Get Quran progress history for a student
+export const getQuranProgressHistory = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Ensure student belongs to this Ustaz
+        const student = await Student.findOne({ _id: id, assignedUstaz: req.user.id });
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found or not assigned to you' });
+        }
+
+        const logs = await QuranProgressLog.find({ student: id }).sort({ createdAt: -1 });
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// End current semester for logged in Ustaz
+export const endSemester = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.semesterStatus = 'ended';
+        await user.save();
+
+        res.json({
+            message: 'Semester successfully ended. Waiting for admin to archive and reset.',
+            semesterStatus: 'ended'
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -6,7 +6,7 @@ import protect from '../middleware/auth.js'
 import ustazOnly from '../middleware/ustazOnly.js'
 import upload from '../middleware/upload.js'
 
-import { getMyStudents, getWeeklyAttendance, updateUstazProfile, updateUstazPassword, registerStudent, updateStudent, updateStudentScores } from '../controllers/ustazController.js'
+import { getMyStudents, getWeeklyAttendance, updateUstazProfile, updateUstazPassword, registerStudent, updateStudent, updateStudentScores, logQuranProgress, getQuranProgressHistory, endSemester } from '../controllers/ustazController.js'
 import { markAttendance, updateAttendance, getAttendanceByDate, resetAttendance } from '../controllers/attendanceController.js'
 import { getMyExams, createMyExam, updateMyExam, deleteMyExam } from '../controllers/examController.js'
 import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteMultipleNotifications } from '../controllers/notificationController.js'
@@ -16,6 +16,9 @@ router.get('/students', protect, ustazOnly, getMyStudents)
 router.post('/students', protect, ustazOnly, upload.single('photo'), registerStudent)
 router.put('/students/:id', protect, ustazOnly, upload.single('photo'), updateStudent)
 router.put('/students/:id/scores', protect, ustazOnly, updateStudentScores)
+router.post('/students/:id/quran-progress', protect, ustazOnly, logQuranProgress)
+router.get('/students/:id/quran-progress', protect, ustazOnly, getQuranProgressHistory)
+router.post('/end-semester', protect, ustazOnly, endSemester)
 router.post('/attendance', protect, ustazOnly, markAttendance)
 router.put('/attendance', protect, ustazOnly, updateAttendance)
 router.get('/attendance', protect, ustazOnly, getAttendanceByDate)

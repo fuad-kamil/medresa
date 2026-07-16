@@ -3,6 +3,8 @@ import Student from '../models/Student.js'
 import Attendance from '../models/Attendance.js'
 import sendEmail from '../utils/sendEmail.js'
 import bcrypt from 'bcryptjs'
+import Exam from '../models/Exam.js'
+import SemesterArchive from '../models/SemesterArchive.js'
 
 // Get all Ustazs (Pending + Approved)
 export const getAllUstazs = async (req, res) => {
@@ -623,5 +625,99 @@ export const registerUstazByAdmin = async (req, res) => {
         })
     } catch (error) {
         res.status(500).json({ message: error.message })
+    }
+}
+
+// Reset Ustaz Semester & Archive Class data
+export const resetUstazSemester = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verify Ustaz exists
+        const ustaz = await User.findById(id);
+        if (!ustaz || ustaz.role !== 'ustaz') {
+            return res.status(404).json({ message: 'Ustaz not found' });
+        }
+
+        // Fetch students assigned to this Ustaz
+        const students = await Student.find({ assignedUstaz: id });
+
+        // Calculate attendance counters dynamically for snapshot
+        const studentsSnapshot = [];
+        for (const student of students) {
+            // Aggregate attendance records for this student
+            const stats = await Attendance.aggregate([
+                { $match: { student: student._id } },
+                {
+                    $group: {
+                        _id: '$student',
+                        presentCount: { $sum: { $cond: [{ $eq: ['$status', 'present'] }, 1, 0] } },
+                        absentCount: { $sum: { $cond: [{ $eq: ['$status', 'absent'] }, 1, 0] } },
+                        excusedCount: { $sum: { $cond: [{ $eq: ['$status', 'excused'] }, 1, 0] } }
+                    }
+                }
+            ]);
+
+            const s = stats.length > 0 ? stats[0] : { presentCount: 0, absentCount: 0, excusedCount: 0 };
+
+            // Clone student's exam scores map
+            const examScoresMap = new Map();
+            if (student.examScores) {
+                student.examScores.forEach((val, key) => {
+                    examScoresMap.set(key, val);
+                });
+            }
+
+            studentsSnapshot.push({
+                studentId: student._id,
+                fullName: student.fullName,
+                stream: student.stream,
+                surah: student.surah,
+                presentCount: s.presentCount,
+                absentCount: s.absentCount,
+                excusedCount: s.excusedCount,
+                examScores: examScoresMap
+            });
+        }
+
+        // Save archive record
+        await SemesterArchive.create({
+            ustaz: id,
+            ustazName: ustaz.name,
+            studentsSnapshot
+        });
+
+        // Delete all attendance records for this Ustaz
+        await Attendance.deleteMany({ ustaz: id });
+
+        // Delete all custom exams scoped to this Ustaz
+        await Exam.deleteMany({ ustaz: id });
+
+        // Clear all assigned student exam scores maps and reset firstExam/secondExam/finalExam if used
+        for (const student of students) {
+            student.examScores = new Map();
+            student.firstExam = 0;
+            student.secondExam = 0;
+            student.finalExam = 0;
+            await student.save();
+        }
+
+        // Reset Ustaz semester status back to active
+        ustaz.semesterStatus = 'active';
+        await ustaz.save();
+
+        res.json({ message: `Semester archived and reset successfully for ${ustaz.name}` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// Fetch all Semester Archives
+export const getSemesterArchives = async (req, res) => {
+    try {
+        const archives = await SemesterArchive.find().sort({ endedAt: -1 });
+        res.json(archives);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }

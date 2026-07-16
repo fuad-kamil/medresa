@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle, RotateCcw, UserPlus } from "lucide-react";
+import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle, RotateCcw, UserPlus, Archive } from "lucide-react";
 import toast from 'react-hot-toast';
 import useAuthStore from "../../store/authStore";
 import useTranslation from "../../hooks/useTranslation";
@@ -50,6 +50,11 @@ export default function AdminDashboard() {
     studentPhoneOption: 1,
   });
   const [createUstazLoading, setCreateUstazLoading] = useState(false);
+
+  // Semester Reset Modal State
+  const [isSemesterResetModalOpen, setIsSemesterResetModalOpen] = useState(false);
+  const [ustazToReset, setUstazToReset] = useState(null);
+  const [resettingSemester, setResettingSemester] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -262,6 +267,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleResetSemesterClick = (ustaz, e) => {
+    e.stopPropagation();
+    setUstazToReset(ustaz);
+    setIsSemesterResetModalOpen(true);
+  };
+
+  const confirmResetSemester = async () => {
+    if (!ustazToReset) return;
+    setResettingSemester(true);
+    try {
+      await axiosInstance.post(`/admin/ustaz/${ustazToReset._id}/reset-semester`);
+      toast.success(`Semester archived and reset for ${ustazToReset.name}!`);
+      setIsSemesterResetModalOpen(false);
+      setUstazToReset(null);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to reset semester:", err);
+      toast.error(err.response?.data?.message || "Failed to reset semester.");
+    } finally {
+      setResettingSemester(false);
+    }
+  };
+
   const getStudentAttendanceStatus = (studentId) => {
     const record = todayAttendance.find((att) => att.student === studentId);
     return record ? record.status : "not marked";
@@ -390,6 +418,11 @@ export default function AdminDashboard() {
                     <p className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2 truncate">
                       {ustaz.name}
                       {ustaz.isApproved && <CheckCircle size={16} className="text-emerald-500 shrink-0" title="Approved" />}
+                      {ustaz.semesterStatus === 'ended' && (
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 shrink-0">
+                          {t("Semester Ended")}
+                        </span>
+                      )}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {ustazStudents.length} {t("Students Assigned")}
@@ -434,6 +467,17 @@ export default function AdminDashboard() {
                     </button>
                   )}
                   
+                  {/* Archive & Reset Semester Button */}
+                  {ustaz.semesterStatus === 'ended' && (
+                    <button
+                      onClick={(e) => handleResetSemesterClick(ustaz, e)}
+                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-sm"
+                      title="Archive & Reset Semester"
+                    >
+                      <Archive size={14} /> {t("Archive & Reset")}
+                    </button>
+                  )}
+
                   {/* Delete Ustaz Button */}
                   <button
                     onClick={(e) => handleDeleteUstazClick(ustaz, e)}
@@ -899,6 +943,50 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Semester Reset Confirmation Modal */}
+      {isSemesterResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 pt-8 pb-6 flex justify-center border-b border-blue-100 dark:border-blue-900/30">
+              <div className="w-20 h-20 bg-blue-100 dark:bg-blue-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <Archive size={40} className="text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                {t("Archive & Reset Semester?")}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4 text-lg">
+                {t("This will archive all attendance and exam data for")} <strong>{ustazToReset?.name}</strong> {t("and then clear it so they can start a new semester.")}
+              </p>
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 text-sm mb-6">
+                <AlertTriangle size={16} className="inline mr-1" />
+                {t("This action cannot be undone. All current attendance records and exam scores will be wiped after archiving.")}
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => { setIsSemesterResetModalOpen(false); setUstazToReset(null); }}
+                  disabled={resettingSemester}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  {t("Cancel")}
+                </button>
+                <button
+                  onClick={confirmResetSemester}
+                  disabled={resettingSemester}
+                  className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-75 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                >
+                  {resettingSemester ? t("Archiving...") : t("Yes, Archive & Reset")}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
