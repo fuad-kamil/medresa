@@ -194,17 +194,50 @@ export const getStudentById = async (req, res) => {
     }
 }
 
-// Get Today's Attendance
+// Get Today's or Most Recent Teaching Day's Attendance for each Ustaz
 export const getTodayAttendance = async (req, res) => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const attendance = await Attendance.find({
-            date: { $gte: today, $lt: tomorrow }
-        });
+        const ustazs = await User.find({ role: 'ustaz', isApproved: true }).select('_id teachingDays');
+        
+        const queries = [];
+        for (const ustaz of ustazs) {
+            // Find most recent teaching day for this ustaz (starting from today going backwards)
+            const cursor = new Date();
+            cursor.setHours(0, 0, 0, 0);
+            
+            const teachingDays = new Set(ustaz.teachingDays && ustaz.teachingDays.length > 0 ? ustaz.teachingDays : [0, 1, 2, 3, 4, 5, 6]);
+            
+            let found = false;
+            // Go back up to 7 days to find their teaching day
+            for (let offset = 0; offset < 7; offset++) {
+                const dow = cursor.getDay();
+                if (teachingDays.has(dow)) {
+                    found = true;
+                    break;
+                }
+                cursor.setDate(cursor.getDate() - 1);
+            }
+            
+            if (found) {
+                const startOfDay = new Date(cursor);
+                startOfDay.setHours(0, 0, 0, 0);
+                const endOfDay = new Date(cursor);
+                endOfDay.setHours(23, 59, 59, 999);
+                
+                queries.push({
+                    ustaz: ustaz._id,
+                    date: { $gte: startOfDay, $lte: endOfDay }
+                });
+            }
+        }
+        
+        let attendance = [];
+        if (queries.length > 0) {
+            attendance = await Attendance.find({
+                $or: queries
+            });
+        }
+        
         res.json(attendance);
     } catch (error) {
         res.status(500).json({ message: error.message });
