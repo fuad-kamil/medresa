@@ -47,6 +47,7 @@ export default function AdminDashboard() {
     stream: "quran",
     kitabName: "",
     teachingDays: [0, 1, 2, 3, 4, 5, 6],
+    studentPhoneOption: 1,
   });
   const [createUstazLoading, setCreateUstazLoading] = useState(false);
 
@@ -159,6 +160,7 @@ export default function AdminDashboard() {
         stream: newUstazData.stream,
         kitabName: newUstazData.stream === "kitab" ? newUstazData.kitabName.trim() : undefined,
         teachingDays: newUstazData.teachingDays,
+        studentPhoneOption: newUstazData.studentPhoneOption,
       });
 
       toast.success("Ustaz created successfully!");
@@ -173,6 +175,7 @@ export default function AdminDashboard() {
         stream: "quran",
         kitabName: "",
         teachingDays: [0, 1, 2, 3, 4, 5, 6],
+        studentPhoneOption: 1,
       });
 
       fetchData();
@@ -849,6 +852,20 @@ export default function AdminDashboard() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Student Phone Option
+                </label>
+                <select
+                  value={newUstazData.studentPhoneOption}
+                  onChange={(e) => setNewUstazData({ ...newUstazData, studentPhoneOption: Number(e.target.value) })}
+                  className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  <option value="1">1 Phone Number (Phone Number)</option>
+                  <option value="2">2 Phone Numbers (Father & Mother Phone)</option>
+                </select>
               </div>
 
               <div>

@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 // Register Ustaz (Public)
 export const registerUstaz = async (req, res) => {
     try {
-        const { name, email, password, phone, stream, kitabName, teachingDays, inviteCode } = req.body
+        const { name, email, password, phone, stream, kitabName, teachingDays, studentPhoneOption, inviteCode } = req.body
         const normalizedEmail = email?.toLowerCase().trim()
 
         // Verify Invitation Code
@@ -30,6 +30,7 @@ export const registerUstaz = async (req, res) => {
             stream: stream || 'quran',
             kitabName: stream === 'kitab' ? kitabName : undefined,
             teachingDays: teachingDays && teachingDays.length > 0 ? teachingDays : [0, 1, 2, 3, 4, 5, 6],
+            studentPhoneOption: studentPhoneOption ? Number(studentPhoneOption) : 1,
             role: 'ustaz',
             isApproved: false
         })
@@ -86,7 +87,8 @@ export const login = async (req, res) => {
                 isApproved: user.isApproved,
                 stream: user.stream,
                 kitabName: user.kitabName,
-                teachingDays: user.teachingDays
+                teachingDays: user.teachingDays,
+                studentPhoneOption: user.studentPhoneOption || 1
             },
             token
         })

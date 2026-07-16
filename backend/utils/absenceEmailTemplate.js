@@ -3,28 +3,26 @@
  * Phone dial links are only shown for kitab stream students.
  */
 const buildAbsenceEmail = (student, ustazName) => {
-  const isKitab = student.stream === 'kitab';
+  const studentPhoneOption = student.assignedUstaz ? (student.assignedUstaz.studentPhoneOption || 1) : 1;
+  const isSinglePhone = studentPhoneOption === 1;
 
   const buttonStyle = "display: inline-block; padding: 8px 16px; background-color: #e8f0fe; color: #1a73e8; text-decoration: none; border-radius: 20px; font-weight: bold; border: 1px solid #1a73e8; margin-top: 4px;";
 
-  // Phone section differs based on stream
-  const fatherPhoneHtml = isKitab
-    ? `<a href="tel:${student.fatherPhone}" style="${buttonStyle}">
+  const fatherPhoneHtml = `<a href="tel:${student.fatherPhone}" style="${buttonStyle}">
              <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Call" width="16" height="16" style="vertical-align: middle;">
              <span style="vertical-align: middle; margin-left: 6px;">${student.fatherPhone}</span>
-           </a>`
-    : `<strong style="font-size: 16px;">${student.fatherPhone}</strong>`;
+           </a>`;
 
-  const motherPhoneHtml = isKitab
-    ? `<a href="tel:${student.motherPhone}" style="${buttonStyle}">
+  const motherPhoneHtml = student.motherPhone ? `<a href="tel:${student.motherPhone}" style="${buttonStyle}">
              <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Call" width="16" height="16" style="vertical-align: middle;">
              <span style="vertical-align: middle; margin-left: 6px;">${student.motherPhone}</span>
-           </a>`
-    : `<strong style="font-size: 16px;">${student.motherPhone}</strong>`;
+           </a>` : '';
 
   const subject = `⚠️ ማስጠንቀቂያ: 3 ተከታታይ ቀናት ቅጣት - ${student.fullName}`;
 
-  const text = `ተማሪ ${student.fullName} ከኡስታዝ ${ustazName} ትምህርት 3 ተከታታይ ቀናት ቀርቷል/ቀርታለች። እባክዎ ምክንያቱን ለመጠየቅ ለአባት ${student.fatherPhone} ወይም ለእናት ${student.motherPhone} ይደውሉ።`;
+  const text = isSinglePhone
+    ? `ተማሪ ${student.fullName} ከኡስታዝ ${ustazName} ትምህርት 3 ተከታታይ ቀናት ቀርቷል/ቀርታለች። እባክዎ ምክንያቱን ለመጠየቅ በ ${student.fatherPhone} ይደውሉ።`
+    : `ተማሪ ${student.fullName} ከኡስታዝ ${ustazName} ትምህርት 3 ተከታታይ ቀናት ቀርቷል/ቀርታለች። እባክዎ ምክንያቱን ለመጠየቅ ለአባት ${student.fatherPhone} ወይም ለእናት ${student.motherPhone || 'N/A'} ይደውሉ።`;
 
   const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
@@ -50,7 +48,7 @@ const buildAbsenceEmail = (student, ustazName) => {
           </p>
           
           <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
-            ${isKitab ? `
+            ${isSinglePhone ? `
             <tr style="background-color: #f5f5f5;">
               <td style="padding: 12px 16px; border: 1px solid #e0e0e0; font-size: 14px;">
                  📞 <strong>ስልክ ቁጥር:</strong>
@@ -68,6 +66,7 @@ const buildAbsenceEmail = (student, ustazName) => {
                 ${fatherPhoneHtml}
               </td>
             </tr>
+            ${student.motherPhone ? `
             <tr>
               <td style="padding: 12px 16px; border: 1px solid #e0e0e0; font-size: 14px;">
                  📞 <strong>የእናት ስልክ:</strong>
@@ -76,6 +75,7 @@ const buildAbsenceEmail = (student, ustazName) => {
                 ${motherPhoneHtml}
               </td>
             </tr>
+            ` : ''}
             `}
           </table>
         </div>

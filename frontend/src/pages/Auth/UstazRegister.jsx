@@ -17,6 +17,7 @@ export default function UstazRegister() {
     stream: "quran",
     kitabName: "",
     teachingDays: [0, 1, 2, 3, 4, 5, 6],
+    studentPhoneOption: 1,
     inviteCode: "",
   });
 
@@ -233,6 +234,22 @@ export default function UstazRegister() {
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Select all the days you will be teaching.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t("Student Contacts")}
+                </label>
+                <select
+                  name="studentPhoneOption"
+                  value={formData.studentPhoneOption}
+                  onChange={handleChange}
+                  className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="1">{t("Accept 1 Phone Number (Phone Number)")}</option>
+                  <option value="2">{t("Accept 2 Phone Numbers (Father & Mother Phone)")}</option>
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("Decide if student profiles under you require one contact or separate father & mother contacts.")}</p>
               </div>
 
               <div>

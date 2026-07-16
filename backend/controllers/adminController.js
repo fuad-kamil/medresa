@@ -123,7 +123,7 @@ export const bulkImportStudents = async (req, res) => {
 export const getAllStudents = async (req, res) => {
     try {
         const students = await Student.find()
-            .populate('assignedUstaz', 'name email')
+            .populate('assignedUstaz', 'name email stream studentPhoneOption')
             .lean();
 
         // Single aggregation query for ALL students at once (not N+1)
@@ -168,7 +168,7 @@ export const getAllStudentsWithStats = getAllStudents;
 export const getStudentById = async (req, res) => {
     try {
         const student = await Student.findById(req.params.id)
-            .populate('assignedUstaz', 'name email stream')
+            .populate('assignedUstaz', 'name email stream studentPhoneOption')
             .lean();
             
         if (!student) {
@@ -321,7 +321,7 @@ export const transferStudent = async (req, res) => {
             id,
             updateData,
             { new: true }
-        ).populate('assignedUstaz', 'name email');
+        ).populate('assignedUstaz', 'name email stream studentPhoneOption');
 
         res.json({ message: 'Student transferred successfully', student });
     } catch (error) {
@@ -420,7 +420,7 @@ export const updateStudent = async (req, res) => {
             id,
             updateData,
             { new: true }
-        ).populate('assignedUstaz', 'name email');
+        ).populate('assignedUstaz', 'name email stream studentPhoneOption');
 
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
@@ -589,7 +589,7 @@ export const getAdminWeeklyAbsentees = async (req, res) => {
 // Register Ustaz directly by Admin (auto-approved, no invite code required)
 export const registerUstazByAdmin = async (req, res) => {
     try {
-        const { name, email, password, phone, stream, kitabName, teachingDays } = req.body
+        const { name, email, password, phone, stream, kitabName, teachingDays, studentPhoneOption } = req.body
         const normalizedEmail = email?.toLowerCase().trim()
 
         const userExists = await User.findOne({ email: normalizedEmail })
@@ -608,6 +608,7 @@ export const registerUstazByAdmin = async (req, res) => {
             stream: stream || 'quran',
             kitabName: stream === 'kitab' ? kitabName : undefined,
             teachingDays: teachingDays && teachingDays.length > 0 ? teachingDays : [0, 1, 2, 3, 4, 5, 6],
+            studentPhoneOption: studentPhoneOption ? Number(studentPhoneOption) : 1,
             role: 'ustaz',
             isApproved: true // Auto-approved since created by Admin
         })

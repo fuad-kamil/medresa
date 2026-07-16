@@ -289,14 +289,17 @@ export default function UstazDashboard() {
                       </div>
                     </td>
                     <td className="p-5 text-gray-600 dark:text-gray-400">
-                      {user?.stream === 'kitab' ? (
-                        <span>{student.fatherPhone || "N/A"}</span>
-                      ) : (
-                        <div className="flex flex-col text-sm">
-                          <span><strong className="text-gray-800 dark:text-gray-300">F:</strong> {student.fatherPhone || "N/A"}</span>
-                          <span><strong className="text-gray-800 dark:text-gray-300">M:</strong> {student.motherPhone || "N/A"}</span>
-                        </div>
-                      )}
+                      {(() => {
+                        const isSinglePhone = (user?.studentPhoneOption || 1) === 1;
+                        return isSinglePhone ? (
+                          <span>{student.fatherPhone || "N/A"}</span>
+                        ) : (
+                          <div className="flex flex-col text-sm">
+                            <span><strong className="text-gray-800 dark:text-gray-300">F:</strong> {student.fatherPhone || "N/A"}</span>
+                            <span><strong className="text-gray-800 dark:text-gray-300">M:</strong> {student.motherPhone || "N/A"}</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="p-5 text-gray-600 dark:text-gray-400">
                       {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
@@ -380,23 +383,26 @@ export default function UstazDashboard() {
               
               {/* Parent Phones */}
               <div className="bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-3 flex flex-col gap-1.5 border border-gray-100 dark:border-gray-800 text-sm">
-                {user?.stream === 'kitab' ? (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 dark:text-gray-400">Phone Number</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
-                  </div>
-                ) : (
-                  <>
+                {(() => {
+                  const isSinglePhone = (user?.studentPhoneOption || 1) === 1;
+                  return isSinglePhone ? (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500 dark:text-gray-400">Father</span>
+                      <span className="text-gray-500 dark:text-gray-400">Phone Number</span>
                       <span className="font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500 dark:text-gray-400">Mother</span>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
-                    </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500 dark:text-gray-400">Father</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500 dark:text-gray-400">Mother</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Attendance Toggle Buttons */}

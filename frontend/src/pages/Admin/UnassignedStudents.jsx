@@ -217,7 +217,7 @@ export default function UnassignedStudents() {
                   Stream
                 </th>
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
-                  Parents' Phones
+                  Phone Numbers
                 </th>
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
                   Address
@@ -257,10 +257,14 @@ export default function UnassignedStudents() {
                     </td>
 
                     <td className="p-6 text-gray-700 dark:text-gray-300 font-medium">
-                      <div className="flex flex-col text-sm font-normal">
-                        <span><strong className="text-gray-800 dark:text-gray-300 font-medium">F:</strong> {student.fatherPhone || "N/A"}</span>
-                        <span><strong className="text-gray-800 dark:text-gray-300 font-medium">M:</strong> {student.motherPhone || "N/A"}</span>
-                      </div>
+                      {student.motherPhone ? (
+                        <div className="flex flex-col text-sm font-normal">
+                          <span><strong className="text-gray-800 dark:text-gray-300 font-medium">F:</strong> {student.fatherPhone || "N/A"}</span>
+                          <span><strong className="text-gray-800 dark:text-gray-300 font-medium">M:</strong> {student.motherPhone || "N/A"}</span>
+                        </div>
+                      ) : (
+                        <span>{student.fatherPhone || "N/A"}</span>
+                      )}
                     </td>
                     <td className="p-6 text-gray-700 dark:text-gray-300">
                       {student.address || "N/A"}
@@ -317,14 +321,23 @@ export default function UnassignedStudents() {
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Father's Phone</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Mother's Phone</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
-                </div>
+                {student.motherPhone ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Father's Phone</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Mother's Phone</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Phone Number</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
+                  </div>
+                )}
                 <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-1"></div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500 dark:text-gray-400">Address</span>

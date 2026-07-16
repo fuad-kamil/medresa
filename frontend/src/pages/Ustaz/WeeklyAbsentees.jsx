@@ -8,6 +8,7 @@ export default function WeeklyAbsentees() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const language = useAuthStore(state => state.language);
+  const user = useAuthStore(state => state.user);
 
   useEffect(() => {
     const fetchAbsentees = async () => {
@@ -104,23 +105,26 @@ export default function WeeklyAbsentees() {
               </div>
 
               <div className="z-10 bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">
-                {data.stream === 'kitab' ? (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Phone</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{data.fatherPhone}</span>
-                  </div>
-                ) : (
-                  <>
+                {(() => {
+                  const isSinglePhone = (user?.studentPhoneOption || 1) === 1;
+                  return isSinglePhone ? (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Father</span>
+                      <span className="text-gray-500 dark:text-gray-400">Phone</span>
                       <span className="font-medium text-gray-700 dark:text-gray-300">{data.fatherPhone}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Mother</span>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">{data.motherPhone}</span>
-                    </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Father</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{data.fatherPhone}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Mother</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{data.motherPhone}</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               <div className="z-10 mt-auto">

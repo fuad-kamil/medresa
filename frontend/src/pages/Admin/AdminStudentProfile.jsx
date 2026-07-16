@@ -140,21 +140,28 @@ export default function AdminStudentProfile() {
                   Contact Information
                 </h3>
                 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {student.stream === 'kitab' ? 'Phone Number' : 'Father'}
-                    </span>
-                    <span className="font-bold text-gray-800 dark:text-gray-200">{student.fatherPhone || "N/A"}</span>
-                  </div>
-                  
-                  {student.stream !== 'kitab' && (
-                    <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Mother</span>
-                      <span className="font-bold text-gray-800 dark:text-gray-200">{student.motherPhone || "N/A"}</span>
+                {(() => {
+                  const ustazPhoneOption = student.assignedUstaz ? (student.assignedUstaz.studentPhoneOption || 1) : 1;
+                  const isSinglePhone = ustazPhoneOption === 1;
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          {isSinglePhone ? 'Phone Number' : "Father's Phone"}
+                        </span>
+                        <span className="font-bold text-gray-800 dark:text-gray-200">{student.fatherPhone || "N/A"}</span>
+                      </div>
+                      
+                      {!isSinglePhone && (
+                        <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Mother's Phone</span>
+                          <span className="font-bold text-gray-800 dark:text-gray-200">{student.motherPhone || "N/A"}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             </div>
 

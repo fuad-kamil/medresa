@@ -47,6 +47,7 @@ export default function AdminWeeklyAbsentees() {
             grouped[ustazName] = {
                stream: record.ustaz.stream,
                kitabName: record.ustaz.kitabName,
+               studentPhoneOption: record.ustaz.studentPhoneOption || 1,
                students: {}
             };
           }
@@ -178,23 +179,26 @@ export default function AdminWeeklyAbsentees() {
                       </div>
 
                       <div className="z-10 bg-gray-50 dark:bg-gray-950/50 rounded-2xl p-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800">
-                        {studentData.stream === 'kitab' ? (
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-500 dark:text-gray-400">Phone</span>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.fatherPhone}</span>
-                          </div>
-                        ) : (
-                          <>
+                        {(() => {
+                          const isSinglePhone = (ustazData.studentPhoneOption || 1) === 1;
+                          return isSinglePhone ? (
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-500 dark:text-gray-400">Father</span>
+                              <span className="text-gray-500 dark:text-gray-400">Phone</span>
                               <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.fatherPhone}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-500 dark:text-gray-400">Mother</span>
-                              <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.motherPhone}</span>
-                            </div>
-                          </>
-                        )}
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-500 dark:text-gray-400">Father</span>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.fatherPhone}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-500 dark:text-gray-400">Mother</span>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{studentData.motherPhone}</span>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       <div className="z-10 mt-auto">

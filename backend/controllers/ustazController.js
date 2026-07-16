@@ -74,6 +74,9 @@ export const updateUstazProfile = async (req, res) => {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
         user.phone = req.body.phone || user.phone;
+        if (req.body.studentPhoneOption !== undefined) {
+            user.studentPhoneOption = Number(req.body.studentPhoneOption);
+        }
         if (user.stream === 'kitab' && req.body.kitabName !== undefined) {
             user.kitabName = req.body.kitabName;
         }
@@ -97,7 +100,8 @@ export const updateUstazProfile = async (req, res) => {
                 isApproved: updatedUser.isApproved,
                 stream: updatedUser.stream,
                 kitabName: updatedUser.kitabName,
-                teachingDays: updatedUser.teachingDays
+                teachingDays: updatedUser.teachingDays,
+                studentPhoneOption: updatedUser.studentPhoneOption || 1
             }
         });
     } catch (error) {

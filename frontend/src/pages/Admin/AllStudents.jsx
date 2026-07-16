@@ -65,12 +65,15 @@ export default function AllStudents() {
 
   const downloadExcel = () => {
     const data = filteredStudents.map(student => {
+      const ustazPhoneOption = student.assignedUstaz ? (student.assignedUstaz.studentPhoneOption || 1) : 1;
+      const isSinglePhone = ustazPhoneOption === 1;
+
       const baseData = {
         "Student Name": student.fullName || "N/A",
         [streamFilter === 'kitab' ? "Kitab Name" : "Surah/Kitab"]: student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`,
       };
 
-      if (streamFilter === 'kitab') {
+      if (isSinglePhone) {
         baseData["Phone Number"] = student.fatherPhone || "N/A";
       } else {
         baseData["Father Phone"] = student.fatherPhone || "N/A";
@@ -205,7 +208,7 @@ export default function AllStudents() {
                 </th>
 
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
-                  {streamFilter === 'kitab' ? "Phone Number" : "Parents' Phones"}
+                  Phone Numbers
                 </th>
                 <th className="text-left p-6 font-semibold text-gray-600 dark:text-gray-300">
                   Address
@@ -251,14 +254,18 @@ export default function AllStudents() {
                     </td>
 
                     <td className="p-6 text-gray-700 dark:text-gray-300 font-medium">
-                      {streamFilter === 'kitab' ? (
-                        <span>{student.fatherPhone || "N/A"}</span>
-                      ) : (
-                        <div className="flex flex-col text-sm font-normal">
-                          <span><strong className="text-gray-800 dark:text-gray-300 font-medium">F:</strong> {student.fatherPhone || "N/A"}</span>
-                          <span><strong className="text-gray-800 dark:text-gray-300 font-medium">M:</strong> {student.motherPhone || "N/A"}</span>
-                        </div>
-                      )}
+                      {(() => {
+                        const ustazPhoneOption = student.assignedUstaz ? (student.assignedUstaz.studentPhoneOption || 1) : 1;
+                        const isSinglePhone = ustazPhoneOption === 1;
+                        return isSinglePhone ? (
+                          <span>{student.fatherPhone || "N/A"}</span>
+                        ) : (
+                          <div className="flex flex-col text-sm font-normal">
+                            <span><strong className="text-gray-800 dark:text-gray-300 font-medium">F:</strong> {student.fatherPhone || "N/A"}</span>
+                            <span><strong className="text-gray-800 dark:text-gray-300 font-medium">M:</strong> {student.motherPhone || "N/A"}</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="p-6 text-gray-700 dark:text-gray-300">
                       {student.address || "N/A"}
@@ -317,23 +324,27 @@ export default function AllStudents() {
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{student.assignedUstaz?.name || "Not Assigned"}</span>
                 </div>
                 <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-1"></div>
-                {streamFilter === 'kitab' ? (
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Phone Number</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
-                  </div>
-                ) : (
-                  <>
+                {(() => {
+                  const ustazPhoneOption = student.assignedUstaz ? (student.assignedUstaz.studentPhoneOption || 1) : 1;
+                  const isSinglePhone = ustazPhoneOption === 1;
+                  return isSinglePhone ? (
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Father's Phone</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Phone Number</span>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Mother's Phone</span>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
-                    </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Father's Phone</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.fatherPhone || "N/A"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Mother's Phone</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.motherPhone || "N/A"}</span>
+                      </div>
+                    </>
+                  );
+                })()}
                 <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-1"></div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500 dark:text-gray-400">Address</span>

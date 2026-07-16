@@ -37,6 +37,11 @@ const userSchema = new mongoose.Schema({
         type: [Number],
         default: [0, 1, 2, 3, 4, 5, 6]
     },
+    studentPhoneOption: {
+        type: Number,
+        enum: [1, 2],
+        default: 1
+    },
     isApproved: {
         type: Boolean,
         default: false
