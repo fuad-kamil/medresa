@@ -56,6 +56,76 @@ export default function AdminDashboard() {
   const [ustazToReset, setUstazToReset] = useState(null);
   const [resettingSemester, setResettingSemester] = useState(false);
 
+  // Semester Archives States
+  const [isArchivesModalOpen, setIsArchivesModalOpen] = useState(false);
+  const [archives, setArchives] = useState([]);
+  const [loadingArchives, setLoadingArchives] = useState(false);
+  const [selectedArchive, setSelectedArchive] = useState(null);
+  const [inviteCode, setInviteCode] = useState("ALI_JOIN_2026");
+
+  const fetchArchives = async () => {
+    setLoadingArchives(true);
+    try {
+      const res = await axiosInstance.get("/admin/semester-archives");
+      setArchives(res.data);
+    } catch (err) {
+      console.error("Failed to fetch archives:", err);
+      toast.error("Failed to fetch archives.");
+    } finally {
+      setLoadingArchives(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isArchivesModalOpen) {
+      fetchArchives();
+    }
+  }, [isArchivesModalOpen]);
+
+  useEffect(() => {
+    const fetchInviteCode = async () => {
+      try {
+        const res = await axiosInstance.get("/admin/settings/invite-code");
+        setInviteCode(res.data.inviteCode);
+      } catch (err) {
+        console.error("Failed to fetch invite code:", err);
+      }
+    };
+    fetchInviteCode();
+  }, []);
+
+  const downloadArchiveCSV = (archive) => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Student Name,Stream,Quran Surah,Present Count,Absent Count,Excused Count,Exam Grades\n";
+    
+    archive.studentsSnapshot.forEach((student) => {
+      let examGrades = [];
+      if (student.examScores) {
+        Object.entries(student.examScores).forEach(([examId, score]) => {
+          const matchedExam = archive.examsSnapshot?.find(e => e.examId === examId);
+          const examLabel = matchedExam ? `${matchedExam.name} (${score}/${matchedExam.maxScore})` : `Score: ${score}`;
+          examGrades.push(examLabel);
+        });
+      }
+      const gradesStr = examGrades.join(" | ");
+      
+      const nameEscaped = `"${student.fullName.replace(/"/g, '""')}"`;
+      const streamEscaped = `"${student.stream || ""}"`;
+      const surahEscaped = `"${student.surah || "N/A"}"`;
+      const gradesEscaped = `"${gradesStr.replace(/"/g, '""')}"`;
+      
+      csvContent += `${nameEscaped},${streamEscaped},${surahEscaped},${student.presentCount || 0},${student.absentCount || 0},${student.excusedCount || 0},${gradesEscaped}\n`;
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `semester_archive_${archive.ustazName}_${new Date(archive.endedAt).toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setFetchError(false);
@@ -388,15 +458,23 @@ export default function AdminDashboard() {
             {t("Ustazs & Students Overview")}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1.5">
-            {t("Teacher Join Code")}: <code className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold border border-emerald-100 dark:border-emerald-900/40 select-all" title="Click to select code">ALI_JOIN_2026</code>
+            {t("Teacher Join Code")}: <code className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold border border-emerald-100 dark:border-emerald-900/40 select-all" title="Click to select code">{inviteCode}</code>
           </p>
         </div>
-        <button
-          onClick={() => setIsCreateUstazModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-premium hover:shadow-[0_8px_20px_-6px_rgba(16,185,129,0.4)] transition text-sm w-full sm:w-auto shrink-0"
-        >
-          <UserPlus size={16} /> {t("Add New Ustaz")}
-        </button>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setIsArchivesModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-800 dark:text-white font-bold rounded-2xl border border-gray-200 dark:border-gray-700 transition text-sm w-full sm:w-auto shrink-0 cursor-pointer"
+          >
+            <History size={16} /> {t("Semester Archives")}
+          </button>
+          <button
+            onClick={() => setIsCreateUstazModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-premium hover:shadow-[0_8px_20px_-6px_rgba(16,185,129,0.4)] transition text-sm w-full sm:w-auto shrink-0"
+          >
+            <UserPlus size={16} /> {t("Add New Ustaz")}
+          </button>
+        </div>
       </div>
       
       <div className="space-y-4">
@@ -987,6 +1065,188 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Semester Archives Modal */}
+      {isArchivesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  <Archive className="text-blue-600 dark:text-blue-400" />
+                  {t("Archived Semester Records")}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  View and export historical class data from ended semesters
+                </p>
+              </div>
+              <button 
+                onClick={() => { setIsArchivesModalOpen(false); setSelectedArchive(null); }} 
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Content body */}
+            <div className="p-6 overflow-y-auto flex-1 bg-gray-50/30 dark:bg-gray-955/20">
+              {selectedArchive ? (
+                // Archive Detail View
+                <div>
+                  <button
+                    onClick={() => setSelectedArchive(null)}
+                    className="mb-6 text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    ← Back to Archives List
+                  </button>
+
+                  <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h3 className="text-lg font-black text-gray-800 dark:text-white">{selectedArchive.ustazName}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Ended on: {new Date(selectedArchive.endedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => downloadArchiveCSV(selectedArchive)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-emerald-500/10 cursor-pointer"
+                    >
+                      Export to CSV (Excel)
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wider">Students Performance Snapshot</h4>
+                    {selectedArchive.studentsSnapshot.map((student) => (
+                      <div key={student.studentId} className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+                          <div>
+                            <span className="font-black text-gray-800 dark:text-white text-md">{student.fullName}</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 ml-2">
+                              {student.stream}
+                            </span>
+                          </div>
+                          {student.stream === 'quran' && student.surah && (
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                              Last Surah: {student.surah}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Attendance summary */}
+                          <div>
+                            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Attendance Status</span>
+                            <div className="grid grid-cols-3 gap-2 mt-2">
+                              <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-2.5 rounded-xl text-center border border-emerald-100/50 dark:border-emerald-900/10">
+                                <span className="block text-lg font-black text-emerald-600 dark:text-emerald-400">{student.presentCount || 0}</span>
+                                <span className="text-[9px] uppercase font-bold text-emerald-500">Present</span>
+                              </div>
+                              <div className="bg-red-50/50 dark:bg-red-950/20 p-2.5 rounded-xl text-center border border-red-100/50 dark:border-red-900/10">
+                                <span className="block text-lg font-black text-red-600 dark:text-red-400">{student.absentCount || 0}</span>
+                                <span className="text-[9px] uppercase font-bold text-red-500">Absent</span>
+                              </div>
+                              <div className="bg-amber-50/50 dark:bg-amber-950/20 p-2.5 rounded-xl text-center border border-amber-100/50 dark:border-amber-900/10">
+                                <span className="block text-lg font-black text-amber-600 dark:text-amber-400">{student.excusedCount || 0}</span>
+                                <span className="text-[9px] uppercase font-bold text-amber-500">Excused</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Exam scores */}
+                          <div>
+                            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Exam Grades</span>
+                            <div className="space-y-2 mt-2">
+                              {student.examScores && Object.keys(student.examScores).length > 0 ? (
+                                Object.entries(student.examScores).map(([examId, score]) => {
+                                  const matchedExam = selectedArchive.examsSnapshot?.find(e => e.examId === examId);
+                                  const examName = matchedExam ? matchedExam.name : "Archived Exam";
+                                  const maxScore = matchedExam ? matchedExam.maxScore : 100;
+                                  
+                                  return (
+                                    <div key={examId} className="flex justify-between items-center p-2.5 bg-gray-50 dark:bg-gray-805/40 rounded-xl border border-gray-100 dark:border-gray-800 text-xs">
+                                      <span className="font-semibold text-gray-600 dark:text-gray-400">{examName}</span>
+                                      <span className="font-black text-gray-800 dark:text-white">{score} / {maxScore}</span>
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-3">No exam scores recorded.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                // Archive List View
+                <div>
+                  {loadingArchives ? (
+                    <div className="flex justify-center items-center py-20">
+                      <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : archives.length === 0 ? (
+                    <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
+                      <History className="mx-auto text-gray-300 dark:text-gray-700 mb-4" size={48} />
+                      <p className="text-gray-500 dark:text-gray-400 italic">No semester archives found.</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Semester archives will appear here once an Admin resets an Ustaz's ended class.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {archives.map((archive) => (
+                        <div key={archive._id} className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                          <div>
+                            <div className="flex justify-between items-start gap-2">
+                              <h3 className="font-black text-gray-800 dark:text-white text-lg">{archive.ustazName}</h3>
+                              <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                {archive.studentsSnapshot?.length || 0} Students
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                              Ended on: {new Date(archive.endedAt).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
+                          </div>
+                          
+                          <div className="flex gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-gray-800">
+                            <button
+                              onClick={() => setSelectedArchive(archive)}
+                              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                            >
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => downloadArchiveCSV(archive)}
+                              className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer"
+                              title="Export CSV"
+                            >
+                              CSV
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex justify-end">
+              <button
+                onClick={() => { setIsArchivesModalOpen(false); setSelectedArchive(null); }}
+                className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-bold transition text-sm cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}
