@@ -28,6 +28,7 @@ import {
     getUstazAttendanceStatus,
     getAdminWeeklyAbsentees,
     registerUstazByAdmin,
+    resetUstazSemester,
     getSemesterArchives,
     getStudentQuranProgressHistory,
     getInviteCode,
