@@ -285,6 +285,55 @@ const handleCallbackQuery = async (bot, query) => {
     const ustaz = await User.findOne({ telegramChatId: chatId.toString() });
     if (!ustaz) return;
 
+    // Handle Poll Excused toggle
+    if (data.startsWith("poll_excused:")) {
+        const [, dateStr, studentId] = data.split(":");
+        const attendanceDate = new Date(dateStr);
+        const startOfDay = new Date(attendanceDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(attendanceDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const record = await Attendance.findOne({
+            student: studentId,
+            ustaz: ustaz._id,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (record) {
+            record.status = "excused";
+            await record.save();
+        }
+
+        const student = await Student.findById(studentId);
+        const studentName = student ? student.fullName : "Student";
+        
+        // Parse message and change status representation
+        const messageText = query.message.text;
+        const lines = messageText.split("\n");
+        const updatedLines = lines.map(line => {
+            if (line.includes(studentName) && line.includes("🔴 Absent")) {
+                return line.replace("🔴 Absent", "🟡 Excused");
+            }
+            return line;
+        });
+
+        // Remove the pressed button
+        const currentMarkup = query.message.reply_markup;
+        const updatedButtons = currentMarkup.inline_keyboard.filter(row => {
+            const btn = row[0];
+            return !btn.callback_data.includes(studentId);
+        });
+
+        await bot.editMessageText(updatedLines.join("\n"), {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            reply_markup: updatedButtons.length > 0 ? { inline_keyboard: updatedButtons } : undefined
+        });
+
+        return;
+    }
+
     // Date select handler
     if (data.startsWith("date_select:")) {
         const [, type, dateStr] = data.split(":");
@@ -309,7 +358,7 @@ const handleCallbackQuery = async (bot, query) => {
         if (type === "poll") {
             // NATIVE POLL FLOW
             // Clear existing attendance for date if they are overwriting (native polls overwrite on submit)
-            const options = students.map(s => s.fullName);
+            const options = students.map((s, idx) => `${idx + 1}. ${s.fullName}`);
             // Native Poll options are capped at 10. If they have more, split them or warn them.
             if (options.length > 10) {
                 await bot.sendMessage(chatId, `⚠️ ${options.length} students found. Telegram Native Polls are limited to 10 options max. Please use the "Interactive Grid" or the "Mini App" option instead.`);
@@ -510,6 +559,8 @@ const handlePollAnswer = async (bot, pollAnswer) => {
         const studentIds = [];
         const summaryLines = [];
 
+        const inlineKeyboard = [];
+
         // Save records: checked = 'absent', unchecked = 'present'
         for (let i = 0; i < students.length; i++) {
             const student = students[i];
@@ -525,6 +576,13 @@ const handlePollAnswer = async (bot, pollAnswer) => {
 
             studentIds.push(student.id);
             summaryLines.push(`${i + 1}. ${student.fullName}: ${isAbsent ? '🔴 Absent' : '🟢 Present'}`);
+
+            if (isAbsent) {
+                inlineKeyboard.push([{
+                    text: `🟡 Mark ${student.fullName} as Excused`,
+                    callback_data: `poll_excused:${date}:${student.id}`
+                }]);
+            }
         }
 
         // Trigger background checks
@@ -532,9 +590,12 @@ const handlePollAnswer = async (bot, pollAnswer) => {
         
         activePolls.delete(pollAnswer.poll_id);
 
+        const options = inlineKeyboard.length > 0 ? { reply_markup: { inline_keyboard: inlineKeyboard } } : {};
+
         await bot.sendMessage(
             chatId,
-            `✅ የቮት ክትትል በተሳካ ሁኔታ ተቀምጧል! 🗳️\nPoll attendance saved successfully for ${date}!\n\n**ማጠቃለያ / Summary**:\n${summaryLines.join('\n')}`
+            `✅ የቮት ክትትል በተሳካ ሁኔታ ተቀምጧል! 🗳️\nPoll attendance saved successfully for ${date}!\n\n**ማጠቃለያ / Summary**:\n${summaryLines.join('\n')}`,
+            options
         );
 
     } catch (err) {
