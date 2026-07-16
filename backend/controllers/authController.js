@@ -1,4 +1,5 @@
 import User from '../models/User.js'
+import Settings from '../models/Settings.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
@@ -9,7 +10,16 @@ export const registerUstaz = async (req, res) => {
         const normalizedEmail = email?.toLowerCase().trim()
 
         // Verify Invitation Code
-        const expectedInviteCode = process.env.REGISTRATION_INVITE_CODE || 'ALI_JOIN_2026';
+        let expectedInviteCode = process.env.REGISTRATION_INVITE_CODE || 'ALI_JOIN_2026';
+        try {
+            const dbInviteCode = await Settings.findOne({ key: 'REGISTRATION_INVITE_CODE' });
+            if (dbInviteCode && dbInviteCode.value) {
+                expectedInviteCode = dbInviteCode.value;
+            }
+        } catch (dbErr) {
+            console.error('Failed to fetch invitation code from database settings:', dbErr);
+        }
+
         if (!inviteCode || inviteCode.trim() !== expectedInviteCode) {
             return res.status(400).json({ message: 'Invalid or missing invitation code' })
         }

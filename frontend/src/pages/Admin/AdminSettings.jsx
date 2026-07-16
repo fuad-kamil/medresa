@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { User, Lock, Moon, Sun, Save, Globe, Trash2, Loader2, Bot, ShieldOff, ShieldCheck, AlertTriangle, X } from "lucide-react";
+import { User, Lock, Moon, Sun, Save, Globe, Trash2, Loader2, Bot, ShieldOff, ShieldCheck, AlertTriangle, X, Pencil, Check } from "lucide-react";
 import toast from 'react-hot-toast';
 import useAuthStore from "../../store/authStore";
 
@@ -86,14 +86,40 @@ export default function AdminSettings() {
 
   // Copy Invite Code state
   const [copied, setCopied] = useState(false);
+  const [inviteCode, setInviteCode] = useState("ALI_JOIN_2026");
+  const [isEditingInvite, setIsEditingInvite] = useState(false);
+  const [newInviteCode, setNewInviteCode] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+
   const handleCopyCode = () => {
-    navigator.clipboard.writeText("ALI_JOIN_2026");
+    navigator.clipboard.writeText(inviteCode);
     setCopied(true);
     toast.success("Invitation code copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Fetch current bot lock status on mount
+  const handleUpdateInviteCode = async () => {
+    if (!newInviteCode.trim()) {
+      toast.error("Invitation code cannot be empty.");
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const res = await axiosInstance.put("/admin/settings/invite-code", {
+        inviteCode: newInviteCode.trim()
+      });
+      setInviteCode(res.data.inviteCode);
+      setIsEditingInvite(false);
+      toast.success("Invitation code updated successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to update invitation code.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  // Fetch current bot status and invite code on mount
   useEffect(() => {
     const fetchBotStatus = async () => {
       try {
@@ -105,7 +131,16 @@ export default function AdminSettings() {
         setBotStatusLoading(false);
       }
     };
+    const fetchInviteCode = async () => {
+      try {
+        const res = await axiosInstance.get("/admin/settings/invite-code");
+        setInviteCode(res.data.inviteCode);
+      } catch (err) {
+        console.error("Failed to fetch invite code:", err);
+      }
+    };
     fetchBotStatus();
+    fetchInviteCode();
   }, []);
 
   const handleProfileSubmit = async (e) => {
@@ -243,15 +278,56 @@ export default function AdminSettings() {
           </p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-5 py-3.5 rounded-2xl font-mono font-bold text-emerald-600 dark:text-emerald-400 select-all tracking-wider text-center flex-1 md:flex-none min-w-[160px]">
-            ALI_JOIN_2026
-          </div>
-          <button
-            onClick={handleCopyCode}
-            className="p-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl transition font-semibold flex items-center gap-2 shadow-md shadow-emerald-500/20 w-full md:w-auto justify-center"
-          >
-            {copied ? "Copied!" : "Copy Code"}
-          </button>
+          {isEditingInvite ? (
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <input
+                type="text"
+                value={newInviteCode}
+                onChange={(e) => setNewInviteCode(e.target.value)}
+                className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl font-mono font-bold text-gray-800 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-center tracking-wider w-full md:w-auto min-w-[160px]"
+                placeholder="Enter new code"
+                disabled={inviteLoading}
+              />
+              <button
+                onClick={handleUpdateInviteCode}
+                disabled={inviteLoading}
+                className="p-3.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl transition disabled:opacity-50 flex items-center justify-center cursor-pointer shadow-md shadow-emerald-500/10"
+                title="Save Code"
+              >
+                {inviteLoading ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+              </button>
+              <button
+                onClick={() => setIsEditingInvite(false)}
+                disabled={inviteLoading}
+                className="p-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-2xl transition disabled:opacity-50 flex items-center justify-center cursor-pointer"
+                title="Cancel"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-5 py-3.5 rounded-2xl font-mono font-bold text-emerald-600 dark:text-emerald-400 select-all tracking-wider text-center flex-1 md:flex-none min-w-[160px]">
+                {inviteCode}
+              </div>
+              <button
+                onClick={() => {
+                  setNewInviteCode(inviteCode);
+                  setIsEditingInvite(true);
+                }}
+                className="p-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl transition flex items-center justify-center cursor-pointer"
+                title="Edit Invitation Code"
+              >
+                <Pencil size={20} />
+              </button>
+              <button
+                onClick={handleCopyCode}
+                className="p-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl transition font-semibold flex items-center gap-2 shadow-md shadow-emerald-500/20 w-full md:w-auto justify-center"
+              >
+                {copied ? "Copied!" : "Copy Code"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

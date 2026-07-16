@@ -28,9 +28,10 @@ import {
     getUstazAttendanceStatus,
     getAdminWeeklyAbsentees,
     registerUstazByAdmin,
-    resetUstazSemester,
     getSemesterArchives,
-    getStudentQuranProgressHistory
+    getStudentQuranProgressHistory,
+    getInviteCode,
+    updateInviteCode
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
@@ -80,6 +81,8 @@ router.delete('/exams/:id', protect, adminOnly, deleteExam)
 // Admin Settings
 router.put('/settings/profile', protect, adminOnly, updateAdminProfile)
 router.put('/settings/password', protect, adminOnly, updateAdminPassword)
+router.get('/settings/invite-code', protect, adminOnly, getInviteCode)
+router.put('/settings/invite-code', protect, adminOnly, updateInviteCode)
 
 // Notifications
 router.get('/notifications', protect, adminOnly, getNotifications)

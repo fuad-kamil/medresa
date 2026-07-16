@@ -3,6 +3,7 @@ import Student from '../models/Student.js'
 import Attendance from '../models/Attendance.js'
 import sendEmail from '../utils/sendEmail.js'
 import QuranProgressLog from '../models/QuranProgressLog.js'
+import Settings from '../models/Settings.js'
 import bcrypt from 'bcryptjs'
 import Exam from '../models/Exam.js'
 import SemesterArchive from '../models/SemesterArchive.js'
@@ -733,6 +734,45 @@ export const getStudentQuranProgressHistory = async (req, res) => {
         }
         const logs = await QuranProgressLog.find({ student: id }).populate('ustaz', 'name').sort({ createdAt: -1 });
         res.json(logs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// Get current Teacher Invitation Code (Admin only)
+export const getInviteCode = async (req, res) => {
+    try {
+        let code = process.env.REGISTRATION_INVITE_CODE || 'ALI_JOIN_2026';
+        const setting = await Settings.findOne({ key: 'REGISTRATION_INVITE_CODE' });
+        if (setting) {
+            code = setting.value;
+        }
+        res.json({ success: true, inviteCode: code });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// Update Teacher Invitation Code (Admin only)
+export const updateInviteCode = async (req, res) => {
+    try {
+        const { inviteCode } = req.body;
+        if (!inviteCode || !inviteCode.trim()) {
+            return res.status(400).json({ message: 'Invitation code cannot be empty' });
+        }
+        
+        let setting = await Settings.findOne({ key: 'REGISTRATION_INVITE_CODE' });
+        if (setting) {
+            setting.value = inviteCode.trim();
+            await setting.save();
+        } else {
+            await Settings.create({
+                key: 'REGISTRATION_INVITE_CODE',
+                value: inviteCode.trim()
+            });
+        }
+        
+        res.json({ success: true, message: 'Invitation code updated successfully', inviteCode: inviteCode.trim() });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
