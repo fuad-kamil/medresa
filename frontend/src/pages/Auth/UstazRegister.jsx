@@ -3,8 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { BookOpen, ArrowLeft, UserPlus } from "lucide-react";
 import toast from 'react-hot-toast';
+import LanguageToggle from "../../components/Common/LanguageToggle";
+import useTranslation from "../../hooks/useTranslation";
 
 export default function UstazRegister() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -104,6 +107,11 @@ export default function UstazRegister() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 dark:from-gray-950 dark:via-slate-900 dark:to-black flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Floating Language Switcher */}
+      <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-20 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl shadow-sm">
+        <LanguageToggle />
+      </div>
+
       <div className="w-full max-w-lg">
         <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-emerald-100 dark:border-gray-700">
           {/* Header */}
@@ -115,8 +123,8 @@ export default function UstazRegister() {
                 className="w-24 h-24 rounded-2xl object-cover ring-4 ring-white/30 shadow-2xl"
               />
             </div>
-            <h1 className="text-4xl font-bold">Join as Ustaz</h1>
-            <p className="text-emerald-100 mt-2">Ali Medresa</p>
+            <h1 className="text-4xl font-bold">{t("Join as Ustaz")}</h1>
+            <p className="text-emerald-100 mt-2">{t("Ali Medresa")}</p>
           </div>
 
           {/* Form Section */}
@@ -125,13 +133,13 @@ export default function UstazRegister() {
               to="/"
               className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-500 hover:underline mb-6"
             >
-              <ArrowLeft size={18} /> Back to Login
+              <ArrowLeft size={18} /> {t("Back to Login")}
             </Link>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name
+                  {t("Full Name")}
                 </label>
                 <input
                   type="text"
@@ -145,7 +153,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email Address
+                  {t("Email Address")}
                 </label>
                 <input
                   type="email"
@@ -159,7 +167,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone Number (Optional)
+                  {t("Phone Number (Optional)")}
                 </label>
                 <input
                   type="tel"
@@ -172,7 +180,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Teaching Stream
+                  {t("Teaching Stream")}
                 </label>
                 <select
                   name="stream"
@@ -181,15 +189,15 @@ export default function UstazRegister() {
                   className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
                   required
                 >
-                  <option value="quran">Quran Teacher</option>
-                  <option value="kitab">Kitab Teacher</option>
+                  <option value="quran">{t("Quran Teacher")}</option>
+                  <option value="kitab">{t("Kitab Teacher")}</option>
                 </select>
               </div>
 
               {formData.stream === "kitab" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Kitab Name <span className="text-red-500">*</span>
+                    {t("Kitab Name")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -206,7 +214,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Teaching Days <span className="text-red-500">*</span>
+                  {t("Teaching Days")} <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {DAYS_OF_WEEK.map(day => (
@@ -229,7 +237,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Invitation Code <span className="text-red-500">*</span>
+                  {t("Invitation Code")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -243,7 +251,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Password
+                  {t("Password")}
                 </label>
                 <input
                   type="password"
@@ -257,7 +265,7 @@ export default function UstazRegister() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Confirm Password
+                  {t("Confirm Password")}
                 </label>
                 <input
                   type="password"
@@ -274,7 +282,7 @@ export default function UstazRegister() {
                 disabled={loading}
                 className="w-full bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-70 mt-4"
               >
-                {loading ? "Creating Account..." : "Register as Ustaz"}
+                {loading ? t("Registering...") : t("Join as Ustaz")}
               </button>
             </form>
           </div>

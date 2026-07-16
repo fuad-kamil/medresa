@@ -3,8 +3,10 @@ import UstazSidebar from "../../components/Ustaz/UstazSidebar";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
 import toast from 'react-hot-toast';
+import useTranslation from "../../hooks/useTranslation";
 
 export default function AttendancePage() {
+  const { t, language } = useTranslation();
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -86,39 +88,39 @@ export default function AttendancePage() {
     try {
       if (isUpdateMode) {
         await axiosInstance.put("/ustaz/attendance", { attendance, date: selectedDate });
-        toast.success("Attendance updated successfully!");
+        toast.success(t("Attendance updated successfully!"));
       } else {
         await axiosInstance.post("/ustaz/attendance", { attendance, date: selectedDate });
-        toast.success("Attendance marked successfully!");
+        toast.success(t("Attendance marked successfully!"));
         setIsUpdateMode(true);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to submit attendance");
+      toast.error(err.response?.data?.message || t("Failed to submit attendance"));
     }
   };
 
   const resetAttendance = async () => {
-    if (!window.confirm("Are you sure you want to reset attendance for this date? This will delete all records for this day.")) return;
+    if (!window.confirm(t("Are you sure you want to reset attendance for this date? This will delete all records for this day."))) return;
     
     try {
       await axiosInstance.delete(`/ustaz/attendance?date=${selectedDate}`);
-      toast.success("Attendance reset successfully!");
+      toast.success(t("Attendance reset successfully!"));
       
       const initial = {};
       students.forEach((s) => (initial[s._id] = "present"));
       setAttendance(initial);
       setIsUpdateMode(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to reset attendance");
+      toast.error(err.response?.data?.message || t("Failed to reset attendance"));
     }
   };
 
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold dark:text-white">Mark Attendance</h1>
+        <h1 className="text-3xl font-bold dark:text-white">{t("Mark Attendance")}</h1>
         <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">Date:</label>
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">{t("Date:")}</label>
           <select
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
@@ -128,8 +130,8 @@ export default function AttendancePage() {
               // Parse date string securely as local time
               const [y, m, d] = date.split('-');
               const dateObj = new Date(y, m - 1, d);
-              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-              const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const dayName = dateObj.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'short' });
+              const dateStr = dateObj.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { month: 'short', day: 'numeric' });
               return (
                 <option key={date} value={date}>
                   {dayName}, {dateStr}
@@ -146,9 +148,9 @@ export default function AttendancePage() {
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                 <th className="p-5 font-semibold text-gray-600 dark:text-gray-300 w-16 text-center">No.</th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Student Name</th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Surah</th>
-                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">Status</th>
+                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">{t("Student Name")}</th>
+                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">{t("Surah")}</th>
+                <th className="p-5 font-semibold text-gray-600 dark:text-gray-300">{t("Attendance Status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -168,9 +170,9 @@ export default function AttendancePage() {
                       }
                       className="bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-xl px-4 py-2 outline-none w-full min-w-[120px]"
                     >
-                      <option value="present">Present</option>
-                      <option value="absent">Absent</option>
-                      <option value="excused">Excused</option>
+                      <option value="present">{t("Present")}</option>
+                      <option value="absent">{t("Absent")}</option>
+                      <option value="excused">{t("Excused")}</option>
                     </select>
                   </td>
                 </tr>
@@ -185,14 +187,14 @@ export default function AttendancePage() {
           onClick={markAttendance}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors text-lg"
         >
-          {isUpdateMode ? "Update Attendance" : "Submit Attendance"}
+          {isUpdateMode ? t("Update Attendance") : t("Submit Attendance")}
         </button>
         {isUpdateMode && (
           <button
             onClick={resetAttendance}
             className="flex-1 md:max-w-xs bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-colors text-lg"
           >
-            Reset Attendance
+            {t("Reset Attendance")}
           </button>
         )}
       </div>

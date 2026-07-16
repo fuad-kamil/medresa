@@ -1,5 +1,6 @@
 import useAuthStore from "../../store/authStore";
 import ThemeToggle from "../Common/ThemeToggle";
+import LanguageToggle from "../Common/LanguageToggle";
 import NotificationBell from "../Common/NotificationBell";
 
 export default function UstazNavbar() {
@@ -14,6 +15,7 @@ export default function UstazNavbar() {
       </div>
 
       <div className="flex items-center gap-5">
+        <LanguageToggle />
         <ThemeToggle />
         <NotificationBell role="ustaz" />
 

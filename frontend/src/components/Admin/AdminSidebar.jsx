@@ -13,12 +13,14 @@ import {
 } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 import { useState, useEffect } from "react";
+import useTranslation from "../../hooks/useTranslation";
 
 export default function AdminSidebar() {
   const location = useLocation();
   const { logout } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkScreen = () => {
@@ -81,8 +83,8 @@ export default function AdminSidebar() {
                 className="w-11 h-11 rounded-2xl object-cover ring-2 ring-emerald-500/20 shadow-lg"
               />
               <div>
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">Ali Medresa</h1>
-                <p className="text-emerald-400 text-xs font-semibold uppercase tracking-wider">Admin Portal</p>
+                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">{t("Ali Medresa")}</h1>
+                <p className="text-emerald-400 text-xs font-semibold uppercase tracking-wider">{t("Admin Portal")}</p>
               </div>
             </div>
           </div>
@@ -104,7 +106,7 @@ export default function AdminSidebar() {
                   }`}
                 >
                   <Icon size={20} className={isActive ? "text-white" : "text-zinc-500 group-hover:text-emerald-400 transition-colors"} />
-                  <span>{item.name}</span>
+                  <span>{t(item.name)}</span>
                 </Link>
               );
             })}
@@ -123,7 +125,7 @@ export default function AdminSidebar() {
             }`}
           >
             <Settings size={20} className={location.pathname === "/admin/settings" ? "text-white" : "text-zinc-500 group-hover:text-emerald-400 transition-colors"} />
-            <span>Settings</span>
+            <span>{t("Settings")}</span>
           </Link>
 
           <button
@@ -131,7 +133,7 @@ export default function AdminSidebar() {
             className="flex items-center gap-3.5 w-full px-4.5 py-3 text-[15px] font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-xl transition-all duration-200 cursor-pointer"
           >
             <LogOut size={20} />
-            <span>Logout</span>
+            <span>{t("Logout")}</span>
           </button>
         </div>
       </div>

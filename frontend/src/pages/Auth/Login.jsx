@@ -3,6 +3,7 @@ import { Moon, Sun, Mail, Lock } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 import { useLogin } from "../../hooks/useLogin";
 import useTranslation from "../../hooks/useTranslation";
+import LanguageToggle from "../../components/Common/LanguageToggle";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,14 +37,19 @@ export default function Login() {
       <div className="absolute top-0 -right-4 w-72 h-72 bg-teal-300 dark:bg-teal-600 rounded-full mix-blend-multiply filter blur-3xl opacity-40 dark:opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute -bottom-8 left-20 w-72 h-72 bg-cyan-300 dark:bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-40 dark:opacity-20 animate-blob animation-delay-4000"></div>
 
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className="absolute top-4 sm:top-6 right-4 sm:right-6 p-3 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 hover:scale-105 hover:bg-white dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 transition-all z-20 shadow-sm"
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-600" />}
-      </button>
+      {/* Top Right Actions */}
+      <div className="absolute top-4 sm:top-6 right-4 sm:right-6 flex items-center gap-3 z-20">
+        <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
+          <LanguageToggle />
+        </div>
+        <button
+          onClick={toggleTheme}
+          className="p-3 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 hover:scale-105 hover:bg-white dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 transition-all shadow-sm"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-600" />}
+        </button>
+      </div>
 
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] overflow-hidden border border-white/60 dark:border-gray-700/50">

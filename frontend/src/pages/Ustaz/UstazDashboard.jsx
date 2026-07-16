@@ -3,9 +3,11 @@ import { CalendarCheck, CalendarX, Clock, CheckCircle2, AlertTriangle, X, Users 
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
 import toast from 'react-hot-toast';
+import useTranslation from "../../hooks/useTranslation";
 
 export default function UstazDashboard() {
-  const { user, language } = useAuthStore();
+  const { user } = useAuthStore();
+  const { t, language } = useTranslation();
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [loading, setLoading] = useState(true);
@@ -164,7 +166,7 @@ export default function UstazDashboard() {
           )}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-3 text-lg">
-          Here is your weekly overview and today's class.
+          {t("Here is your weekly overview and today's class.")}
         </p>
       </div>
 
@@ -172,7 +174,7 @@ export default function UstazDashboard() {
 
       {/* Daily Stats */}
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-        Attendance Overview for Selected Date
+        {t("Attendance Overview for Selected Date")}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* Total Students Card */}
@@ -181,7 +183,7 @@ export default function UstazDashboard() {
             <Users size={26} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">My Students</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("My Students")}</p>
             <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{students.length}</p>
           </div>
         </div>
@@ -191,7 +193,7 @@ export default function UstazDashboard() {
             <CalendarCheck size={26} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Present</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Present")}</p>
             <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{Object.values(attendance).filter(v => v === "present").length}</p>
           </div>
         </div>
@@ -201,7 +203,7 @@ export default function UstazDashboard() {
             <CalendarX size={26} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Absent</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Absent")}</p>
             <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{Object.values(attendance).filter(v => v === "absent").length}</p>
           </div>
         </div>
@@ -211,7 +213,7 @@ export default function UstazDashboard() {
             <Clock size={26} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Excused</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Excused")}</p>
             <p className="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">{Object.values(attendance).filter(v => v === "excused").length}</p>
           </div>
         </div>
@@ -219,10 +221,10 @@ export default function UstazDashboard() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
-          {isEditMode ? "Edit Attendance For" : "Mark Attendance For"}
+          {isEditMode ? t("Edit Attendance For") : t("Mark Attendance For")}
         </h2>
         <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 w-max">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">Date:</label>
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">{t("Date:")}</label>
           <select
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
@@ -251,21 +253,21 @@ export default function UstazDashboard() {
             <thead>
               <tr className="bg-slate-50/50 dark:bg-zinc-800/20 border-b border-slate-100 dark:border-zinc-900">
                 <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 w-16 text-center">No.</th>
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">Student Name</th>
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Student Name")}</th>
                 <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                  {user?.stream === 'kitab' ? "Phone Number" : "Parents' Phones"}
+                  {user?.stream === 'kitab' ? t("Phone Number") : t("Parents' Phones")}
                 </th>
                 <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                  {user?.stream === 'kitab' ? "Kitab Name" : "Surah"}
+                  {user?.stream === 'kitab' ? t("Kitab Name") : t("Surah")}
                 </th>
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">Attendance Status</th>
+                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Attendance Status")}</th>
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="p-10 text-center text-slate-400 dark:text-zinc-500">
-                    No students assigned to you yet.
+                    {t("No students assigned to you yet.")}
                   </td>
                 </tr>
               ) : (
@@ -277,11 +279,11 @@ export default function UstazDashboard() {
                         <span>{student.fullName}</span>
                         {takenTodayMap[student._id] ? (
                           <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full w-max border border-emerald-200 dark:border-emerald-800">
-                            Taken
+                            {t("Taken")}
                           </span>
                         ) : (
                           <span className="text-[10px] uppercase font-bold tracking-wider text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 px-2 py-0.5 rounded-full w-max border border-red-200 dark:border-red-800">
-                            Not Taken
+                            {t("Not Taken")}
                           </span>
                         )}
                       </div>
@@ -310,7 +312,7 @@ export default function UstazDashboard() {
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
                           } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                         >
-                          P <span className="font-normal opacity-80 ml-1">Present</span>
+                          P <span className="font-normal opacity-80 ml-1">{t("Present")}</span>
                         </button>
                         <button
                           onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "absent" })}
@@ -321,7 +323,7 @@ export default function UstazDashboard() {
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50"
                           } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                         >
-                          A <span className="font-normal opacity-80 ml-1">Absent</span>
+                          A <span className="font-normal opacity-80 ml-1">{t("Absent")}</span>
                         </button>
                         <button
                           onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "excused" })}
@@ -332,7 +334,7 @@ export default function UstazDashboard() {
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-amber-100 dark:hover:bg-amber-900/50"
                           } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
                         >
-                          E <span className="font-normal opacity-80 ml-1">Excused</span>
+                          E <span className="font-normal opacity-80 ml-1">{t("Excused")}</span>
                         </button>
                       </div>
                     </td>
@@ -348,7 +350,7 @@ export default function UstazDashboard() {
       <div className="lg:hidden grid grid-cols-1 gap-4 mb-10">
         {students.length === 0 ? (
           <div className="text-center py-10 text-slate-400 dark:text-zinc-500 bg-white/70 dark:bg-zinc-900/40 backdrop-blur-sm rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium">
-            No students assigned to you yet.
+            {t("No students assigned to you yet.")}
           </div>
         ) : (
           students.map((student, index) => (
@@ -367,11 +369,11 @@ export default function UstazDashboard() {
                 </div>
                 {takenTodayMap[student._id] ? (
                   <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                    Taken
+                    {t("Taken")}
                   </span>
                 ) : (
                   <span className="text-[10px] uppercase font-bold tracking-wider text-red-600 bg-red-500/10 dark:text-red-400 dark:bg-red-950/40 px-2.5 py-1 rounded-full border border-red-500/20">
-                    Not Taken
+                    {t("Not Taken")}
                   </span>
                 )}
               </div>
@@ -449,14 +451,14 @@ export default function UstazDashboard() {
                 : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
             }`}
           >
-            {isBlocked ? "Attendance Locked" : isEditMode ? "Update Attendance" : "Submit Attendance"}
+            {isBlocked ? t("Attendance Locked") : isEditMode ? t("Update Attendance") : t("Submit Attendance")}
           </button>
           {isEditMode && (
             <button
               onClick={handleResetClick}
               className="flex-1 md:max-w-xs font-bold py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-all text-xl"
             >
-              Reset Attendance
+              {t("Reset Attendance")}
             </button>
           )}
         </div>
