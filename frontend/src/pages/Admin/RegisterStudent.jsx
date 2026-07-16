@@ -558,9 +558,10 @@ export default function RegisterStudent() {
               </div>
 
               {(() => {
+                const hasSelectedUstaz = !!formData.assignedUstaz;
                 const selectedUstazObj = ustazs.find(u => u._id === formData.assignedUstaz);
                 const ustazPhoneOption = selectedUstazObj ? (selectedUstazObj.studentPhoneOption || 1) : 1;
-                const isSinglePhone = ustazPhoneOption === 1;
+                const isSinglePhone = !hasSelectedUstaz || (ustazPhoneOption === 1);
 
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -572,11 +573,16 @@ export default function RegisterStudent() {
                         type="tel"
                         name="fatherPhone"
                         value={formData.fatherPhone}
+                        disabled={!hasSelectedUstaz}
+                        placeholder={!hasSelectedUstaz ? "Please select Ustaz first" : ""}
                         onChange={(e) =>
                           setFormData({ ...formData, fatherPhone: e.target.value })
                         }
-                        className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'}`}
-                        required
+                        className={`w-full px-6 py-4 text-lg rounded-2xl border dark:bg-gray-800 focus:ring-2 outline-none transition-all ${
+                          !hasSelectedUstaz ? 'bg-gray-100 dark:bg-gray-900 border-gray-200 cursor-not-allowed text-gray-400' :
+                          isEditMode ? 'focus:ring-blue-500 focus:border-blue-500 border-gray-300 dark:border-gray-700' : 'focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 dark:border-gray-700'
+                        }`}
+                        required={hasSelectedUstaz}
                       />
                     </div>
 

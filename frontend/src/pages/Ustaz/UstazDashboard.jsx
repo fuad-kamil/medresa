@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { CalendarCheck, CalendarX, Clock, CheckCircle2, AlertTriangle, X, Users } from "lucide-react";
+import { CalendarCheck, CalendarX, Clock, CheckCircle2, AlertTriangle, X, Users, BookOpen, PlusCircle } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance";
 import useAuthStore from "../../store/authStore";
 import toast from 'react-hot-toast';
 import useTranslation from "../../hooks/useTranslation";
+import { SURAHS } from "../../utils/surahs";
 
 export default function UstazDashboard() {
   const { user } = useAuthStore();
@@ -41,6 +42,69 @@ export default function UstazDashboard() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isEndSemesterModalOpen, setIsEndSemesterModalOpen] = useState(false);
+
+  // Quran Progress modal state
+  const [isQuranModalOpen, setIsQuranModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [quranLogs, setQuranLogs] = useState([]);
+  const [loggingProgress, setLoggingProgress] = useState(false);
+  const [logFormData, setLogFormData] = useState({
+    juz: "",
+    surah: "",
+    verseStart: "",
+    verseEnd: "",
+    type: "memorization",
+    notes: ""
+  });
+
+  const fetchQuranLogs = async (studentId) => {
+    try {
+      const res = await axiosInstance.get(`/ustaz/students/${studentId}/quran-progress`);
+      setQuranLogs(res.data);
+    } catch (err) {
+      console.error("Failed to fetch Quran logs:", err);
+    }
+  };
+
+  const openQuranProgressModal = (student) => {
+    setSelectedStudent(student);
+    setQuranLogs([]);
+    setLogFormData({
+      juz: "",
+      surah: "",
+      verseStart: "",
+      verseEnd: "",
+      type: "memorization",
+      notes: ""
+    });
+    fetchQuranLogs(student._id);
+    setIsQuranModalOpen(true);
+  };
+
+  const handleLogSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+    setLoggingProgress(true);
+    try {
+      await axiosInstance.post(`/ustaz/students/${selectedStudent._id}/quran-progress`, logFormData);
+      toast.success("Quran progress logged successfully!");
+      setLogFormData({
+        juz: "",
+        surah: "",
+        verseStart: "",
+        verseEnd: "",
+        type: "memorization",
+        notes: ""
+      });
+      fetchQuranLogs(selectedStudent._id);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to log progress:", err);
+      toast.error(err.response?.data?.message || "Failed to log progress.");
+    } finally {
+      setLoggingProgress(false);
+    }
+  };
   const fetchData = async () => {
     try {
       const [studentsRes, weeklyRes] = await Promise.all([
@@ -299,6 +363,9 @@ export default function UstazDashboard() {
                   {user?.stream === 'kitab' ? t("Kitab Name") : t("Surah")}
                 </th>
                 <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Attendance Status")}</th>
+                {user?.stream === 'quran' && (
+                  <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Quran Progress")}</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -379,6 +446,17 @@ export default function UstazDashboard() {
                         </button>
                       </div>
                     </td>
+                    {user?.stream === 'quran' && (
+                      <td className="p-5">
+                        <button
+                          onClick={() => openQuranProgressModal(student)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl transition text-xs font-bold border border-emerald-100/40 dark:border-emerald-900/20 cursor-pointer"
+                        >
+                          <BookOpen size={14} />
+                          {t("Log Progress")}
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -442,6 +520,16 @@ export default function UstazDashboard() {
                   );
                 })()}
               </div>
+
+              {user?.stream === 'quran' && (
+                <button
+                  onClick={() => openQuranProgressModal(student)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl transition text-sm font-bold border border-emerald-100/40 dark:border-emerald-900/20 cursor-pointer animate-pulse"
+                >
+                  <BookOpen size={16} />
+                  {t("Log Quran Progress")}
+                </button>
+              )}
 
               {/* Attendance Toggle Buttons */}
               <div className="flex gap-2 mt-2">
@@ -624,6 +712,213 @@ export default function UstazDashboard() {
           </div>
         </div>
       )}
+
+      {/* Quran Progress Log Modal */}
+      {isQuranModalOpen && selectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-4xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-950/50">
+              <div className="flex items-center gap-3">
+                <BookOpen className="text-emerald-600 dark:text-emerald-400" size={28} />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                    {t("Quran Progress")}: <span className="text-emerald-600 dark:text-emerald-400">{selectedStudent.fullName}</span>
+                  </h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("Log daily recitation progress & view history")}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setIsQuranModalOpen(false); setSelectedStudent(null); }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition text-gray-500 dark:text-gray-400 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-8 overflow-y-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
+              {/* Form Col */}
+              <div className="lg:col-span-2 space-y-6">
+                <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">
+                  {t("Log Daily Recitation")}
+                </h3>
+                {isBlocked && (
+                  <div className="p-3.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl text-red-800 dark:text-red-400 text-xs font-semibold">
+                    {t("Semester has ended. Progress logging is locked.")}
+                  </div>
+                )}
+                <form onSubmit={handleLogSubmit} className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                      {t("Juz (1 - 30)")}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      required
+                      disabled={isBlocked}
+                      value={logFormData.juz}
+                      onChange={(e) => setLogFormData({ ...logFormData, juz: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition disabled:opacity-50"
+                      placeholder="e.g. 1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                      {t("Surah")}
+                    </label>
+                    <select
+                      required
+                      disabled={isBlocked}
+                      value={logFormData.surah}
+                      onChange={(e) => setLogFormData({ ...logFormData, surah: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="">Select a Surah</option>
+                      {SURAHS.map((surah) => (
+                        <option key={surah} value={surah}>{surah}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                        {t("Verse Start")}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        disabled={isBlocked}
+                        value={logFormData.verseStart}
+                        onChange={(e) => setLogFormData({ ...logFormData, verseStart: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition disabled:opacity-50"
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                        {t("Verse End")}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        disabled={isBlocked}
+                        value={logFormData.verseEnd}
+                        onChange={(e) => setLogFormData({ ...logFormData, verseEnd: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition disabled:opacity-50"
+                        placeholder="10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                      {t("Type")}
+                    </label>
+                    <select
+                      required
+                      disabled={isBlocked}
+                      value={logFormData.type}
+                      onChange={(e) => setLogFormData({ ...logFormData, type: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition cursor-pointer disabled:opacity-50 font-bold"
+                    >
+                      <option value="memorization">Memorization (Hifz)</option>
+                      <option value="revision">Revision (Muraja'ah)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                      {t("Notes (Optional)")}
+                    </label>
+                    <textarea
+                      rows="2"
+                      disabled={isBlocked}
+                      value={logFormData.notes}
+                      onChange={(e) => setLogFormData({ ...logFormData, notes: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition resize-none disabled:opacity-50 text-sm"
+                      placeholder="e.g. Excellent recitation..."
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loggingProgress || isBlocked}
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white rounded-xl font-bold transition shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <PlusCircle size={18} />
+                    {loggingProgress ? t("Logging...") : t("Log Progress")}
+                  </button>
+                </form>
+              </div>
+
+              {/* History Col */}
+              <div className="lg:col-span-3 space-y-6 lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-8">
+                <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">
+                  {t("Recitation History")}
+                </h3>
+                <div className="max-h-[380px] overflow-y-auto pr-2 space-y-4">
+                  {quranLogs.length === 0 ? (
+                    <p className="text-gray-400 dark:text-gray-500 text-center py-20 text-sm italic">
+                      {t("No history recorded yet.")}
+                    </p>
+                  ) : (
+                    <div className="relative border-l border-gray-100 dark:border-gray-800 ml-3 pl-6 space-y-6">
+                      {quranLogs.map((log) => (
+                        <div key={log._id} className="relative">
+                          <span className="absolute -left-10 top-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center text-white shadow-sm">
+                            <BookOpen size={12} />
+                          </span>
+                          <div>
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-md">
+                                {log.surah} (Juz {log.juz})
+                              </span>
+                              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-bold font-bold">
+                                {log.type === 'memorization' ? 'Memorization' : 'Revision'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {t("Verses")}: {log.verseStart} - {log.verseEnd}
+                            </p>
+                            {log.notes && (
+                              <p className="text-xs italic bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800 mt-2 text-gray-600 dark:text-gray-400">
+                                {log.notes}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-1.5 mt-2 text-[10px] text-gray-400 font-medium">
+                              <Clock size={10} />
+                              <span>{new Date(log.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-5 border-t border-gray-100 dark:border-gray-800 flex justify-end bg-gray-50 dark:bg-gray-950/30">
+              <button
+                onClick={() => { setIsQuranModalOpen(false); setSelectedStudent(null); }}
+                className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-semibold transition text-sm cursor-pointer"
+              >
+                {t("Close")}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
