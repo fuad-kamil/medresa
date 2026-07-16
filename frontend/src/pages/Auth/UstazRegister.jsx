@@ -236,7 +236,6 @@ export default function UstazRegister() {
                   name="inviteCode"
                   value={formData.inviteCode}
                   onChange={handleChange}
-                  placeholder="e.g. ALI_JOIN_2026"
                   className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
                   required
                 />

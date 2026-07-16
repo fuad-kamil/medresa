@@ -84,6 +84,15 @@ export default function AdminSettings() {
   const [botStatusLoading, setBotStatusLoading] = useState(true);
   const [showBotLockModal, setShowBotLockModal] = useState(false);
 
+  // Copy Invite Code state
+  const [copied, setCopied] = useState(false);
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText("ALI_JOIN_2026");
+    setCopied(true);
+    toast.success("Invitation code copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // Fetch current bot lock status on mount
   useEffect(() => {
     const fetchBotStatus = async () => {
@@ -223,6 +232,27 @@ export default function AdminSettings() {
           <Globe size={24} className="text-blue-500" />
           {language === "en" ? "English" : "አማርኛ"}
         </button>
+      </div>
+
+      {/* Teacher Invitation Code */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-emerald-100 dark:border-emerald-900/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-1">Teacher Invitation Code</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xl">
+            This secret code is required by new Ustazs to register themselves. Share this code with new teachers so they can sign up.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-5 py-3.5 rounded-2xl font-mono font-bold text-emerald-600 dark:text-emerald-400 select-all tracking-wider text-center flex-1 md:flex-none min-w-[160px]">
+            ALI_JOIN_2026
+          </div>
+          <button
+            onClick={handleCopyCode}
+            className="p-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl transition font-semibold flex items-center gap-2 shadow-md shadow-emerald-500/20 w-full md:w-auto justify-center"
+          >
+            {copied ? "Copied!" : "Copy Code"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
