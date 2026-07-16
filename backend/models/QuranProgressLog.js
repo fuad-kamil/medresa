@@ -5,7 +5,8 @@ const quranProgressLogSchema = new mongoose.Schema(
         student: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Student',
-            required: true
+            required: true,
+            index: true
         },
         ustaz: {
             type: mongoose.Schema.Types.ObjectId,
