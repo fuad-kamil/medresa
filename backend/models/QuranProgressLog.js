@@ -34,7 +34,7 @@ const quranProgressLogSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ['hifz', 'murajaah', 'tilawah'],
+            enum: ['hifz', 'murajaah', 'tilawah', 'nezer'],
             required: true
         },
         notes: {

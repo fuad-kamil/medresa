@@ -29,7 +29,8 @@ import {
     getAdminWeeklyAbsentees,
     registerUstazByAdmin,
     resetUstazSemester,
-    getSemesterArchives
+    getSemesterArchives,
+    getStudentQuranProgressHistory
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
@@ -56,6 +57,7 @@ router.get('/students/:id/attendance', protect, adminOnly, getStudentAttendanceH
 router.delete('/students/:id/attendance', protect, adminOnly, resetStudentAttendance)
 router.put('/students/:id', protect, adminOnly, upload.single('photo'), updateStudent)
 router.put('/students/:id/scores', protect, adminOnly, updateStudentScores)
+router.get('/students/:id/quran-progress', protect, adminOnly, getStudentQuranProgressHistory)
 
 // PDF Reports
 router.post('/students/:id/send-report', protect, adminOnly, sendStudentReport)

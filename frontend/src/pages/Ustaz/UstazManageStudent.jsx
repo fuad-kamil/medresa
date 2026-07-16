@@ -38,7 +38,7 @@ export default function UstazManageStudent() {
     surah: "",
     verseStart: "",
     verseEnd: "",
-    type: "memorization",
+    type: "hifz",
     notes: ""
   });
 
@@ -177,7 +177,7 @@ export default function UstazManageStudent() {
         surah: "",
         verseStart: "",
         verseEnd: "",
-        type: "memorization",
+        type: "hifz",
         notes: ""
       });
       // Refresh logs
@@ -545,8 +545,9 @@ export default function UstazManageStudent() {
                     onChange={(e) => setLogFormData({ ...logFormData, type: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition cursor-pointer font-semibold"
                   >
-                    <option value="memorization">Memorization (Hifz)</option>
-                    <option value="revision">Revision (Muraja'ah)</option>
+                    <option value="hifz">Memorization (Hifz)</option>
+                    <option value="murajaah">Revision (Muraja'ah)</option>
+                    <option value="nezer">Nezer (Nazar)</option>
                   </select>
                 </div>
 
@@ -592,7 +593,7 @@ export default function UstazManageStudent() {
                               {log.surah} (Juz {log.juz})
                             </span>
                             <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-bold">
-                              {log.type === 'memorization' ? 'Memorization' : 'Revision'}
+                              {log.type === 'hifz' ? 'Memorization' : log.type === 'murajaah' ? 'Revision' : log.type === 'nezer' ? 'Nezer' : log.type === 'tilawah' ? 'Tilawah' : log.type}
                             </span>
                           </div>
                           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

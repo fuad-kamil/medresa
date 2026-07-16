@@ -24,7 +24,7 @@ const studentSchema = new mongoose.Schema(
             surah: { type: String, default: "Al-Fatiha" },
             verseStart: { type: Number, default: 1 },
             verseEnd: { type: Number, default: 7 },
-            type: { type: String, enum: ['hifz', 'murajaah', 'tilawah'], default: 'hifz' },
+            type: { type: String, enum: ['hifz', 'murajaah', 'tilawah', 'nezer'], default: 'hifz' },
             updatedAt: { type: Date, default: Date.now }
         },
 

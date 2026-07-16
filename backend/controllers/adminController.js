@@ -2,6 +2,7 @@ import User from '../models/User.js'
 import Student from '../models/Student.js'
 import Attendance from '../models/Attendance.js'
 import sendEmail from '../utils/sendEmail.js'
+import QuranProgressLog from '../models/QuranProgressLog.js'
 import bcrypt from 'bcryptjs'
 import Exam from '../models/Exam.js'
 import SemesterArchive from '../models/SemesterArchive.js'
@@ -717,6 +718,21 @@ export const getSemesterArchives = async (req, res) => {
     try {
         const archives = await SemesterArchive.find().sort({ endedAt: -1 });
         res.json(archives);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// Get Quran progress history for a student (Admin)
+export const getStudentQuranProgressHistory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+        const logs = await QuranProgressLog.find({ student: id }).populate('ustaz', 'name').sort({ createdAt: -1 });
+        res.json(logs);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

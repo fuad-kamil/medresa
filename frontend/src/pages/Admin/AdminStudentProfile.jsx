@@ -8,6 +8,7 @@ export default function AdminStudentProfile() {
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
   const [exams, setExams] = useState([]);
+  const [quranLogs, setQuranLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -28,6 +29,16 @@ export default function AdminStudentProfile() {
           setExams(examsRes.data);
         } catch (examErr) {
           console.error("Failed to fetch exams:", examErr);
+        }
+      }
+
+      // Fetch Quran logs if it is a Quran-stream student
+      if (res.data.stream === 'quran') {
+        try {
+          const progressRes = await axiosInstance.get(`/admin/students/${id}/quran-progress`);
+          setQuranLogs(progressRes.data);
+        } catch (progressErr) {
+          console.error("Failed to fetch Quran logs:", progressErr);
         }
       }
     } catch (err) {
@@ -220,6 +231,68 @@ export default function AdminStudentProfile() {
               </div>
             </div>
           </div>
+
+          {student.stream === 'quran' && (
+            <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <BookOpen size={24} className="text-emerald-600 dark:text-emerald-400" />
+                Quran Recitation Progress History
+              </h3>
+              
+              {quranLogs.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/30 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
+                  <p className="text-gray-400 dark:text-gray-500 italic text-sm">No recitation progress logs found for this student.</p>
+                </div>
+              ) : (
+                <div className="relative border-l border-gray-100 dark:border-gray-800 ml-4 pl-8 space-y-6">
+                  {quranLogs.map((log) => (
+                    <div key={log._id} className="relative">
+                      <span className="absolute -left-12 top-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center text-white shadow-sm">
+                        <BookOpen size={12} />
+                      </span>
+                      
+                      <div className="bg-gray-50 dark:bg-gray-800/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-gray-800 dark:text-white text-lg">
+                              {log.surah} (Juz {log.juz})
+                            </span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
+                              {log.type === 'hifz' ? 'Memorization' : log.type === 'murajaah' ? 'Revision' : log.type === 'nezer' ? 'Nezer' : log.type === 'tilawah' ? 'Tilawah' : log.type}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                            {new Date(log.createdAt).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 dark:text-gray-300 font-semibold mb-2">
+                          Verses: {log.verseStart} - {log.verseEnd}
+                        </p>
+                        
+                        {log.notes && (
+                          <div className="text-xs italic bg-white dark:bg-gray-900/60 p-3 rounded-xl border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-400 mt-2">
+                            {log.notes}
+                          </div>
+                        )}
+                        
+                        <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1">
+                          <span>Logged by:</span>
+                          <span className="font-bold text-gray-600 dark:text-gray-400">{log.ustaz?.name || "Assigned Ustaz"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
