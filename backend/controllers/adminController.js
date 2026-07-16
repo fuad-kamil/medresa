@@ -644,14 +644,6 @@ export const resetUstazSemester = async (req, res) => {
         // Fetch students assigned to this Ustaz
         const students = await Student.find({ assignedUstaz: id });
 
-        // Fetch exams defined by this Ustaz
-        const exams = await Exam.find({ ustaz: id });
-        const examsSnapshot = exams.map(e => ({
-            examId: e._id,
-            name: e.name,
-            maxScore: e.maxScore
-        }));
-
         // Calculate attendance counters dynamically for snapshot
         const studentsSnapshot = [];
         for (const student of students) {
@@ -694,8 +686,7 @@ export const resetUstazSemester = async (req, res) => {
         await SemesterArchive.create({
             ustaz: id,
             ustazName: ustaz.name,
-            studentsSnapshot,
-            examsSnapshot
+            studentsSnapshot
         });
 
         // Delete all attendance records for this Ustaz

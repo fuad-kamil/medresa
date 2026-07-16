@@ -29,13 +29,6 @@ const semesterArchiveSchema = new mongoose.Schema(
                     of: Number
                 }
             }
-        ],
-        examsSnapshot: [
-            {
-                examId: mongoose.Schema.Types.ObjectId,
-                name: String,
-                maxScore: Number
-            }
         ]
     },
     { timestamps: true }
