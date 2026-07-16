@@ -42,6 +42,8 @@ export const translations = {
     "Submit Attendance": "Submit Attendance",
     "Update Attendance": "Update Attendance",
     "Reset Attendance": "Reset Attendance",
+    "Attendance marked successfully!": "Attendance marked successfully!",
+    "Attendance updated successfully!": "Attendance updated successfully!",
 
     // Admin Dashboard
     "Ustazs & Students Overview": "Ustazs & Students Overview",
@@ -104,6 +106,8 @@ export const translations = {
     "Submit Attendance": "ክትትል አስገባ",
     "Update Attendance": "ክትትል አዘምን",
     "Reset Attendance": "ክትትል ዳግም አስጀምር",
+    "Attendance marked successfully!": "ክትትል በተሳካ ሁኔታ ተመዝግቧል!",
+    "Attendance updated successfully!": "ክትትል በተሳካ ሁኔታ ተሻሽሏል!",
 
     // Admin Dashboard
     "Ustazs & Students Overview": "የኡስታዞች እና ተማሪዎች አጠቃላይ እይታ",

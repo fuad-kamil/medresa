@@ -80,6 +80,9 @@ export const updateUstazProfile = async (req, res) => {
         if (req.body.teachingDays !== undefined) {
             user.teachingDays = req.body.teachingDays;
         }
+        if (req.body.telegramChatId !== undefined) {
+            user.telegramChatId = req.body.telegramChatId;
+        }
 
         const updatedUser = await user.save();
 

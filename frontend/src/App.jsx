@@ -23,6 +23,7 @@ import WeeklyAbsentees from "./pages/Ustaz/WeeklyAbsentees";
 import UstazSettings from "./pages/Ustaz/UstazSettings";
 import UstazManageStudent from "./pages/Ustaz/UstazManageStudent";
 import UstazLayout from "./components/Layout/UstazLayout";
+import TelegramAttendance from "./pages/Ustaz/TelegramAttendance";
 
 // Common
 import Exams from "./pages/Common/Exams";
@@ -34,6 +35,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/ustaz-register" element={<UstazRegister />} />
+        <Route path="/telegram-attendance" element={<TelegramAttendance />} />
 
         {/* Admin Routes with Layout */}
         <Route

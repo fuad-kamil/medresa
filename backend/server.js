@@ -10,6 +10,7 @@ import adminOnly from './middleware/adminOnly.js';
 
 import connectDB from './config/db.js';
 import { initBot } from './bot/telegramBot.js';
+import { initUstazBot } from './bot/ustazBot.js';
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
@@ -176,6 +177,12 @@ const botConfig = initBot();
 if (botConfig) {
     app.post(botConfig.webhookPath, botConfig.webhookHandler);
     console.log(`Telegram webhook route mounted at POST ${botConfig.webhookPath}`);
+}
+
+const ustazBotConfig = initUstazBot();
+if (ustazBotConfig) {
+    app.post(ustazBotConfig.webhookPath, ustazBotConfig.webhookHandler);
+    console.log(`Ustaz Telegram webhook route mounted at POST ${ustazBotConfig.webhookPath}`);
 }
 
 // 404 Handler
