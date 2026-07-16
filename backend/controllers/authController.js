@@ -5,8 +5,14 @@ import jwt from 'jsonwebtoken'
 // Register Ustaz (Public)
 export const registerUstaz = async (req, res) => {
     try {
-        const { name, email, password, phone, stream, kitabName, teachingDays } = req.body
+        const { name, email, password, phone, stream, kitabName, teachingDays, inviteCode } = req.body
         const normalizedEmail = email?.toLowerCase().trim()
+
+        // Verify Invitation Code
+        const expectedInviteCode = process.env.REGISTRATION_INVITE_CODE || 'ALI_JOIN_2026';
+        if (!inviteCode || inviteCode.trim() !== expectedInviteCode) {
+            return res.status(400).json({ message: 'Invalid or missing invitation code' })
+        }
 
         const userExists = await User.findOne({ email: normalizedEmail })
         if (userExists) {

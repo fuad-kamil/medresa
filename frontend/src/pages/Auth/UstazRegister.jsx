@@ -14,6 +14,7 @@ export default function UstazRegister() {
     stream: "quran",
     kitabName: "",
     teachingDays: [0, 1, 2, 3, 4, 5, 6],
+    inviteCode: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ export default function UstazRegister() {
     if (!formData.name.trim()) return "Full name is required";
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
       return "Valid email is required";
+    if (!formData.inviteCode.trim()) return "Medresa invitation code is required";
     if (formData.password.length < 6)
       return "Password must be at least 6 characters long";
     if (formData.password !== formData.confirmPassword)
@@ -87,6 +89,7 @@ export default function UstazRegister() {
         stream: formData.stream,
         kitabName: formData.stream === "kitab" ? formData.kitabName.trim() : undefined,
         teachingDays: formData.teachingDays,
+        inviteCode: formData.inviteCode.trim(),
       });
 
       toast.success("Registration Successful! Please wait for Admin approval.");
@@ -222,6 +225,21 @@ export default function UstazRegister() {
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Select all the days you will be teaching.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Invitation Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="inviteCode"
+                  value={formData.inviteCode}
+                  onChange={handleChange}
+                  placeholder="e.g. ALI_JOIN_2026"
+                  className="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-gray-800 dark:text-white"
+                  required
+                />
               </div>
 
               <div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle, RotateCcw } from "lucide-react";
+import { Users, Calendar, ChevronDown, ChevronUp, User, CheckCircle, Trash2, ArrowRightLeft, History, X, AlertTriangle, RotateCcw, UserPlus } from "lucide-react";
 import toast from 'react-hot-toast';
 import useAuthStore from "../../store/authStore";
 
@@ -34,6 +34,19 @@ export default function AdminDashboard() {
   // Delete Ustaz Modal State
   const [isDeleteUstazModalOpen, setIsDeleteUstazModalOpen] = useState(false);
   const [ustazToDelete, setUstazToDelete] = useState(null);
+
+  // Create Ustaz Modal State
+  const [isCreateUstazModalOpen, setIsCreateUstazModalOpen] = useState(false);
+  const [newUstazData, setNewUstazData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    stream: "quran",
+    kitabName: "",
+    teachingDays: [0, 1, 2, 3, 4, 5, 6],
+  });
+  const [createUstazLoading, setCreateUstazLoading] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -124,6 +137,60 @@ export default function AdminDashboard() {
       console.error("Failed to delete ustaz:", error);
       toast.error("Failed to delete Ustaz.");
     }
+  };
+
+  const handleCreateUstaz = async (e) => {
+    e.preventDefault();
+    if (!newUstazData.name.trim()) return toast.error("Full name is required");
+    if (!newUstazData.email.trim()) return toast.error("Email is required");
+    if (newUstazData.password.length < 6) return toast.error("Password must be at least 6 characters");
+    if (newUstazData.stream === "kitab" && !newUstazData.kitabName.trim()) return toast.error("Kitab name is required for Kitab stream");
+    if (newUstazData.teachingDays.length === 0) return toast.error("Please select at least one teaching day");
+
+    setCreateUstazLoading(true);
+    try {
+      await axiosInstance.post("/admin/ustazs", {
+        name: newUstazData.name.trim(),
+        email: newUstazData.email.trim(),
+        password: newUstazData.password,
+        phone: newUstazData.phone.trim(),
+        stream: newUstazData.stream,
+        kitabName: newUstazData.stream === "kitab" ? newUstazData.kitabName.trim() : undefined,
+        teachingDays: newUstazData.teachingDays,
+      });
+
+      toast.success("Ustaz created successfully!");
+      setIsCreateUstazModalOpen(false);
+      
+      // Reset form
+      setNewUstazData({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        stream: "quran",
+        kitabName: "",
+        teachingDays: [0, 1, 2, 3, 4, 5, 6],
+      });
+
+      fetchData();
+    } catch (err) {
+      console.error("Failed to create Ustaz:", err);
+      toast.error(err.response?.data?.message || "Failed to create Ustaz.");
+    } finally {
+      setCreateUstazLoading(false);
+    }
+  };
+
+  const handleDayToggleInModal = (dayId) => {
+    setNewUstazData((prev) => {
+      const currentDays = prev.teachingDays;
+      if (currentDays.includes(dayId)) {
+        return { ...prev, teachingDays: currentDays.filter(d => d !== dayId) };
+      } else {
+        return { ...prev, teachingDays: [...currentDays, dayId].sort() };
+      }
+    });
   };
 
   const openTransferModal = (studentId, e) => {
@@ -282,9 +349,22 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-        Ustazs & Students Overview
-      </h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+            Ustazs & Students Overview
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1.5">
+            Teacher Join Code: <code className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold border border-emerald-100 dark:border-emerald-900/40 select-all" title="Click to select code">ALI_JOIN_2026</code>
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCreateUstazModalOpen(true)}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-premium hover:shadow-[0_8px_20px_-6px_rgba(16,185,129,0.4)] transition text-sm w-full sm:w-auto shrink-0"
+        >
+          <UserPlus size={16} /> Add New Ustaz
+        </button>
+      </div>
       
       <div className="space-y-4">
         {ustazs.map((ustaz) => {
@@ -649,6 +729,157 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Ustaz Modal */}
+      {isCreateUstazModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-gray-700 overflow-hidden my-8">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Add New Ustaz</h2>
+              <button
+                onClick={() => setIsCreateUstazModalOpen(false)}
+                className="text-gray-500 hover:text-gray-800 dark:hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateUstaz} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newUstazData.name}
+                  onChange={(e) => setNewUstazData({ ...newUstazData, name: e.target.value })}
+                  placeholder="e.g. Ustaz Ahmed"
+                  className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={newUstazData.email}
+                  onChange={(e) => setNewUstazData({ ...newUstazData, email: e.target.value })}
+                  placeholder="e.g. ahmed@medresa.com"
+                  className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Phone Number (Optional)
+                </label>
+                <input
+                  type="tel"
+                  value={newUstazData.phone}
+                  onChange={(e) => setNewUstazData({ ...newUstazData, phone: e.target.value })}
+                  placeholder="e.g. +251..."
+                  className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Teaching Stream
+                </label>
+                <select
+                  value={newUstazData.stream}
+                  onChange={(e) => setNewUstazData({ ...newUstazData, stream: e.target.value })}
+                  className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  <option value="quran">Quran Teacher</option>
+                  <option value="kitab">Kitab Teacher</option>
+                </select>
+              </div>
+
+              {newUstazData.stream === "kitab" && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Kitab Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newUstazData.kitabName}
+                    onChange={(e) => setNewUstazData({ ...newUstazData, kitabName: e.target.value })}
+                    placeholder="e.g. Ajrumiyyah"
+                    className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Teaching Days
+                </label>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {[
+                    { id: 1, label: "Mon" },
+                    { id: 2, label: "Tue" },
+                    { id: 3, label: "Wed" },
+                    { id: 4, label: "Thu" },
+                    { id: 5, label: "Fri" },
+                    { id: 6, label: "Sat" },
+                    { id: 0, label: "Sun" },
+                  ].map((day) => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      onClick={() => handleDayToggleInModal(day.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        newUstazData.teachingDays.includes(day.id)
+                          ? "bg-emerald-600 text-white"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Password (Min 6 chars)
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newUstazData.password}
+                  onChange={(e) => setNewUstazData({ ...newUstazData, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateUstazModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createUstazLoading}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-75 text-white rounded-xl font-semibold transition shadow-md"
+                >
+                  {createUstazLoading ? "Creating..." : "Save Ustaz"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

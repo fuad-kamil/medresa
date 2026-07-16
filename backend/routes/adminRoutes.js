@@ -26,7 +26,8 @@ import {
     updateAdminProfile,
     updateAdminPassword,
     getUstazAttendanceStatus,
-    getAdminWeeklyAbsentees
+    getAdminWeeklyAbsentees,
+    registerUstazByAdmin
 } from '../controllers/adminController.js'
 
 import { getExamsByUstaz, updateExam, deleteExam } from '../controllers/examController.js'
@@ -36,6 +37,7 @@ import { getBotLocked, setBotLocked } from '../bot/telegramBot.js'
 
 // Ustaz management
 router.get('/ustazs', protect, adminOnly, getAllUstazs)
+router.post('/ustazs', protect, adminOnly, registerUstazByAdmin)
 router.get('/ustazs/attendance-status', protect, adminOnly, getUstazAttendanceStatus)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
 router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
