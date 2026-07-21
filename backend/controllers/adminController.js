@@ -630,8 +630,8 @@ export const registerUstazByAdmin = async (req, res) => {
     }
 }
 
-// End Ustaz Semester (Admin)
-export const endUstazSemester = async (req, res) => {
+// Reject Ustaz Semester End Request (Re-activates Ustaz class without archiving)
+export const rejectUstazSemester = async (req, res) => {
     try {
         const { id } = req.params;
         const ustaz = await User.findById(id);
@@ -639,10 +639,10 @@ export const endUstazSemester = async (req, res) => {
             return res.status(404).json({ message: 'Ustaz not found' });
         }
 
-        ustaz.semesterStatus = 'ended';
+        ustaz.semesterStatus = 'active';
         await ustaz.save();
 
-        res.json({ message: `Semester marked as ended for ${ustaz.name}` });
+        res.json({ message: `Semester end request rejected for ${ustaz.name}. Class reactivated.` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

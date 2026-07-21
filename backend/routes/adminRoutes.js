@@ -28,7 +28,7 @@ import {
     getUstazAttendanceStatus,
     getAdminWeeklyAbsentees,
     registerUstazByAdmin,
-    endUstazSemester,
+    rejectUstazSemester,
     resetUstazSemester,
     getSemesterArchives,
     getStudentQuranProgressHistory,
@@ -47,7 +47,7 @@ router.post('/ustazs', protect, adminOnly, registerUstazByAdmin)
 router.get('/ustazs/attendance-status', protect, adminOnly, getUstazAttendanceStatus)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
 router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
-router.post('/ustaz/:id/end-semester', protect, adminOnly, endUstazSemester)
+router.post('/ustaz/:id/reject-semester', protect, adminOnly, rejectUstazSemester)
 router.post('/ustaz/:id/reset-semester', protect, adminOnly, resetUstazSemester)
 router.get('/semester-archives', protect, adminOnly, getSemesterArchives)
 

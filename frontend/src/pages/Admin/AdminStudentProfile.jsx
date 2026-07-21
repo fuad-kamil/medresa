@@ -109,13 +109,6 @@ export default function AdminStudentProfile() {
       <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 h-32 md:h-48 relative">
-          <button
-            onClick={() => setIsDeleteModalOpen(true)}
-            className="absolute top-4 right-4 p-2.5 bg-black/20 hover:bg-red-600 text-white/90 hover:text-white rounded-full backdrop-blur-md transition-all shadow-md active:scale-95 border border-white/20"
-            title="Delete Student"
-          >
-            <Trash2 size={18} />
-          </button>
         </div>
         
         <div className="px-8 pb-8 md:px-12 md:pb-12 relative">

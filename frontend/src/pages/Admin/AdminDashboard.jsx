@@ -56,31 +56,31 @@ export default function AdminDashboard() {
   const [ustazToReset, setUstazToReset] = useState(null);
   const [resettingSemester, setResettingSemester] = useState(false);
 
-  // End Ustaz Semester Modal State (Admin)
-  const [isEndUstazSemesterModalOpen, setIsEndUstazSemesterModalOpen] = useState(false);
-  const [ustazToEndSemester, setUstazToEndSemester] = useState(null);
-  const [endingUstazSemester, setEndingUstazSemester] = useState(false);
+  // Reject Semester End Modal State (Admin)
+  const [isSemesterRejectModalOpen, setIsSemesterRejectModalOpen] = useState(false);
+  const [ustazToReject, setUstazToReject] = useState(null);
+  const [rejectingSemester, setRejectingSemester] = useState(false);
 
-  const handleEndUstazSemesterClick = (ustaz, e) => {
+  const handleRejectSemesterClick = (ustaz, e) => {
     e.stopPropagation();
-    setUstazToEndSemester(ustaz);
-    setIsEndUstazSemesterModalOpen(true);
+    setUstazToReject(ustaz);
+    setIsSemesterRejectModalOpen(true);
   };
 
-  const confirmEndUstazSemester = async () => {
-    if (!ustazToEndSemester) return;
-    setEndingUstazSemester(true);
+  const confirmRejectSemester = async () => {
+    if (!ustazToReject) return;
+    setRejectingSemester(true);
     try {
-      await axiosInstance.post(`/admin/ustaz/${ustazToEndSemester._id}/end-semester`);
-      toast.success(`Semester marked as ended for ${ustazToEndSemester.name}!`);
-      setIsEndUstazSemesterModalOpen(false);
-      setUstazToEndSemester(null);
+      await axiosInstance.post(`/admin/ustaz/${ustazToReject._id}/reject-semester`);
+      toast.success(`Semester end request rejected for ${ustazToReject.name}. Class reactivated!`);
+      setIsSemesterRejectModalOpen(false);
+      setUstazToReject(null);
       fetchData();
     } catch (err) {
-      console.error("Failed to end semester:", err);
-      toast.error(err.response?.data?.message || "Failed to end semester.");
+      console.error("Failed to reject semester end:", err);
+      toast.error(err.response?.data?.message || "Failed to reject semester end.");
     } finally {
-      setEndingUstazSemester(false);
+      setRejectingSemester(false);
     }
   };
 
@@ -495,23 +495,24 @@ export default function AdminDashboard() {
                     </button>
                   )}
                   
-                  {/* Semester Actions */}
-                  {ustaz.semesterStatus === 'ended' ? (
-                    <button
-                      onClick={(e) => handleResetSemesterClick(ustaz, e)}
-                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-sm"
-                      title="Archive & Reset Semester"
-                    >
-                      <Archive size={14} /> {t("Archive & Reset")}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={(e) => handleEndUstazSemesterClick(ustaz, e)}
-                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-full transition-colors shadow-sm"
-                      title="End Semester"
-                    >
-                      <AlertTriangle size={14} /> {t("End Semester")}
-                    </button>
+                  {/* Semester End Request Actions (Approve / Reject) */}
+                  {ustaz.semesterStatus === 'ended' && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleResetSemesterClick(ustaz, e)}
+                        className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors shadow-sm"
+                        title="Approve Semester End & Start New Semester"
+                      >
+                        <CheckCircle size={14} /> {t("Approve & Reset")}
+                      </button>
+                      <button
+                        onClick={(e) => handleRejectSemesterClick(ustaz, e)}
+                        className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-full transition-colors shadow-sm"
+                        title="Reject Semester End Request"
+                      >
+                        <X size={14} /> {t("Reject")}
+                      </button>
+                    </div>
                   )}
 
                   {/* Delete Ustaz Button */}
@@ -1027,8 +1028,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* End Ustaz Semester Modal (Admin) */}
-      {isEndUstazSemesterModalOpen && (
+      {/* Reject Semester End Modal (Admin) */}
+      {isSemesterRejectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
             
@@ -1040,26 +1041,26 @@ export default function AdminDashboard() {
 
             <div className="p-8 text-center">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
-                {t("Confirm End Semester?")}
+                {t("Reject Semester End Request?")}
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
-                {t("Are you sure you want to end the semester for")} <strong>{ustazToEndSemester?.name}</strong>? {t("Their class attendance and exam scores will be locked.")}
+                {t("Are you sure you want to reject the semester end request for")} <strong>{ustazToReject?.name}</strong>? {t("Their class will be reactivated, and all existing attendance and scores will remain intact.")}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => { setIsEndUstazSemesterModalOpen(false); setUstazToEndSemester(null); }}
-                  disabled={endingUstazSemester}
+                  onClick={() => { setIsSemesterRejectModalOpen(false); setUstazToReject(null); }}
+                  disabled={rejectingSemester}
                   className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
                 >
                   {t("Cancel")}
                 </button>
                 <button
-                  onClick={confirmEndUstazSemester}
-                  disabled={endingUstazSemester}
+                  onClick={confirmRejectSemester}
+                  disabled={rejectingSemester}
                   className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 disabled:opacity-50"
                 >
-                  {endingUstazSemester ? t("Ending...") : t("Yes, End Semester")}
+                  {rejectingSemester ? t("Rejecting...") : t("Yes, Reject & Reopen")}
                 </button>
               </div>
             </div>
