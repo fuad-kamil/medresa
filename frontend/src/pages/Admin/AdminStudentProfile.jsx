@@ -87,27 +87,35 @@ export default function AdminStudentProfile() {
 
   return (
     <div className="max-w-4xl mx-auto pb-10">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6 gap-2">
         <button 
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-emerald-600 transition font-medium"
+          className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-emerald-600 transition font-medium text-xs sm:text-sm whitespace-nowrap"
         >
-          <ArrowLeft size={20} />
-          Back to Students List
+          <ArrowLeft size={18} className="shrink-0" />
+          <span>Back <span className="hidden sm:inline">to Students List</span></span>
         </button>
 
         <button
           onClick={() => setIsDeleteModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl transition font-bold text-sm border border-red-200 dark:border-red-900/50 shadow-sm hover:shadow"
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-50 hover:bg-red-500 hover:text-white dark:bg-red-950/40 dark:hover:bg-red-600 text-red-600 dark:text-red-400 rounded-full transition-all duration-200 font-bold text-xs sm:text-sm border border-red-200 dark:border-red-900/60 shadow-sm hover:shadow-md shrink-0 whitespace-nowrap active:scale-95"
+          title="Delete Student"
         >
-          <Trash2 size={18} />
-          Delete Student
+          <Trash2 size={15} className="shrink-0" />
+          <span>Delete <span className="hidden sm:inline">Student</span></span>
         </button>
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 h-32 md:h-48 relative">
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="absolute top-4 right-4 p-2.5 bg-black/20 hover:bg-red-600 text-white/90 hover:text-white rounded-full backdrop-blur-md transition-all shadow-md active:scale-95 border border-white/20"
+            title="Delete Student"
+          >
+            <Trash2 size={18} />
+          </button>
         </div>
         
         <div className="px-8 pb-8 md:px-12 md:pb-12 relative">
