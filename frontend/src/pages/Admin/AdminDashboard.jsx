@@ -56,6 +56,34 @@ export default function AdminDashboard() {
   const [ustazToReset, setUstazToReset] = useState(null);
   const [resettingSemester, setResettingSemester] = useState(false);
 
+  // End Ustaz Semester Modal State (Admin)
+  const [isEndUstazSemesterModalOpen, setIsEndUstazSemesterModalOpen] = useState(false);
+  const [ustazToEndSemester, setUstazToEndSemester] = useState(null);
+  const [endingUstazSemester, setEndingUstazSemester] = useState(false);
+
+  const handleEndUstazSemesterClick = (ustaz, e) => {
+    e.stopPropagation();
+    setUstazToEndSemester(ustaz);
+    setIsEndUstazSemesterModalOpen(true);
+  };
+
+  const confirmEndUstazSemester = async () => {
+    if (!ustazToEndSemester) return;
+    setEndingUstazSemester(true);
+    try {
+      await axiosInstance.post(`/admin/ustaz/${ustazToEndSemester._id}/end-semester`);
+      toast.success(`Semester marked as ended for ${ustazToEndSemester.name}!`);
+      setIsEndUstazSemesterModalOpen(false);
+      setUstazToEndSemester(null);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to end semester:", err);
+      toast.error(err.response?.data?.message || "Failed to end semester.");
+    } finally {
+      setEndingUstazSemester(false);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setFetchError(false);
@@ -467,14 +495,22 @@ export default function AdminDashboard() {
                     </button>
                   )}
                   
-                  {/* Archive & Reset Semester Button */}
-                  {ustaz.semesterStatus === 'ended' && (
+                  {/* Semester Actions */}
+                  {ustaz.semesterStatus === 'ended' ? (
                     <button
                       onClick={(e) => handleResetSemesterClick(ustaz, e)}
                       className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-sm"
                       title="Archive & Reset Semester"
                     >
                       <Archive size={14} /> {t("Archive & Reset")}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => handleEndUstazSemesterClick(ustaz, e)}
+                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-full transition-colors shadow-sm"
+                      title="End Semester"
+                    >
+                      <AlertTriangle size={14} /> {t("End Semester")}
                     </button>
                   )}
 
@@ -984,6 +1020,46 @@ export default function AdminDashboard() {
                   className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-75 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                 >
                   {resettingSemester ? t("Archiving...") : t("Yes, Archive & Reset")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End Ustaz Semester Modal (Admin) */}
+      {isEndUstazSemesterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                {t("Confirm End Semester?")}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
+                {t("Are you sure you want to end the semester for")} <strong>{ustazToEndSemester?.name}</strong>? {t("Their class attendance and exam scores will be locked.")}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => { setIsEndUstazSemesterModalOpen(false); setUstazToEndSemester(null); }}
+                  disabled={endingUstazSemester}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  {t("Cancel")}
+                </button>
+                <button
+                  onClick={confirmEndUstazSemester}
+                  disabled={endingUstazSemester}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                >
+                  {endingUstazSemester ? t("Ending...") : t("Yes, End Semester")}
                 </button>
               </div>
             </div>

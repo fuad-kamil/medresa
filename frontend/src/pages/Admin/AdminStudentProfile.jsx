@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
-import { User, Phone, MapPin, BookOpen, CheckCircle, XCircle, Clock, ArrowLeft } from "lucide-react";
+import { User, Phone, MapPin, BookOpen, CheckCircle, XCircle, Clock, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminStudentProfile() {
   const { id } = useParams();
@@ -11,6 +12,23 @@ export default function AdminStudentProfile() {
   const [quranLogs, setQuranLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteStudent = async () => {
+    setDeleting(true);
+    try {
+      await axiosInstance.delete(`/admin/students/${id}`);
+      toast.success("Student deleted successfully!");
+      setIsDeleteModalOpen(false);
+      navigate(-1);
+    } catch (err) {
+      console.error("Failed to delete student:", err);
+      toast.error(err.response?.data?.message || "Failed to delete student.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     fetchStudent();
@@ -69,13 +87,23 @@ export default function AdminStudentProfile() {
 
   return (
     <div className="max-w-4xl mx-auto pb-10">
-      <button 
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-emerald-600 transition mb-6 font-medium"
-      >
-        <ArrowLeft size={20} />
-        Back to Students List
-      </button>
+      <div className="flex justify-between items-center mb-6">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-emerald-600 transition font-medium"
+        >
+          <ArrowLeft size={20} />
+          Back to Students List
+        </button>
+
+        <button
+          onClick={() => setIsDeleteModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl transition font-bold text-sm border border-red-200 dark:border-red-900/50 shadow-sm hover:shadow"
+        >
+          <Trash2 size={18} />
+          Delete Student
+        </button>
+      </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
         {/* Header Section */}
@@ -295,6 +323,53 @@ export default function AdminStudentProfile() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all">
+            
+            {/* Header Icon Area */}
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-500 dark:text-red-400" />
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                Delete Student?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Are you sure you want to permanently delete{" "}
+                <strong className="text-gray-800 dark:text-gray-200">{student?.fullName}</strong>?
+              </p>
+              <p className="text-sm text-red-500 dark:text-red-400 font-medium mb-8">
+                This action cannot be undone and will erase all their attendance history.
+              </p>
+              
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={deleting}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteStudent}
+                  disabled={deleting}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Yes, Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

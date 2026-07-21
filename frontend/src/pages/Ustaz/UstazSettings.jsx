@@ -1,11 +1,33 @@
 import { useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { User, Lock, Moon, Sun, Save, Globe } from "lucide-react";
+import { User, Lock, Moon, Sun, Save, Globe, AlertTriangle, CalendarX } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 import toast from 'react-hot-toast';
 
 export default function UstazSettings() {
-  const { user, login, theme, toggleTheme, token, language, setLanguage } = useAuthStore();
+  const { user, login, theme, toggleTheme, token, language, setLanguage, updateUser } = useAuthStore();
+
+  const [isEndSemesterModalOpen, setIsEndSemesterModalOpen] = useState(false);
+  const [endSemesterLoading, setEndSemesterLoading] = useState(false);
+
+  const confirmEndSemester = async () => {
+    setEndSemesterLoading(true);
+    try {
+      const res = await axiosInstance.post("/ustaz/end-semester");
+      toast.success(res.data.message || "Semester ended successfully!");
+      if (updateUser) {
+        updateUser({ semesterStatus: 'ended' });
+      } else {
+        login({ ...user, semesterStatus: 'ended' }, token);
+      }
+      setIsEndSemesterModalOpen(false);
+    } catch (err) {
+      console.error("End semester error:", err);
+      toast.error(err.response?.data?.message || "Failed to end semester");
+    } finally {
+      setEndSemesterLoading(false);
+    }
+  };
 
   // Profile Form State
   const [profileData, setProfileData] = useState({
@@ -268,6 +290,87 @@ export default function UstazSettings() {
           </form>
         </div>
       </div>
+
+      {/* Semester Management Card */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
+            <CalendarX size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Semester Settings</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Control class active status and semester end resets</p>
+          </div>
+        </div>
+
+        {user?.semesterStatus === 'ended' ? (
+          <div className="p-5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl flex items-center gap-4 text-red-800 dark:text-red-400">
+            <AlertTriangle size={28} className="shrink-0" />
+            <div>
+              <h3 className="font-bold text-base">Semester Currently Ended</h3>
+              <p className="text-xs mt-0.5">Your class is locked. Please wait for the admin to archive and reset your class before starting a new semester.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+            <div>
+              <h3 className="font-bold text-gray-800 dark:text-white text-base">End Current Semester</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-lg">
+                Marking this semester as ended will lock your attendance marking and exam scores. Your data will be preserved until the admin archives and resets your class.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEndSemesterModalOpen(true)}
+              className="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-600/20 transition-all text-sm shrink-0 self-stretch sm:self-auto"
+            >
+              End Semester
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* End Semester Confirmation Modal */}
+      {isEndSemesterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            <div className="bg-red-50 dark:bg-red-900/20 pt-8 pb-6 flex justify-center border-b border-red-100 dark:border-red-900/30">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-800/40 rounded-full flex items-center justify-center shadow-inner">
+                <AlertTriangle size={40} className="text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                Confirm End Semester?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Are you sure you want to end this semester? Your class attendance and exam scores will be locked. You won't be able to change them until the admin resets the semester.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsEndSemesterModalOpen(false)}
+                  disabled={endSemesterLoading}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-2xl font-bold transition-all shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmEndSemester}
+                  disabled={endSemesterLoading}
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                >
+                  {endSemesterLoading ? "Ending..." : "Yes, End Semester"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
