@@ -215,22 +215,6 @@ export default function UstazDashboard() {
     }
   };
 
-  const handleEndSemesterClick = () => {
-    setIsEndSemesterModalOpen(true);
-  };
-
-  const confirmEndSemester = async () => {
-    setIsEndSemesterModalOpen(false);
-    try {
-      const res = await axiosInstance.post("/ustaz/end-semester");
-      toast.success(res.data.message || "Semester ended successfully!");
-      useAuthStore.getState().updateUser({ semesterStatus: 'ended' });
-    } catch (err) {
-      console.error("End semester error:", err);
-      toast.error(err.response?.data?.message || "Failed to end semester");
-    }
-  };
-
   if (loading) {
     return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;
   }
@@ -261,15 +245,6 @@ export default function UstazDashboard() {
             {t("Here is your weekly overview and today's class.")}
           </p>
         </div>
-
-        {!isSemesterEnded && (
-          <button
-            onClick={handleEndSemesterClick}
-            className="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-600/20 transition-all text-sm self-stretch md:self-auto hover:-translate-y-0.5"
-          >
-            {t("End Semester")}
-          </button>
-        )}
       </div>
 
 
