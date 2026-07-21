@@ -359,9 +359,39 @@ const handleCallbackQuery = async (bot, query) => {
             // NATIVE POLL FLOW
             // Clear existing attendance for date if they are overwriting (native polls overwrite on submit)
             const options = students.map((s, idx) => `${idx + 1}. ${s.fullName}`);
-            // Native Poll options are capped at 10. If they have more, split them or warn them.
+            // Native Poll options are capped at 10 in Telegram. If there are more, fall back to Interactive Grid seamlessly.
             if (options.length > 10) {
-                await bot.sendMessage(chatId, `⚠️ ${options.length} students found. Telegram Native Polls are limited to 10 options max. Please use the "Interactive Grid" or the "Mini App" option instead.`);
+                const webAppUrl = `${process.env.FRONTEND_URL || 'https://medresa-five.vercel.app'}/telegram-attendance`;
+                await bot.sendMessage(
+                    chatId,
+                    `⚠️ **${options.length} ተማሪዎች ተገኝተዋል / ${options.length} students found.**\n\nTelegram Native Polls are limited to 10 options max. 🔄 **Interactive Grid** በራስ-ሰር ተከፍቷል (ወይም Mini App ይጠቀሙ)፦`,
+                    {
+                        parse_mode: 'Markdown',
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: "Open Attendance Mini App 📱", web_app: { url: webAppUrl } }]
+                            ]
+                        }
+                    }
+                );
+
+                const studentStates = students.map(s => {
+                    const record = existingRecords.find(r => r.student.toString() === s._id.toString());
+                    return {
+                        id: s._id.toString(),
+                        fullName: s.fullName,
+                        surah: s.surah || "None",
+                        status: record ? record.status : "present"
+                    };
+                });
+
+                activeSessions.set(chatId, {
+                    date: dateStr,
+                    students: studentStates,
+                    messageId: null
+                });
+
+                await renderGridMessage(bot, chatId, dateStr, studentStates);
                 return;
             }
 
