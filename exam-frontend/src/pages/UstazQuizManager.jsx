@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import mammoth from 'mammoth';
-import { Globe, Sun, Moon, LogOut } from 'lucide-react';
+import { Globe, Sun, Moon, LogOut, FileUp, PlusCircle, FileQuestion } from 'lucide-react';
 
 const MAIN_API_URL = import.meta.env.VITE_MAIN_API_URL || 'https://medresa.onrender.com/api';
 const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'https://medresa-exam-backend.onrender.com/api';
@@ -667,52 +667,55 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   return (
     <div className={`min-h-screen transition-colors duration-200 ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* ─── DEDICATED TOP NAVIGATION BAR ───────────────────────────────────── */}
-      <header className={`sticky top-0 z-40 border-b px-4 sm:px-8 py-3.5 transition-colors ${
-        isDark ? 'bg-gray-900/90 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900 shadow-sm'
+      <header className={`sticky top-0 z-40 border-b px-4 sm:px-8 py-3 transition-colors ${
+        isDark ? 'bg-gray-900/95 border-gray-800 text-white backdrop-blur-md' : 'bg-white/95 border-gray-100 text-gray-900 shadow-xs backdrop-blur-md'
       }`}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl font-extrabold shadow-inner border ${
-              isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-700 border-emerald-200/50'
-            }`}>
-              📖
-            </div>
+            <img 
+              src="/medresa_icon.jpg" 
+              alt="Ali Medresa" 
+              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-emerald-100/60" 
+            />
             <div>
-              <h1 className={`font-extrabold text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <h1 className={`font-black text-base sm:text-lg leading-tight tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {t('portalTitle')}
               </h1>
-              <p className={`text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className={`text-[11px] font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                 {ustazUser?.name || ustazUser?.fullName || 'Ustaz'} Dashboard
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Unified Header Controls Cluster */}
+          <div className={`flex items-center gap-1 p-1 rounded-2xl border ${
+            isDark ? 'bg-gray-800/80 border-gray-700/80' : 'bg-gray-50 border-gray-200/70 shadow-2xs'
+          }`}>
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className={`p-2.5 rounded-xl transition flex items-center gap-2 text-xs font-bold cursor-pointer border ${
+              className={`h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
                 isDark
-                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-200 border-gray-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200'
+                  ? 'bg-gray-700 hover:bg-gray-600 text-amber-300 shadow-2xs'
+                  : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200/50 shadow-2xs'
               }`}
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
-              <span className="hidden sm:inline">{isDark ? 'Light' : 'Dark'}</span>
+              {isDark ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-emerald-600" />}
+              <span className="hidden md:inline">{isDark ? 'Light' : 'Dark'}</span>
             </button>
 
             {/* Globe Language Toggle Button */}
             <button
               onClick={toggleLanguage}
-              className={`p-2.5 rounded-xl border transition flex items-center gap-2 text-xs font-bold cursor-pointer ${
+              className={`h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
                 isDark
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-200'
+                  ? 'bg-gray-700 hover:bg-gray-600 text-white shadow-2xs'
+                  : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200/50 shadow-2xs'
               }`}
               title={lang === 'en' ? 'Switch to Amharic' : 'Switch to English'}
             >
-              <Globe size={18} className="text-blue-500" />
+              <Globe size={15} className="text-blue-500" />
               <span>{lang === 'en' ? 'English (EN)' : 'አማርኛ (AM)'}</span>
             </button>
 
@@ -720,10 +723,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="p-2.5 rounded-xl border border-red-200/80 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:hover:bg-red-900/60 dark:text-red-400 dark:border-red-900/50 transition flex items-center gap-2 text-xs font-bold cursor-pointer"
+                className="h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer text-red-600 hover:bg-red-100/70 hover:scale-[1.02] active:scale-[0.98] dark:text-red-400 dark:hover:bg-red-950/60"
                 title={lang === 'en' ? 'Log out' : 'ውጣ (Logout)'}
               >
-                <LogOut size={18} className="text-red-500" />
+                <LogOut size={15} className="text-red-500" />
                 <span className="hidden sm:inline">{lang === 'en' ? 'Logout' : 'ውጣ'}</span>
               </button>
             )}
@@ -731,33 +734,41 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-8 space-y-8">
         {/* Main Action Header Card */}
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl border ${
-          isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900 shadow-sm'
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 rounded-3xl border transition-all ${
+          isDark 
+            ? 'bg-gray-900 border-gray-800 text-white shadow-lg' 
+            : 'bg-white border-gray-100 text-gray-900 shadow-sm hover:shadow-md'
         }`}>
           <div>
-            <h1 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('title')}</h1>
-            <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('subtitle')}</p>
+            <h1 className={`text-2xl sm:text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('title')}</h1>
+            <p className={`text-sm font-medium mt-1 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('subtitle')}</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Secondary Action: Bulk Import (Outline style) */}
             <button
               onClick={() => setShowBulkImportModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl shadow-md transition font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                isDark
+                  ? 'bg-gray-800 hover:bg-gray-700 text-purple-300 border-purple-500/30'
+                  : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200/80 shadow-2xs'
+              }`}
             >
-              <span>📥</span>
+              <FileUp size={16} className="text-purple-600" />
               <span>{t('bulkImportBtn')}</span>
             </button>
 
+            {/* Primary Action: Create New Quiz (Solid Brand Color) */}
             <button
               onClick={() => {
                 fetchInitialData();
                 setShowCreateModal(true);
               }}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition text-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span>+</span>
+              <PlusCircle size={17} />
               <span>{t('createQuizBtn')}</span>
             </button>
           </div>
@@ -771,18 +782,21 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           </div>
         )}
 
-        {/* Quizzes List */}
-        <div className={`rounded-3xl border p-6 ${
-          isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900 shadow-sm'
+        {/* Quizzes List Card */}
+        <div className={`rounded-3xl border p-6 sm:p-8 transition-all ${
+          isDark ? 'bg-gray-900 border-gray-800 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-900 shadow-sm hover:shadow-md'
         }`}>
-          <h2 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>{t('activePastTitle')}</h2>
+          <h2 className={`text-xl font-black tracking-tight mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('activePastTitle')}</h2>
 
           {quizzes.length === 0 ? (
-            <div className={`text-center py-12 border-2 border-dashed rounded-2xl ${
-              isDark ? 'border-gray-800' : 'border-gray-200'
+            <div className={`text-center py-12 px-6 border-2 border-dashed rounded-3xl transition-all ${
+              isDark ? 'border-gray-800 bg-gray-900/40' : 'border-emerald-200/60 bg-emerald-50/20'
             }`}>
-              <p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noQuizzesYet')}</p>
-              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('noQuizzesSub')}</p>
+              <div className="w-14 h-14 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <FileQuestion size={28} />
+              </div>
+              <h3 className={`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('noQuizzesYet')}</h3>
+              <p className={`text-xs font-medium mt-1 max-w-sm mx-auto ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noQuizzesSub')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

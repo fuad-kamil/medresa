@@ -366,11 +366,11 @@ export default function ExamPlayer({ quizId, student }) {
         }`}>
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl font-extrabold shadow-inner border ${
-                isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-700 border-emerald-200/50'
-              }`}>
-                📖
-              </div>
+              <img 
+                src="/medresa_icon.jpg" 
+                alt="Ali Medresa Logo" 
+                className="w-10 h-10 rounded-xl object-cover shadow-sm border border-emerald-100/60" 
+              />
               <div>
                 <h1 className={`font-extrabold text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {t('portalTitle')}
@@ -458,11 +458,11 @@ export default function ExamPlayer({ quizId, student }) {
       }`}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl font-extrabold shadow-inner border ${
-              isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-700 border-emerald-200/50'
-            }`}>
-              📖
-            </div>
+            <img 
+              src="/medresa_icon.jpg" 
+              alt="Ali Medresa Logo" 
+              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-emerald-100/60" 
+            />
             <div>
               <h1 className={`font-extrabold text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {t('portalTitle')}

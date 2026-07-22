@@ -169,10 +169,12 @@ export default function StudentLogin({ quizId, onVerified }) {
         </div>
 
         <div className="text-center mb-6">
-          {/* Standalone decorative book badge */}
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-3xl font-extrabold mx-auto mb-3">
-            📖
-          </div>
+          {/* Medresa Icon Logo */}
+          <img 
+            src="/medresa_icon.jpg" 
+            alt="Ali Medresa Logo" 
+            className="w-16 h-16 rounded-2xl object-cover shadow-md mx-auto mb-3 border-2 border-emerald-100" 
+          />
           <h1 className="text-2xl font-bold text-gray-900">{t('portalTitle')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('subtitle')}</p>
         </div>
