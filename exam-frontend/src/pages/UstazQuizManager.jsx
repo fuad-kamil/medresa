@@ -3,8 +3,8 @@ import toast from 'react-hot-toast';
 import mammoth from 'mammoth';
 import { Globe, Sun, Moon } from 'lucide-react';
 
-const MAIN_API_URL = import.meta.env.VITE_MAIN_API_URL || 'http://localhost:5000/api';
-const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'http://localhost:5001/api';
+const MAIN_API_URL = import.meta.env.VITE_MAIN_API_URL || 'https://medresa.onrender.com/api';
+const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'https://medresa-exam-backend.onrender.com/api';
 
 // ─── Complete English & Authentic Amharic Translation Dictionary ───────────
 const translations = {
