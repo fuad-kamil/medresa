@@ -2,6 +2,7 @@ import Exam from '../models/Exam.js';
 import Student from '../models/Student.js';
 import User from '../models/User.js';
 import Settings from '../models/Settings.js';
+import mongoose from 'mongoose';
 
 // ─── Ustaz: Get their own exam columns ────────────────────────────────────────
 export const getMyExams = async (req, res) => {
@@ -347,40 +348,76 @@ export const clearExamScore = async (req, res) => {
 
         const { studentId, ustazId, examId, examColumnName, clearAll } = req.body;
 
-        // If clearAll is true or ustazId is provided without a single studentId, clear across all students
-        if (clearAll || (!studentId && ustazId)) {
-            let filter = {};
-            if (ustazId && ustazId !== 'ustaz_default') filter.assignedUstaz = ustazId;
+        // Helper: wipes all score keys + autoSyncedExams entries for this exam column on one student
+        const clearStudentScore = async (student) => {
+            // Collect all the exam column IDs/names that syncExamScore may have written
+            const keysToDelete = new Set();
+            if (examId) keysToDelete.add(examId.toString());
+            if (examColumnName) keysToDelete.add(examColumnName);
 
-            const studentsList = await Student.find(filter);
-            for (const student of studentsList) {
-                if (student.examScores) {
-                    if (examId) student.examScores.delete(examId.toString());
-                    if (examColumnName) student.examScores.delete(examColumnName);
-                    
-                    const uId = student.assignedUstaz;
-                    if (uId) {
-                        const ustazExams = await Exam.find({ ustaz: uId });
-                        ustazExams.forEach(ex => {
-                            if (!examId || examId === 'exam_default' || ex._id.toString() === String(examId) || ex.name === examColumnName || ex.name === 'Quiz' || ex.name === 'Test') {
-                                student.examScores.delete(ex._id.toString());
-                                if (ex.name) student.examScores.delete(ex.name);
-                            }
-                        });
+            // Also find every exam column belonging to this student's Ustaz
+            // (syncExamScore spreads across ALL columns where name === 'Quiz' or 'Test')
+            const uId = student.assignedUstaz;
+            if (uId) {
+                const ustazExams = await Exam.find({ ustaz: uId });
+                ustazExams.forEach(ex => {
+                    // Match the same condition syncExamScore used when writing
+                    if (
+                        !examId ||
+                        examId === 'exam_default' ||
+                        ex._id.toString() === String(examId) ||
+                        ex.name === examColumnName ||
+                        ex.name === 'Quiz' ||
+                        ex.name === 'Test'
+                    ) {
+                        keysToDelete.add(ex._id.toString());
+                        if (ex.name) keysToDelete.add(ex.name);
                     }
-                }
-                if (student.autoSyncedExams) {
-                    student.autoSyncedExams = student.autoSyncedExams.filter(
-                        id => id !== String(examId) && id !== examColumnName
-                    );
-                }
-                student.markModified('examScores');
-                student.markModified('autoSyncedExams');
-                await student.save();
+                });
             }
-            return res.json({ success: true, message: 'Cleared all student scores for exam.' });
+
+            // Remove all matching keys from examScores Map
+            if (student.examScores) {
+                keysToDelete.forEach(k => student.examScores.delete(k));
+            }
+
+            // Remove ALL matching entries from autoSyncedExams array
+            if (student.autoSyncedExams) {
+                student.autoSyncedExams = student.autoSyncedExams.filter(
+                    id => !keysToDelete.has(id)
+                );
+            }
+
+            student.markModified('examScores');
+            student.markModified('autoSyncedExams');
+            await student.save();
+        };
+
+        // ── BULK MODE: clearAll=true or ustazId provided without a specific studentId ──
+        if (clearAll || (!studentId && ustazId)) {
+            let studentFilter = {};
+
+            if (ustazId && ustazId !== 'ustaz_default') {
+                // assignedUstaz is an ObjectId ref — cast it properly
+                try {
+                    studentFilter.assignedUstaz = new mongoose.Types.ObjectId(ustazId);
+                } catch {
+                    // If ustazId isn't a valid ObjectId, fall back to string compare
+                    studentFilter.assignedUstaz = ustazId;
+                }
+            }
+
+            const studentsList = await Student.find(studentFilter);
+            console.log(`[clearExamScore] clearAll for ${studentsList.length} students, examId=${examId}, examColumnName=${examColumnName}`);
+
+            for (const student of studentsList) {
+                await clearStudentScore(student);
+            }
+
+            return res.json({ success: true, message: `Cleared scores for ${studentsList.length} students.` });
         }
 
+        // ── SINGLE STUDENT MODE ──
         if (!studentId) {
             return res.status(400).json({ message: 'studentId is required' });
         }
@@ -390,36 +427,12 @@ export const clearExamScore = async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        if (student.examScores) {
-            if (examId) student.examScores.delete(examId.toString());
-            if (examColumnName) student.examScores.delete(examColumnName);
-
-            // Also clear across all exam columns assigned to this student's Ustaz
-            const uId = student.assignedUstaz;
-            if (uId) {
-                const ustazExams = await Exam.find({ ustaz: uId });
-                ustazExams.forEach(ex => {
-                    if (!examId || examId === 'exam_default' || ex._id.toString() === String(examId) || ex.name === examColumnName || ex.name === 'Quiz' || ex.name === 'Test') {
-                        student.examScores.delete(ex._id.toString());
-                        if (ex.name) student.examScores.delete(ex.name);
-                    }
-                });
-            }
-        }
-
-        if (student.autoSyncedExams) {
-            student.autoSyncedExams = student.autoSyncedExams.filter(
-                id => id !== String(examId) && id !== examColumnName
-            );
-        }
-
-        student.markModified('examScores');
-        student.markModified('autoSyncedExams');
-        await student.save();
-
-        console.log(`Cleared and unlocked score for student ${student.fullName} (${studentId})`);
-        res.json({ success: true, message: 'Score unlocked and cleared for retake' });
+        await clearStudentScore(student);
+        console.log(`[clearExamScore] Cleared score for student ${student.fullName} (${studentId})`);
+        res.json({ success: true, message: 'Score cleared and cell unlocked for retake.' });
     } catch (error) {
+        console.error('[clearExamScore] Error:', error);
         res.status(500).json({ message: error.message });
     }
 };
+
