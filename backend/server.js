@@ -24,15 +24,17 @@ const app = express();
 // ── CORS must be FIRST, before any routes ─────────────────────────────────────
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
-  'https://medresa-five.vercel.app',            // production frontend (Vercel)
+  'https://medresa-five.vercel.app',
+  'https://medresa.onrender.com',
   ...(process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
     : []),
 ];
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
       callback(null, true);
     } else {
       callback(new Error(`CORS policy: Origin '${origin}' not allowed.`));
@@ -209,7 +211,7 @@ const startServer = async () => {
         await connectDB();
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
-            console.log(` Ali Medresa Backend is Ready!`);
+            console.log(`Ali Medresa Backend is Ready!`);
         });
 
         // ── Keep-alive: prevent Render free-tier dyno from sleeping ──────────

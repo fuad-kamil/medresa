@@ -55,6 +55,7 @@ export default function Exams() {
   
   // Local score states for inline editing (mapped as: scores[studentId][examId])
   const [scores, setScores] = useState({});
+  const [autoSyncedMap, setAutoSyncedMap] = useState({});
 
   // Manage Exams Panel state (Ustaz Only)
   const [showManagePanel, setShowManagePanel] = useState(false);
@@ -95,8 +96,57 @@ export default function Exams() {
       setExams([]);
       setStudents([]);
       setScores({});
+      setAutoSyncedMap({});
     }
   }, [selectedUstaz, isAdmin]);
+
+  const fetchAutoSyncedQuizzes = async (uId) => {
+    try {
+      const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'http://localhost:5001/api';
+      const targetUstazId = uId || user?._id || user?.id || 'ustaz_default';
+      const resQuizzes = await fetch(`${EXAM_API_URL}/quizzes/ustaz/${targetUstazId}`);
+      if (!resQuizzes.ok) return { syncedMap: {}, onlineScoresMap: {} };
+
+      const quizzesData = await resQuizzes.json();
+      const syncedMap = {};
+      const onlineScoresMap = {};
+
+      await Promise.all(quizzesData.map(async (quiz) => {
+        try {
+          const resSub = await fetch(`${EXAM_API_URL}/quizzes/${quiz._id}/submissions`);
+          if (resSub.ok) {
+            const subs = await resSub.json();
+            if (Array.isArray(subs)) {
+              subs.forEach((s) => {
+                if (s.studentId) {
+                  const targetMax = quiz.maxScore || 100;
+                  const calculatedScore = (s.correctAnswers !== undefined && s.totalQuestions > 0)
+                    ? Math.round((s.correctAnswers / s.totalQuestions) * targetMax)
+                    : s.score;
+
+                  if (quiz.examColumnId) {
+                    syncedMap[`${s.studentId}_${quiz.examColumnId}`] = true;
+                    onlineScoresMap[`${s.studentId}_${quiz.examColumnId}`] = calculatedScore;
+                  }
+                  if (quiz.examColumnName) {
+                    syncedMap[`${s.studentId}_${quiz.examColumnName}`] = true;
+                    onlineScoresMap[`${s.studentId}_${quiz.examColumnName}`] = calculatedScore;
+                  }
+                }
+              });
+            }
+          }
+        } catch (subErr) {
+          console.warn('Failed to fetch quiz submissions:', subErr);
+        }
+      }));
+
+      return { syncedMap, onlineScoresMap };
+    } catch (err) {
+      console.warn('Failed to fetch online quizzes for sync lock:', err);
+      return { syncedMap: {}, onlineScoresMap: {} };
+    }
+  };
 
   const fetchUstazs = async () => {
     setLoading(true);
@@ -126,6 +176,23 @@ export default function Exams() {
       setStudents(kitabStudents);
 
       initializeScores(kitabStudents, activeExams);
+
+      // Fetch auto-synced online quizzes to lock & update online exam score cells
+      const { syncedMap, onlineScoresMap } = await fetchAutoSyncedQuizzes(user?._id || user?.id);
+      setAutoSyncedMap(syncedMap);
+
+      if (Object.keys(onlineScoresMap).length > 0) {
+        setScores((prevScores) => {
+          const updated = { ...prevScores };
+          Object.keys(onlineScoresMap).forEach((key) => {
+            const [stId, exId] = key.split('_');
+            if (stId && exId && updated[stId]) {
+              updated[stId][exId] = onlineScoresMap[key];
+            }
+          });
+          return updated;
+        });
+      }
     } catch (err) {
       console.error("Failed to load ustaz data", err);
       setFetchError(true);
@@ -148,6 +215,22 @@ export default function Exams() {
       setStudents(ustazStudents);
 
       initializeScores(ustazStudents, activeExams);
+
+      const { syncedMap, onlineScoresMap } = await fetchAutoSyncedQuizzes(ustazId);
+      setAutoSyncedMap(syncedMap);
+
+      if (Object.keys(onlineScoresMap).length > 0) {
+        setScores((prevScores) => {
+          const updated = { ...prevScores };
+          Object.keys(onlineScoresMap).forEach((key) => {
+            const [stId, exId] = key.split('_');
+            if (stId && exId && updated[stId]) {
+              updated[stId][exId] = onlineScoresMap[key];
+            }
+          });
+          return updated;
+        });
+      }
     } catch (err) {
       console.error("Failed to load admin ustaz data", err);
       setFetchError(true);
@@ -166,15 +249,26 @@ export default function Exams() {
         else if (exam.name === "Second Exam") legacyScore = student.secondExam || 0;
         else if (exam.name === "Final Exam") legacyScore = student.finalExam || 0;
 
-        initialScores[student._id][exam._id] = student.examScores?.[exam._id] ?? legacyScore;
+        const savedScore = student.examScores?.[exam._id] 
+          ?? student.examScores?.[String(exam._id)] 
+          ?? student.examScores?.[exam.name];
+        initialScores[student._id][exam._id] = savedScore !== undefined ? savedScore : legacyScore;
       });
     });
     setScores(initialScores);
   };
 
   const handleScoreChange = (studentId, examId, val) => {
+    const exam = exams.find(e => e._id === examId);
+    const isAutoSynced = Boolean(
+      autoSyncedMap[`${studentId}_${examId}`] || 
+      (exam?.name && autoSyncedMap[`${studentId}_${exam.name}`])
+    );
+    if (isAutoSynced) return; // Locked: score comes directly from online exam submission
+
     let numericVal = val === "" ? "" : Number(val);
-    if (numericVal !== "" && (isNaN(numericVal) || numericVal < 0 || numericVal > 100)) {
+    const maxAllowed = exam?.maxScore || 100;
+    if (numericVal !== "" && (isNaN(numericVal) || numericVal < 0 || numericVal > maxAllowed)) {
       return;
     }
 
@@ -200,6 +294,7 @@ export default function Exams() {
 
       await axiosInstance.put(endpoint, payload);
       setSavedSuccessId(studentId);
+      toast.success("Exam scores saved successfully!");
       setTimeout(() => setSavedSuccessId(null), 3000);
     } catch (err) {
       console.error(err);
@@ -587,6 +682,21 @@ export default function Exams() {
                         Export
                     </button>
 
+                    {!isAdmin && (
+                      <button
+                        onClick={() => {
+                          const examUrl = import.meta.env.VITE_EXAM_FRONTEND_URL || 'http://localhost:5174';
+                          const token = localStorage.getItem('token') || '';
+                          const userStr = JSON.stringify(user || {});
+                          window.open(`${examUrl}?token=${encodeURIComponent(token)}&user=${encodeURIComponent(userStr)}`, '_blank');
+                        }}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl transition font-semibold text-md shadow-md cursor-pointer whitespace-nowrap hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <GraduationCap size={18} />
+                        Online Quiz Builder
+                      </button>
+                    )}
+
                     {isAdmin && selectedUstaz && (
                         <button
                             onClick={sendAllReportsToTelegram}
@@ -771,21 +881,31 @@ export default function Exams() {
                               </div>
                               
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                  {exams.map((exam) => (
-                                      <div key={exam._id} className="bg-gray-50 dark:bg-gray-950/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
-                                          <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide truncate" title={exam.name}>
-                                              {exam.name} <span className="font-normal normal-case opacity-70 block mt-0.5">Max: {exam.maxScore || 100}</span>
-                                          </label>
-                                          <input
-                                              type="number"
-                                              min="0"
-                                              max="100"
-                                              value={studentScores[exam._id] ?? 0}
-                                              onChange={(e) => handleScoreChange(student._id, exam._id, e.target.value)}
-                                              className="w-full px-3 py-2.5 text-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold text-gray-800 dark:text-white shadow-sm"
-                                          />
-                                      </div>
-                                  ))}
+                                  {exams.map((exam) => {
+                                      const isAutoSynced = Boolean(
+                                          autoSyncedMap[`${student._id}_${exam._id}`] || 
+                                          (exam.name && autoSyncedMap[`${student._id}_${exam.name}`]) ||
+                                          student.autoSyncedExams?.includes(String(exam._id)) ||
+                                          (exam.name && student.autoSyncedExams?.includes(exam.name))
+                                      );
+                                      return (
+                                          <div key={exam._id} className={`p-3 rounded-2xl border flex flex-col justify-between transition-all ${isAutoSynced ? 'bg-emerald-50/30 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-800/30' : 'bg-gray-50 dark:bg-gray-950/50 border-gray-100 dark:border-gray-800'}`}>
+                                              <label className="flex items-center justify-between text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide truncate" title={exam.name}>
+                                                  <span>{exam.name} <span className="font-normal normal-case opacity-70 block mt-0.5">Max: {exam.maxScore || 100}</span></span>
+                                              </label>
+                                              <input
+                                                  type="number"
+                                                  min="0"
+                                                  max={exam.maxScore || 100}
+                                                  disabled={isAutoSynced}
+                                                  readOnly={isAutoSynced}
+                                                  value={studentScores[exam._id] ?? 0}
+                                                  onChange={(e) => handleScoreChange(student._id, exam._id, e.target.value)}
+                                                  className={`w-full px-3 py-2.5 text-center border rounded-xl outline-none transition font-bold shadow-sm ${isAutoSynced ? 'bg-gray-100/90 dark:bg-gray-800/80 text-emerald-600 dark:text-emerald-400 cursor-not-allowed border-dashed border-emerald-300/60 dark:border-emerald-700/60 font-black shadow-inner opacity-90' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-emerald-500'}`}
+                                              />
+                                          </div>
+                                      );
+                                  })}
                               </div>
                               
                               <div className="flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
@@ -840,41 +960,44 @@ export default function Exams() {
               )}
             </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden md:block bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-850">
-                <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+            {/* Ultra-Modern Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-gray-900/90 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800/80 backdrop-blur-md">
+                <div className="w-full">
+                <table className="w-full text-left border-collapse table-auto">
                     <thead>
-                    <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300">Student Name</th>
+                    <tr className="bg-gray-50/90 dark:bg-gray-950/80 border-b border-gray-100 dark:border-gray-800 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th className="py-3.5 px-3 pl-5 text-center w-12 font-extrabold text-gray-700 dark:text-gray-300">No.</th>
+                        <th className="py-3.5 px-4 font-extrabold text-gray-700 dark:text-gray-300">Student Name</th>
                         {exams.map((exam) => (
-                        <th key={exam._id} className="p-4 font-semibold text-gray-600 dark:text-gray-300 text-center min-w-[120px]">
+                        <th key={exam._id} className="py-3 px-2 text-center">
                             <div className="flex flex-col items-center justify-center gap-0.5">
-                                <span className="whitespace-nowrap">{exam.name}</span>
-                                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal normal-case whitespace-nowrap">(Max: {exam.maxScore || 100})</span>
+                                <span className="text-gray-900 dark:text-gray-100 font-extrabold text-xs normal-case whitespace-nowrap">{exam.name}</span>
+                                <span className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-black px-1.5 py-0.2 rounded-full text-[9px] border border-emerald-200/50 dark:border-emerald-800/40">
+                                    Max: {exam.maxScore || 100}
+                                </span>
                             </div>
                         </th>
                         ))}
-                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-28">Total</th>
-                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-28">Rank</th>
-                        <th className="p-6 font-semibold text-gray-600 dark:text-gray-300 text-center w-40">Action</th>
+                        <th className="py-3 px-2 text-center w-16">Total</th>
+                        <th className="py-3 px-2 text-center w-14">Rank</th>
+                        <th className="py-3.5 px-4 pr-6 text-center w-36">Action</th>
                     </tr>
                     </thead>
-                    <tbody className="divide-y dark:divide-gray-800">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
                     {tableLoading ? (
                         <tr>
-                        <td colSpan={exams.length + 3} className="text-center py-20">
+                        <td colSpan={exams.length + 4} className="text-center py-20">
                             <div className="animate-spin w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full mx-auto font-medium"></div>
                         </td>
                         </tr>
                     ) : filteredStudents.length === 0 ? (
                         <tr>
-                        <td colSpan={exams.length + 3} className="text-center py-20 text-gray-500 font-medium">
+                        <td colSpan={exams.length + 4} className="text-center py-20 text-gray-500 font-medium">
                             No students found.
                         </td>
                         </tr>
                     ) : (
-                        filteredStudents.map((student) => {
+                        filteredStudents.map((student, idx) => {
                         const studentScores = scores[student._id] || {};
                         let totalScore = 0;
                         
@@ -882,56 +1005,79 @@ export default function Exams() {
                             totalScore += Number(studentScores[exam._id]) || 0;
                         });
 
+                        const rankNum = getStudentRank(student._id);
+
                         return (
-                            <tr key={student._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition duration-150">
-                            <td className="p-6 font-bold text-gray-800 dark:text-white">
-                                {student.fullName}
+                            <tr key={student._id} className="hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10 transition-colors duration-150 group">
+                            {/* No. Column */}
+                            <td className="py-3 px-3 pl-5 text-center text-xs font-extrabold text-gray-400 dark:text-gray-500">
+                                {idx + 1}
+                            </td>
+
+                            {/* Student Name */}
+                            <td className="py-3 px-4">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm whitespace-nowrap group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                    {student.fullName}
+                                </span>
                             </td>
                             
-                            {/* Dynamic Exam Inputs */}
-                            {exams.map((exam) => (
-                                <td key={exam._id} className="p-6 text-center">
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    value={studentScores[exam._id] ?? 0}
-                                    onChange={(e) => handleScoreChange(student._id, exam._id, e.target.value)}
-                                    className="w-20 px-3 py-2 text-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-900 outline-none transition font-semibold"
-                                />
-                                </td>
-                            ))}
+                            {/* Dynamic Compact Exam Inputs */}
+                            {exams.map((exam) => {
+                                const isAutoSynced = Boolean(
+                                    autoSyncedMap[`${student._id}_${exam._id}`] || 
+                                    (exam.name && autoSyncedMap[`${student._id}_${exam.name}`]) ||
+                                    student.autoSyncedExams?.includes(String(exam._id)) ||
+                                    (exam.name && student.autoSyncedExams?.includes(exam.name))
+                                );
+                                return (
+                                    <td key={exam._id} className="py-2.5 px-1.5 text-center">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={exam.maxScore || 100}
+                                            disabled={isAutoSynced}
+                                            readOnly={isAutoSynced}
+                                            value={studentScores[exam._id] ?? 0}
+                                            onChange={(e) => handleScoreChange(student._id, exam._id, e.target.value)}
+                                            className={`w-14 sm:w-16 px-2 py-1.5 text-center border rounded-xl outline-none transition font-extrabold text-xs ${isAutoSynced ? 'bg-gray-100 dark:bg-gray-800/80 text-emerald-600 dark:text-emerald-400 cursor-not-allowed border-dashed border-emerald-300 dark:border-emerald-800 opacity-90 shadow-inner' : 'bg-gray-50 dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-900 text-gray-800 dark:text-white hover:border-emerald-400'}`}
+                                            title={isAutoSynced ? "Auto-graded online exam score (Read-only)" : ""}
+                                        />
+                                    </td>
+                                );
+                            })}
 
                             {/* Total Score */}
-                            <td className="p-6 text-center">
-                                <span className="inline-flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-bold px-4 py-2 rounded-xl text-lg w-20">
-                                {totalScore}
+                            <td className="py-2.5 px-2 text-center">
+                                <span className="inline-flex items-center justify-center bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 text-emerald-700 dark:text-emerald-400 font-black px-2.5 py-1 rounded-xl text-xs border border-emerald-200/50 dark:border-emerald-800/40 shadow-sm">
+                                    {totalScore}
                                 </span>
                             </td>
 
                             {/* Rank */}
-                            <td className="p-6 text-center font-bold text-gray-700 dark:text-gray-300">
-                                #{getStudentRank(student._id)}
+                            <td className="py-2.5 px-2 text-center">
+                                <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-lg text-[11px] font-black border ${rankNum === 1 ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50' : rankNum === 2 ? 'bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' : 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40'}`}>
+                                    #{rankNum}
+                                </span>
                             </td>
 
-                            {/* Action Button */}
-                            <td className="p-6 text-center">
-                                <div className="flex gap-2 justify-center">
+                            {/* Exciting Action Buttons Toolbar */}
+                            <td className="py-2.5 px-4 pr-6 text-center">
+                                <div className="flex gap-1.5 justify-center items-center">
                                     <button
                                         onClick={() => generatePDF(student)}
                                         disabled={generatingPdfId === student._id}
                                         title="Print Report Card"
-                                        className="inline-flex items-center justify-center p-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 text-emerald-600 dark:text-emerald-400 rounded-xl transition shadow-sm cursor-pointer"
+                                        className="p-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 rounded-xl transition hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
                                     >
-                                        {generatingPdfId === student._id ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
+                                        {generatingPdfId === student._id ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
                                     </button>
                                     <button
                                         onClick={() => downloadPDF(student)}
                                         disabled={downloadingPdfId === student._id}
                                         title="Download Report Card as PDF"
-                                        className="inline-flex items-center justify-center p-2.5 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-800/60 disabled:opacity-50 text-emerald-700 dark:text-emerald-400 rounded-xl transition shadow-sm cursor-pointer"
+                                        className="p-1.5 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/40 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-400 rounded-xl transition hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
                                     >
-                                        {downloadingPdfId === student._id ? <Loader2 size={18} className="animate-spin" /> : <FileDown size={18} />}
+                                        {downloadingPdfId === student._id ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />}
                                     </button>
                                     
                                     {isAdmin && (
@@ -939,23 +1085,23 @@ export default function Exams() {
                                           onClick={() => sendReportToTelegram(student._id)}
                                           disabled={sendingReportId === student._id}
                                           title="Send Report to Telegram"
-                                          className="inline-flex items-center justify-center p-2.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 disabled:opacity-50 text-blue-700 dark:text-blue-400 rounded-xl transition shadow-sm cursor-pointer"
+                                          className="p-1.5 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-400 rounded-xl transition hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
                                       >
-                                          {sendingReportId === student._id ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                                          {sendingReportId === student._id ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                                       </button>
                                     )}
 
                                     {savedSuccessId === student._id ? (
-                                    <span className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm shadow-sm animate-pulse w-[88px]">
-                                        <CheckCircle size={16} /> Saved
+                                    <span className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-xs shadow-sm animate-pulse">
+                                        <CheckCircle size={13} /> Saved
                                     </span>
                                     ) : (
                                     <button
                                         onClick={() => handleSaveScores(student._id)}
                                         disabled={savingId === student._id}
-                                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl font-semibold text-sm transition shadow-sm hover:shadow-md cursor-pointer w-[88px]"
+                                        className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
                                     >
-                                        <Save size={16} />
+                                        <Save size={13} />
                                         {savingId === student._id ? "..." : "Save"}
                                     </button>
                                     )}

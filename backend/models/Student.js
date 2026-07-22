@@ -67,6 +67,10 @@ const studentSchema = new mongoose.Schema(
             of: Number,
             default: {}
         },
+        autoSyncedExams: {
+            type: [String],
+            default: []
+        },
         reportCardUrl: {
             type: String,
             required: false

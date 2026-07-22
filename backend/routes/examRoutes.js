@@ -1,15 +1,40 @@
 import express from 'express';
 import protect from '../middleware/auth.js';
 import adminOnly from '../middleware/adminOnly.js';
-import { getExams, createExam, updateExam, deleteExam } from '../controllers/examController.js';
+import { 
+    getExams, 
+    createExam, 
+    updateExam, 
+    deleteExam,
+    getMyExams,
+    createMyExam,
+    updateMyExam,
+    deleteMyExam,
+    verifyStudent,
+    syncExamScore,
+    clearExamScore,
+    getExamSystemStatus,
+    toggleExamSystemLock
+} from '../controllers/examController.js';
 
 const router = express.Router();
 
-router.use(protect);
+// Public / Service endpoints (No user token required)
+router.post('/verify-student', verifyStudent);
+router.post('/sync-score', syncExamScore);
+router.post('/clear-score', clearExamScore);
+router.get('/system-status', getExamSystemStatus);
 
-router.get('/', getExams);
-router.post('/', adminOnly, createExam);
-router.put('/:id', adminOnly, updateExam);
-router.delete('/:id', adminOnly, deleteExam);
+// Protected endpoints
+router.get('/my-exams', protect, getMyExams);
+router.post('/my-exams', protect, createMyExam);
+router.put('/my-exams/:id', protect, updateMyExam);
+router.delete('/my-exams/:id', protect, deleteMyExam);
+
+router.get('/', protect, getExams);
+router.post('/', protect, adminOnly, createExam);
+router.put('/:id', protect, adminOnly, updateExam);
+router.delete('/:id', protect, adminOnly, deleteExam);
+router.post('/system-lock', protect, adminOnly, toggleExamSystemLock);
 
 export default router;
