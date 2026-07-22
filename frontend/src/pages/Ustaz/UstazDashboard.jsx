@@ -321,9 +321,7 @@ export default function UstazDashboard() {
             </select>
           </div>
         </div>
-      </div>
 
-      
       {/* Desktop Table View */}
       <div className="hidden lg:block bg-white/80 dark:bg-zinc-900/50 backdrop-blur-md rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium overflow-hidden mb-10">
         <div className="overflow-x-auto">
