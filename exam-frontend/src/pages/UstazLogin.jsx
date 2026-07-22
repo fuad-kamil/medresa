@@ -83,8 +83,8 @@ export default function UstazLogin({ onLoginSuccess }) {
         throw new Error(t('accessDeniedError'));
       }
 
-      localStorage.setItem('ustazToken', data.token);
-      localStorage.setItem('ustazUser', JSON.stringify(data.user));
+      sessionStorage.setItem('ustazToken', data.token);
+      sessionStorage.setItem('ustazUser', JSON.stringify(data.user));
 
       onLoginSuccess(data.token, data.user);
     } catch (err) {

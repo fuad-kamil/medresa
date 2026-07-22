@@ -21,13 +21,13 @@ export default function App() {
     if (qId) setQuizId(qId);
     
     if (token) {
-      // Accessed via URL token from Main Portal -> DO NOT persist in localStorage
+      // Accessed via URL token from Main Portal -> DO NOT persist in storage
       setUstazToken(token);
-      localStorage.removeItem('ustazToken');
-      localStorage.removeItem('ustazUser');
+      sessionStorage.removeItem('ustazToken');
+      sessionStorage.removeItem('ustazUser');
     } else {
-      // Accessed via direct login -> retrieve persisted credentials
-      setUstazToken(localStorage.getItem('ustazToken'));
+      // Accessed via direct login -> retrieve persisted credentials in sessionStorage
+      setUstazToken(sessionStorage.getItem('ustazToken'));
     }
 
     if (userJson) {
@@ -37,7 +37,7 @@ export default function App() {
       } catch (e) {}
     } else {
       if (!token) {
-        const storedUser = localStorage.getItem('ustazUser');
+        const storedUser = sessionStorage.getItem('ustazUser');
         if (storedUser) {
           try { setUstazUser(JSON.parse(storedUser)); } catch (e) {}
         }
