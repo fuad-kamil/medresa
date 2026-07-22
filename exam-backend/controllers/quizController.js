@@ -407,17 +407,54 @@ export const endQuiz = async (req, res) => {
   }
 };
 
-// ── 7. Ustaz: Delete Exam ───────────────────────────────────────────────────
+// ── 7. Ustaz: Delete Exam (deletes paper, all submissions, & clears scores in main DB) ───
 export const deleteQuiz = async (req, res) => {
   try {
     const { id } = req.params;
     const { quizId } = req.body || {};
     const targetId = id || quizId;
 
-    await Quiz.findByIdAndDelete(targetId);
-    await QuizSubmission.deleteMany({ quizId: targetId });
+    const quiz = await Quiz.findById(targetId);
+    if (quiz) {
+      // 1. Delete all submissions for this quiz from MongoDB exam-backend
+      await QuizSubmission.deleteMany({ quizId: targetId });
+      
+      // 2. Delete quiz paper from MongoDB exam-backend
+      await Quiz.findByIdAndDelete(targetId);
 
-    res.json({ success: true, message: 'Exam and submissions deleted.' });
+      // 3. Notify Main Backend to clear/reset student scores for this exam column
+      const candidateUrls = [
+        MAIN_MEDRESA_URL,
+        'http://localhost:5000/api',
+        'https://medresa.onrender.com/api'
+      ].filter(Boolean);
+
+      for (const rawUrl of candidateUrls) {
+        try {
+          const cleanBase = rawUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+          const clearRes = await fetch(`${cleanBase}/api/exams/clear-score`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-sync-secret': SYNC_SECRET_KEY
+            },
+            body: JSON.stringify({
+              ustazId: quiz.ustazId,
+              examId: quiz.examColumnId,
+              examColumnName: quiz.examColumnName,
+              clearAll: true
+            })
+          });
+          if (clearRes.ok) break;
+        } catch (clearErr) {
+          console.warn('Score unlock sync notice attempt failed:', clearErr.message);
+        }
+      }
+    } else {
+      await QuizSubmission.deleteMany({ quizId: targetId });
+    }
+
+    res.json({ success: true, message: 'Exam and all submissions deleted successfully.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

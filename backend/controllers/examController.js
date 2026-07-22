@@ -345,7 +345,42 @@ export const clearExamScore = async (req, res) => {
             return res.status(401).json({ message: 'Unauthorized sync request' });
         }
 
-        const { studentId, examId, examColumnName } = req.body;
+        const { studentId, ustazId, examId, examColumnName, clearAll } = req.body;
+
+        // If clearAll is true or ustazId is provided without a single studentId, clear across all students
+        if (clearAll || (!studentId && ustazId)) {
+            let filter = {};
+            if (ustazId && ustazId !== 'ustaz_default') filter.assignedUstaz = ustazId;
+
+            const studentsList = await Student.find(filter);
+            for (const student of studentsList) {
+                if (student.examScores) {
+                    if (examId) student.examScores.delete(examId.toString());
+                    if (examColumnName) student.examScores.delete(examColumnName);
+                    
+                    const uId = student.assignedUstaz;
+                    if (uId) {
+                        const ustazExams = await Exam.find({ ustaz: uId });
+                        ustazExams.forEach(ex => {
+                            if (!examId || examId === 'exam_default' || ex._id.toString() === String(examId) || ex.name === examColumnName || ex.name === 'Quiz' || ex.name === 'Test') {
+                                student.examScores.delete(ex._id.toString());
+                                if (ex.name) student.examScores.delete(ex.name);
+                            }
+                        });
+                    }
+                }
+                if (student.autoSyncedExams) {
+                    student.autoSyncedExams = student.autoSyncedExams.filter(
+                        id => id !== String(examId) && id !== examColumnName
+                    );
+                }
+                student.markModified('examScores');
+                student.markModified('autoSyncedExams');
+                await student.save();
+            }
+            return res.json({ success: true, message: 'Cleared all student scores for exam.' });
+        }
+
         if (!studentId) {
             return res.status(400).json({ message: 'studentId is required' });
         }
@@ -360,9 +395,9 @@ export const clearExamScore = async (req, res) => {
             if (examColumnName) student.examScores.delete(examColumnName);
 
             // Also clear across all exam columns assigned to this student's Ustaz
-            const ustazId = student.assignedUstaz;
-            if (ustazId) {
-                const ustazExams = await Exam.find({ ustaz: ustazId });
+            const uId = student.assignedUstaz;
+            if (uId) {
+                const ustazExams = await Exam.find({ ustaz: uId });
                 ustazExams.forEach(ex => {
                     if (!examId || examId === 'exam_default' || ex._id.toString() === String(examId) || ex.name === examColumnName || ex.name === 'Quiz' || ex.name === 'Test') {
                         student.examScores.delete(ex._id.toString());
