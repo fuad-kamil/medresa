@@ -2,8 +2,14 @@ import React, { useState } from 'react';
 import { Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const MAIN_API_URL = import.meta.env.VITE_MAIN_API_URL || 'https://medresa.onrender.com/api';
-const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'https://medresa-exam-backend.onrender.com/api';
+const getCleanApiUrl = (url, defaultUrl) => {
+  let clean = (url || defaultUrl).trim().replace(/\/+$/, '');
+  if (!clean.endsWith('/api')) clean += '/api';
+  return clean;
+};
+
+const MAIN_API_URL = getCleanApiUrl(import.meta.env.VITE_MAIN_API_URL, 'https://medresa.onrender.com/api');
+const EXAM_API_URL = getCleanApiUrl(import.meta.env.VITE_EXAM_API_URL, 'https://medresa-exam.onrender.com/api');
 
 // ─── English & Authentic Amharic Translation Dictionary ────────────────────
 const translations = {

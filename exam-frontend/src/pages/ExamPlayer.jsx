@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Globe, Sun, Moon } from 'lucide-react';
 
-const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'https://medresa-exam-backend.onrender.com/api';
+const getCleanApiUrl = (url, defaultUrl) => {
+  let clean = (url || defaultUrl).trim().replace(/\/+$/, '');
+  if (!clean.endsWith('/api')) clean += '/api';
+  return clean;
+};
+
+const EXAM_API_URL = getCleanApiUrl(import.meta.env.VITE_EXAM_API_URL, 'https://medresa-exam.onrender.com/api');
 
 // ─── Complete English & Authentic Amharic Translation Dictionary ───────────
 const translations = {
