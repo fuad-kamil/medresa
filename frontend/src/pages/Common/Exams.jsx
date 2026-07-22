@@ -100,9 +100,15 @@ export default function Exams() {
     }
   }, [selectedUstaz, isAdmin]);
 
+  const getCleanApiUrl = (url, defaultUrl) => {
+    let clean = (url || defaultUrl).trim().replace(/\/+$/, '');
+    if (!clean.endsWith('/api')) clean += '/api';
+    return clean;
+  };
+
   const fetchAutoSyncedQuizzes = async (uId) => {
     try {
-      const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'http://localhost:5001/api';
+      const EXAM_API_URL = getCleanApiUrl(import.meta.env.VITE_EXAM_API_URL, 'https://medresa-exam-backend.onrender.com/api');
       const targetUstazId = uId || user?._id || user?.id || 'ustaz_default';
       const resQuizzes = await fetch(`${EXAM_API_URL}/quizzes/ustaz/${targetUstazId}`);
       if (!resQuizzes.ok) return { syncedMap: {}, onlineScoresMap: {} };
@@ -148,6 +154,24 @@ export default function Exams() {
     }
   };
 
+  const mergeOnlineScores = (prevScores, activeExams, onlineScoresMap) => {
+    const updated = { ...prevScores };
+    Object.keys(onlineScoresMap).forEach((key) => {
+      const [stId, exRef] = key.split('_');
+      if (stId && exRef && updated[stId]) {
+        updated[stId][exRef] = onlineScoresMap[key];
+
+        const matchedExam = activeExams.find(
+          e => String(e._id) === String(exRef) || e.name === exRef || e.name?.toLowerCase() === exRef?.toLowerCase()
+        );
+        if (matchedExam) {
+          updated[stId][matchedExam._id] = onlineScoresMap[key];
+        }
+      }
+    });
+    return updated;
+  };
+
   const fetchUstazs = async () => {
     setLoading(true);
     setFetchError(false);
@@ -182,16 +206,7 @@ export default function Exams() {
       setAutoSyncedMap(syncedMap);
 
       if (Object.keys(onlineScoresMap).length > 0) {
-        setScores((prevScores) => {
-          const updated = { ...prevScores };
-          Object.keys(onlineScoresMap).forEach((key) => {
-            const [stId, exId] = key.split('_');
-            if (stId && exId && updated[stId]) {
-              updated[stId][exId] = onlineScoresMap[key];
-            }
-          });
-          return updated;
-        });
+        setScores((prevScores) => mergeOnlineScores(prevScores, activeExams, onlineScoresMap));
       }
     } catch (err) {
       console.error("Failed to load ustaz data", err);
@@ -220,16 +235,7 @@ export default function Exams() {
       setAutoSyncedMap(syncedMap);
 
       if (Object.keys(onlineScoresMap).length > 0) {
-        setScores((prevScores) => {
-          const updated = { ...prevScores };
-          Object.keys(onlineScoresMap).forEach((key) => {
-            const [stId, exId] = key.split('_');
-            if (stId && exId && updated[stId]) {
-              updated[stId][exId] = onlineScoresMap[key];
-            }
-          });
-          return updated;
-        });
+        setScores((prevScores) => mergeOnlineScores(prevScores, activeExams, onlineScoresMap));
       }
     } catch (err) {
       console.error("Failed to load admin ustaz data", err);

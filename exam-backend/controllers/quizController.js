@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import Quiz from '../models/Quiz.js';
 import QuizSubmission from '../models/QuizSubmission.js';
 
+const MAIN_MEDRESA_URL = process.env.MAIN_MEDRESA_URL || 'https://medresa.onrender.com/api';
+const SYNC_SECRET_KEY = process.env.SYNC_SECRET_KEY || 'medresa_sync_secret_key_2026';
+
 const checkIsSystemLocked = async () => {
   try {
     const urls = [
@@ -240,28 +243,37 @@ export const submitQuiz = async (req, res) => {
 
     // Sync score to Main Ali Medresa Database BEFORE responding
     let synced = false;
-    try {
-      const baseUrl = MAIN_MEDRESA_URL.replace(/\/api\/?$/, '');
-      const syncRes = await fetch(`${baseUrl}/api/exams/sync-score`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-sync-secret': SYNC_SECRET_KEY
-        },
-        body: JSON.stringify({
-          studentId: String(studentId),
-          examId: quiz.examColumnId,
-          score: finalScore
-        })
-      });
-      const syncData = await syncRes.json();
-      if (syncRes.ok && syncData.success) {
-        synced = true;
-        submission.syncedToMain = true;
-        await submission.save();
+    const candidateUrls = [
+      MAIN_MEDRESA_URL,
+      'http://localhost:5000/api',
+      'https://medresa.onrender.com/api'
+    ].filter(Boolean);
+
+    for (const rawUrl of candidateUrls) {
+      try {
+        const cleanBase = rawUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+        const syncRes = await fetch(`${cleanBase}/api/exams/sync-score`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-sync-secret': SYNC_SECRET_KEY
+          },
+          body: JSON.stringify({
+            studentId: String(studentId),
+            examId: quiz.examColumnId,
+            score: finalScore
+          })
+        });
+        const syncData = await syncRes.json();
+        if (syncRes.ok && syncData.success) {
+          synced = true;
+          submission.syncedToMain = true;
+          await submission.save();
+          break;
+        }
+      } catch (syncErr) {
+        console.warn('Score sync attempt warning:', syncErr.message);
       }
-    } catch (syncErr) {
-      console.warn('Score sync warning:', syncErr.message);
     }
 
     // Now respond to student with score result & detailed answer breakdown
