@@ -301,25 +301,7 @@ export default function UstazDashboard() {
           {isEditMode ? t("Edit Attendance For") : t("Mark Attendance For")}
         </h2>
         
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Quick-action: Select All Present */}
-          <button
-            type="button"
-            onClick={() => {
-              if (isBlocked) return;
-              const allP = {};
-              students.forEach(s => (allP[s._id] = "present"));
-              setAttendance(allP);
-              toast.success("Marked all students as Present");
-            }}
-            disabled={isBlocked || students.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-xl transition-all text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60 cursor-pointer disabled:opacity-50 shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
-            <span>{t("Select All Present")}</span>
-          </button>
-
-          <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-xs border border-gray-100 dark:border-gray-700 w-max">
+        <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-xs border border-gray-100 dark:border-gray-700 w-max">
             <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">{t("Date:")}</label>
             <select
               value={selectedDate}
