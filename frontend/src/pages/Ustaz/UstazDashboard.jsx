@@ -297,72 +297,94 @@ export default function UstazDashboard() {
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+        <h2 className="text-2xl font-black text-gray-800 dark:text-white flex items-center tracking-tight">
           {isEditMode ? t("Edit Attendance For") : t("Mark Attendance For")}
         </h2>
-        <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 w-max">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">{t("Date:")}</label>
-          <select
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer min-w-[160px]"
+        
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Quick-action: Select All Present */}
+          <button
+            type="button"
+            onClick={() => {
+              if (isBlocked) return;
+              const allP = {};
+              students.forEach(s => (allP[s._id] = "present"));
+              setAttendance(allP);
+              toast.success("Marked all students as Present");
+            }}
+            disabled={isBlocked || students.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-xl transition-all text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60 cursor-pointer disabled:opacity-50 shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
           >
-            {validDates.map(dateStr => {
-              const [y, m, d] = dateStr.split('-');
-              const dateObj = new Date(y, m - 1, d);
-              const dayName = dateObj.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' });
-              return (
-                <option key={dateStr} value={dateStr}>
-                  {dayName}, {dateStr}
-                </option>
-              );
-            })}
-          </select>
+            <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
+            <span>{t("Select All Present")}</span>
+          </button>
+
+          <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-xs border border-gray-100 dark:border-gray-700 w-max">
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">{t("Date:")}</label>
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer min-w-[160px]"
+            >
+              {validDates.map(dateStr => {
+                const [y, m, d] = dateStr.split('-');
+                const dateObj = new Date(y, m - 1, d);
+                const dayName = dateObj.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' });
+                return (
+                  <option key={dateStr} value={dateStr}>
+                    {dayName}, {dateStr}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
       </div>
 
-
       
       {/* Desktop Table View */}
-      <div className="hidden lg:block bg-white/70 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium overflow-hidden mb-10">
+      <div className="hidden lg:block bg-white/80 dark:bg-zinc-900/50 backdrop-blur-md rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium overflow-hidden mb-10">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 dark:bg-zinc-800/20 border-b border-slate-100 dark:border-zinc-900">
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 w-16 text-center">No.</th>
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Student Name")}</th>
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+              <tr className="bg-slate-100/70 dark:bg-zinc-800/40 border-b border-slate-200/60 dark:border-zinc-800">
+                <th className="p-5 font-black text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400 w-16 text-center">No.</th>
+                <th className="p-5 font-black text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400">{t("Student Name")}</th>
+                <th className="p-5 font-black text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                   {user?.stream === 'kitab' ? t("Phone Number") : t("Parents' Phones")}
                 </th>
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                <th className="p-5 font-black text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                   {user?.stream === 'kitab' ? t("Kitab Name") : t("Surah")}
                 </th>
-                <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Attendance Status")}</th>
+                <th className="p-5 font-black text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400">{t("Attendance Status")}</th>
                 {user?.stream === 'quran' && (
-                  <th className="p-5 font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t("Quran Progress")}</th>
+                  <th className="p-5 font-black text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400">{t("Quran Progress")}</th>
                 )}
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-10 text-center text-slate-400 dark:text-zinc-500">
-                    {t("No students assigned to you yet.")}
+                  <td colSpan="6" className="p-12 text-center text-slate-400 dark:text-zinc-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Users size={32} className="text-slate-300 dark:text-zinc-600" />
+                      <p className="font-bold text-sm">{t("No students assigned to you yet.")}</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 students.map((student, index) => (
-                  <tr key={student._id} className="border-b border-slate-50 dark:border-zinc-900 hover:bg-slate-50/30 dark:hover:bg-zinc-800/20 transition-all duration-200">
-                    <td className="p-5 font-bold text-slate-400 dark:text-zinc-600 text-center text-lg">{index + 1}</td>
+                  <tr key={student._id} className="border-b border-slate-100 dark:border-zinc-800/50 odd:bg-white even:bg-slate-50/50 dark:odd:bg-zinc-900/30 dark:even:bg-zinc-800/20 hover:bg-slate-100/50 dark:hover:bg-zinc-800/40 transition-all duration-200">
+                    <td className="p-5 font-extrabold text-slate-400 dark:text-zinc-500 text-center text-base">{index + 1}</td>
                     <td className="p-5 font-medium text-gray-800 dark:text-gray-200">
-                      <div className="flex flex-col gap-1">
-                        <span>{student.fullName}</span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="font-bold text-slate-900 dark:text-white">{student.fullName}</span>
                         {takenTodayMap[student._id] ? (
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full w-max border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-700 bg-emerald-100/80 dark:text-emerald-300 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
                             {t("Taken")}
                           </span>
                         ) : (
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 px-2 py-0.5 rounded-full w-max border border-red-200 dark:border-red-800">
+                          <span className="text-[10px] uppercase font-extrabold tracking-wider text-red-700 bg-red-100/80 dark:text-red-300 dark:bg-red-950/60 px-2 py-0.5 rounded-full border border-red-200/80 dark:border-red-800/60 shadow-2xs">
                             {t("Not Taken")}
                           </span>
                         )}
@@ -372,60 +394,67 @@ export default function UstazDashboard() {
                       {(() => {
                         const isSinglePhone = (user?.studentPhoneOption || 1) === 1;
                         return isSinglePhone ? (
-                          <span>{student.fatherPhone || "N/A"}</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">{student.fatherPhone || "N/A"}</span>
                         ) : (
-                          <div className="flex flex-col text-sm">
+                          <div className="flex flex-col text-xs space-y-0.5">
                             <span><strong className="text-gray-800 dark:text-gray-300">F:</strong> {student.fatherPhone || "N/A"}</span>
                             <span><strong className="text-gray-800 dark:text-gray-300">M:</strong> {student.motherPhone || "N/A"}</span>
                           </div>
                         );
                       })()}
                     </td>
-                    <td className="p-5 text-gray-600 dark:text-gray-400">
+                    <td className="p-5 text-gray-600 dark:text-gray-400 font-medium text-sm">
                       {student.stream === 'kitab' ? `Kitab: ${student.surah || "N/A"}` : `Surah: ${student.surah || "N/A"}`}
                     </td>
                     <td className="p-5">
-                      <div className="flex gap-2 w-max">
+                      {/* Equal Width Button Group */}
+                      <div className="flex gap-1.5 w-max bg-slate-100/80 dark:bg-zinc-800/80 p-1 rounded-2xl border border-slate-200/50 dark:border-zinc-700/60">
                         <button
+                          type="button"
                           onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "present" })}
                           disabled={isBlocked}
-                          className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                          className={`w-24 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer ${
                             attendance[student._id] === "present"
-                              ? "bg-emerald-500 text-white shadow-md ring-2 ring-emerald-300 dark:ring-emerald-700"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                          } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
+                              ? "bg-emerald-600 text-white shadow-md border border-emerald-500 scale-[1.02]"
+                              : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/40 font-semibold"
+                          } ${isBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          P <span className="font-normal opacity-80 ml-1">{t("Present")}</span>
+                          P <span className="font-normal opacity-90">{t("Present")}</span>
                         </button>
+
                         <button
+                          type="button"
                           onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "absent" })}
                           disabled={isBlocked}
-                          className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                          className={`w-24 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer ${
                             attendance[student._id] === "absent"
-                              ? "bg-red-500 text-white shadow-md ring-2 ring-red-300 dark:ring-red-700"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50"
-                          } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
+                              ? "bg-red-600 text-white shadow-md border border-red-500 scale-[1.02]"
+                              : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-red-100/60 dark:hover:bg-red-950/40 font-semibold"
+                          } ${isBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          A <span className="font-normal opacity-80 ml-1">{t("Absent")}</span>
+                          A <span className="font-normal opacity-90">{t("Absent")}</span>
                         </button>
+
                         <button
+                          type="button"
                           onClick={() => !isBlocked && setAttendance({ ...attendance, [student._id]: "excused" })}
                           disabled={isBlocked}
-                          className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                          className={`w-24 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer ${
                             attendance[student._id] === "excused"
-                              ? "bg-amber-500 text-white shadow-md ring-2 ring-amber-300 dark:ring-amber-700"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                          } ${isBlocked ? "opacity-50 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800" : ""}`}
+                              ? "bg-amber-500 text-white shadow-md border border-amber-400 scale-[1.02]"
+                              : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-amber-100/60 dark:hover:bg-amber-950/40 font-semibold"
+                          } ${isBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          E <span className="font-normal opacity-80 ml-1">{t("Excused")}</span>
+                          E <span className="font-normal opacity-90">{t("Excused")}</span>
                         </button>
                       </div>
                     </td>
                     {user?.stream === 'quran' && (
                       <td className="p-5">
                         <button
+                          type="button"
                           onClick={() => openQuranProgressModal(student)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl transition text-xs font-bold border border-emerald-100/40 dark:border-emerald-900/20 cursor-pointer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-xl transition-all text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60 cursor-pointer shadow-2xs hover:scale-[1.02]"
                         >
                           <BookOpen size={14} />
                           {t("Log Progress")}
