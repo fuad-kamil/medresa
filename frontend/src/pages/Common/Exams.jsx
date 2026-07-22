@@ -685,7 +685,7 @@ export default function Exams() {
                     {!isAdmin && (
                       <button
                         onClick={() => {
-                          const examUrl = import.meta.env.VITE_EXAM_FRONTEND_URL || 'http://localhost:5174';
+                          const examUrl = import.meta.env.VITE_EXAM_FRONTEND_URL || 'https://medresa-ckrx.vercel.app';
                           const token = localStorage.getItem('token') || '';
                           const userStr = JSON.stringify(user || {});
                           window.open(`${examUrl}?token=${encodeURIComponent(token)}&user=${encodeURIComponent(userStr)}`, '_blank');

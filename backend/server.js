@@ -27,6 +27,7 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://localhost:3000',
   'https://medresa-five.vercel.app',
+  'https://medresa-ckrx.vercel.app',
   'https://medresa.onrender.com',
   ...(process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
