@@ -358,6 +358,18 @@ export const clearExamScore = async (req, res) => {
         if (student.examScores) {
             if (examId) student.examScores.delete(examId.toString());
             if (examColumnName) student.examScores.delete(examColumnName);
+
+            // Also clear across all exam columns assigned to this student's Ustaz
+            const ustazId = student.assignedUstaz;
+            if (ustazId) {
+                const ustazExams = await Exam.find({ ustaz: ustazId });
+                ustazExams.forEach(ex => {
+                    if (!examId || examId === 'exam_default' || ex._id.toString() === String(examId) || ex.name === examColumnName || ex.name === 'Quiz' || ex.name === 'Test') {
+                        student.examScores.delete(ex._id.toString());
+                        if (ex.name) student.examScores.delete(ex.name);
+                    }
+                });
+            }
         }
 
         if (student.autoSyncedExams) {

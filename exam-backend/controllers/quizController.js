@@ -326,22 +326,31 @@ export const allowRetake = async (req, res) => {
 
     // Notify Main Backend to clear student score and unlock autoSyncedExams cell
     if (quiz) {
-      try {
-        const baseUrl = MAIN_MEDRESA_URL.replace(/\/api\/?$/, '');
-        await fetch(`${baseUrl}/api/exams/clear-score`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-sync-secret': SYNC_SECRET_KEY
-          },
-          body: JSON.stringify({
-            studentId: String(studentId),
-            examId: quiz.examColumnId,
-            examColumnName: quiz.examColumnName
-          })
-        });
-      } catch (clearErr) {
-        console.warn('Score unlock sync notice:', clearErr.message);
+      const candidateUrls = [
+        MAIN_MEDRESA_URL,
+        'http://localhost:5000/api',
+        'https://medresa.onrender.com/api'
+      ].filter(Boolean);
+
+      for (const rawUrl of candidateUrls) {
+        try {
+          const cleanBase = rawUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+          const clearRes = await fetch(`${cleanBase}/api/exams/clear-score`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-sync-secret': SYNC_SECRET_KEY
+            },
+            body: JSON.stringify({
+              studentId: String(studentId),
+              examId: quiz.examColumnId,
+              examColumnName: quiz.examColumnName
+            })
+          });
+          if (clearRes.ok) break;
+        } catch (clearErr) {
+          console.warn('Score unlock sync notice attempt failed:', clearErr.message);
+        }
       }
     }
 
