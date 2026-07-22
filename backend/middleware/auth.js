@@ -4,7 +4,21 @@ import jwt from 'jsonwebtoken'
 const protect = (req, res, next) => {
     let token
 
+    // 1. Try to extract from HTTP cookies
+    if (req.headers.cookie) {
+        const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.split('=').map(c => c.trim());
+            acc[key] = value;
+            return acc;
+        }, {});
+        if (cookies.token) {
+            token = cookies.token;
+        }
+    }
+
+    // 2. Fallback to Authorization Bearer header
     if (
+        !token &&
         req.headers.authorization &&
         req.headers.authorization.startsWith('Bearer')
     ) {
