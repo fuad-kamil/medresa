@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import mammoth from 'mammoth';
-import { Globe, Sun, Moon } from 'lucide-react';
+import { Globe, Sun, Moon, LogOut } from 'lucide-react';
 
 const MAIN_API_URL = import.meta.env.VITE_MAIN_API_URL || 'https://medresa.onrender.com/api';
 const EXAM_API_URL = import.meta.env.VITE_EXAM_API_URL || 'https://medresa-exam-backend.onrender.com/api';
@@ -176,7 +176,7 @@ const translations = {
   }
 };
 
-export default function UstazQuizManager({ ustazToken, ustazUser }) {
+export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const [examColumns, setExamColumns] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -715,6 +715,18 @@ export default function UstazQuizManager({ ustazToken, ustazUser }) {
               <Globe size={18} className="text-blue-500" />
               <span>{lang === 'en' ? 'English (EN)' : 'አማርኛ (AM)'}</span>
             </button>
+
+            {/* Logout Button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-2.5 rounded-xl border border-red-200/80 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:hover:bg-red-900/60 dark:text-red-400 dark:border-red-900/50 transition flex items-center gap-2 text-xs font-bold cursor-pointer"
+                title={lang === 'en' ? 'Log out' : 'ውጣ (Logout)'}
+              >
+                <LogOut size={18} className="text-red-500" />
+                <span className="hidden sm:inline">{lang === 'en' ? 'Logout' : 'ውጣ'}</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

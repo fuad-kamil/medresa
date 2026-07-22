@@ -83,11 +83,20 @@ export default function App() {
     );
   }
 
+  const handleLogout = () => {
+    setUstazToken(null);
+    setUstazUser(null);
+    sessionStorage.removeItem('ustazToken');
+    sessionStorage.removeItem('ustazUser');
+    localStorage.removeItem('ustazToken');
+    localStorage.removeItem('ustazUser');
+  };
+
   // 3. Ustaz Exam Manager View (If logged in)
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-center" />
-      <UstazQuizManager ustazToken={ustazToken} ustazUser={ustazUser} />
+      <UstazQuizManager ustazToken={ustazToken} ustazUser={ustazUser} onLogout={handleLogout} />
     </div>
   );
 }
