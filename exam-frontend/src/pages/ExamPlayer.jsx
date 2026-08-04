@@ -28,10 +28,10 @@ const translations = {
     examEndedTitle: '⚠️ Exam Has Ended',
     examEndedDesc: 'This exam paper is no longer accepting submissions because it has been closed by the Ustaz.',
     examSubmittedSuccessTitle: '🎉 Exam Submitted Successfully!',
-    jazakallah: 'Jazakallah Khair,',
-    yourFinalGrade: 'YOUR FINAL GRADE',
-    correctAnswersCount: 'Correct Answers:',
-    gradeRecordedNotice: "Your grade has been automatically recorded in your Ustaz's roster table.",
+    jazakallah: 'JazakAllah Khair,',
+    submittedNotice: 'Thank you! Your exam paper has been submitted successfully.',
+    resultPublishedByUstazNotice: 'Your results will be reviewed and published by your Ustaz.',
+    gradeRecordedNotice: 'Your submission has been recorded safely in your Ustaz gradebook.',
     questionLabel: 'Question',
     of: 'of',
     submitExamBtn: 'Submit Final Answers',
@@ -73,10 +73,10 @@ const translations = {
     examEndedTitle: '⚠️ ፈተናው ተጠናቋል',
     examEndedDesc: 'ይህ ፈተና በአስተማሪው ስለተጠናቀቀ ተጨማሪ መልስ አይቀበልም።',
     examSubmittedSuccessTitle: '🎉 ፈተናው በተሳካ ሁኔታ ተልኳል!',
-    jazakallah: 'ጃዛኩሙላሁ ኸይረን፣',
-    yourFinalGrade: 'የእርስዎ የመጨረሻ ውጤት',
-    correctAnswersCount: 'ትክክለኛ መልሶች፡',
-    gradeRecordedNotice: 'ውጤትዎ በአስተማሪዎ የውጤት ሠንጠረዥ ውስጥ በራስ-ሰር ተመዝግቧል።',
+    jazakallah: 'ጃዛካላሁ ኸይረን፣',
+    submittedNotice: 'እናመሰግናለን! የፈተና ወረቀትዎ በተሳካ ሁኔታ ተልኳል።',
+    resultPublishedByUstazNotice: 'ውጤትዎ በኡስታዝዎ ታይቶ የሚገለጽ ይሆናል።',
+    gradeRecordedNotice: 'የሰጡት መልስ በኡስታዝዎ የውጤት ሠንጠረዥ ውስጥ ተመዝግቧል።',
     questionLabel: 'ጥያቄ',
     of: 'ከ',
     submitExamBtn: 'መልሶችን በሙሉ አስገባ',
@@ -437,18 +437,20 @@ export default function ExamPlayer({ quizId, student }) {
             <h1 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('examSubmittedSuccessTitle')}</h1>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('jazakallah')} {student.fullName}.</p>
 
-            <div className={`my-6 p-5 rounded-2xl border shadow-sm ${
+            <div className={`my-6 p-6 rounded-2xl border shadow-sm space-y-3 ${
               isDark ? 'bg-emerald-950/40 border-emerald-900/60' : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'
             }`}>
-              <span className={`text-xs uppercase tracking-wider font-extrabold ${isDark ? 'text-emerald-400' : 'text-emerald-800'}`}>
-                {t('yourFinalGrade')}
-              </span>
-              <div className={`text-4xl font-black mt-1 ${isDark ? 'text-emerald-300' : 'text-emerald-950'}`}>
-                {result.score} <span className={`text-lg font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>/ {result.maxScore || quiz?.maxScore || 100}</span>
+              <div className="w-12 h-12 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-2xl mx-auto">
+                ✅
               </div>
-              <p className={`text-xs mt-2 font-semibold ${isDark ? 'text-emerald-400' : 'text-emerald-800'}`}>
-                {t('correctAnswersCount')} {result.correctAnswers} {t('of')} {result.totalQuestions}
+              <p className={`text-sm font-bold ${isDark ? 'text-emerald-200' : 'text-emerald-900'}`}>
+                {t('submittedNotice')}
               </p>
+              <div className={`text-xs p-3 rounded-xl border font-medium ${
+                isDark ? 'bg-gray-900/80 border-emerald-900/40 text-gray-300' : 'bg-white/80 border-emerald-200 text-gray-700'
+              }`}>
+                📋 {t('resultPublishedByUstazNotice')}
+              </div>
             </div>
 
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

@@ -602,6 +602,108 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     }
   };
 
+  const downloadStudentHistoryDocx = (submission, quiz) => {
+    if (!submission || !quiz) return;
+
+    const studentName = submission.studentName || 'Student';
+    const quizTitle = quiz.title || 'Exam Paper';
+    const displayScore = submission.displayScore !== undefined ? submission.displayScore : submission.score;
+    const targetMaxScore = submission.targetMaxScore || quiz.maxScore || 100;
+    const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
+    const totalCount = submission.totalQuestions || quiz.questions.length || 0;
+
+    let contentHtml = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <title>${quizTitle} - ${studentName}</title>
+        <style>
+          body { font-family: 'Calibri', 'Arial', sans-serif; padding: 24px; color: #1f2937; line-height: 1.6; }
+          .header { border-bottom: 2px solid #059669; padding-bottom: 12px; margin-bottom: 20px; }
+          h1 { color: #065f46; font-size: 24px; margin: 0 0 6px 0; }
+          h2 { color: #1f2937; font-size: 18px; margin: 0; }
+          .meta-box { background: #f0fdf4; border: 1px solid #a7f3d0; padding: 14px; border-radius: 8px; margin-bottom: 24px; }
+          .meta-row { font-size: 14px; margin-bottom: 6px; }
+          .q-card { border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 18px; border-radius: 8px; background: #fafafa; }
+          .q-title { font-weight: bold; font-size: 15px; margin-bottom: 10px; color: #111827; }
+          .badge-correct { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: bold; display: inline-block; margin-left: 8px; }
+          .badge-wrong { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: bold; display: inline-block; margin-left: 8px; }
+          .opt { padding: 8px 12px; margin: 6px 0; border-radius: 6px; font-size: 13px; }
+          .opt-correct-student { background-color: #d1fae5; border: 1.5px solid #10b981; font-weight: bold; color: #065f46; }
+          .opt-correct-only { background-color: #ecfdf5; border: 1px dashed #34d399; color: #047857; }
+          .opt-wrong-student { background-color: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; }
+          .opt-normal { background-color: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Ali Medresa Exam Portal</h1>
+          <h2>Student Exam Results & Answer Paper</h2>
+        </div>
+
+        <div class="meta-box">
+          <div class="meta-row"><strong>Exam Title:</strong> ${quizTitle}</div>
+          <div class="meta-row"><strong>Student Name:</strong> ${studentName}</div>
+          <div class="meta-row"><strong>Exam Column:</strong> ${quiz.examColumnName || 'N/A'}</div>
+          <div class="meta-row"><strong>Final Score:</strong> ${displayScore} / ${targetMaxScore} (${correctCount} of ${totalCount} questions correct)</div>
+          <div class="meta-row"><strong>Date Submitted:</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString()}</div>
+        </div>
+
+        <h3 style="color: #111827; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Detailed Questions & Options Breakdown:</h3>
+    `;
+
+    quiz.questions.forEach((q, idx) => {
+      const studentChoiceIdx = submission.answers?.[idx];
+      const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+
+      contentHtml += `
+        <div class="q-card">
+          <div class="q-title">
+            Question ${idx + 1}: ${q.questionText}
+            ${isCorrect ? '<span class="badge-correct">✅ Correct</span>' : '<span class="badge-wrong">❌ Incorrect</span>'}
+          </div>
+          <div>
+      `;
+
+      q.options.forEach((opt, optIdx) => {
+        const isChosen = studentChoiceIdx === optIdx;
+        const isCorrectOpt = q.correctOptionIndex === optIdx;
+
+        let optClass = 'opt-normal';
+        let badgeText = '';
+
+        if (isCorrectOpt && isChosen) {
+          optClass = 'opt-correct-student';
+          badgeText = ' — ✅ Student Answer (Correct)';
+        } else if (isCorrectOpt) {
+          optClass = 'opt-correct-only';
+          badgeText = ' — ✅ Correct Answer';
+        } else if (isChosen) {
+          optClass = 'opt-wrong-student';
+          badgeText = ' — ❌ Student Answer (Incorrect)';
+        }
+
+        const optLabel = String.fromCharCode(65 + optIdx);
+        contentHtml += `<div class="opt ${optClass}">${optLabel}) ${opt}${badgeText}</div>`;
+      });
+
+      contentHtml += `</div></div>`;
+    });
+
+    contentHtml += `</body></html>`;
+
+    const blob = new Blob(['\ufeff', contentHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${studentName.replace(/\s+/g, '_')}_${quizTitle.replace(/\s+/g, '_')}_Result.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Word (.docx) exam report downloaded!');
+  };
+
   const downloadAsWord = (quiz) => {
     let docContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -1000,6 +1102,14 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                 <span>{t('history')}</span>
                               </button>
                               <button
+                                onClick={() => downloadStudentHistoryDocx({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz)}
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
+                                title="Download Student's Exam Paper Word (.docx) File"
+                              >
+                                <span>📄</span>
+                                <span>Word</span>
+                              </button>
+                              <button
                                 onClick={() => handleAllowRetake(selectedSubmissionQuiz._id, s.studentId, s.studentName)}
                                 className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer shadow-xs"
                                 title="Delete submission and clear history from database"
@@ -1031,12 +1141,22 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                     {selectedSubmissionQuiz?.title} • {t('score')}: {selectedStudentHistory.displayScore} / {selectedStudentHistory.targetMaxScore} ({selectedStudentHistory.correctAnswers} of {selectedStudentHistory.totalQuestions} {t('correct')})
                   </p>
                 </div>
-                <button
-                  onClick={() => setSelectedStudentHistory(null)}
-                  className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  &times;
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadStudentHistoryDocx(selectedStudentHistory, selectedSubmissionQuiz)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
+                    title="Download Word (.docx) Exam Report"
+                  >
+                    <span>📄</span>
+                    <span>Download Word (.docx)</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedStudentHistory(null)}
+                    className={`text-2xl font-bold cursor-pointer px-2 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
