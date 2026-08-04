@@ -201,13 +201,14 @@ export const verifyStudent = async (req, res) => {
     try {
         const { identifier, ustazId } = req.body;
         if (!identifier) {
-            return res.status(400).json({ message: 'Phone number or Roster Index ID is required' });
+            return res.status(400).json({ message: 'Exam login code is required' });
         }
 
         const cleanInput = identifier.toString().trim();
         let student = null;
         let targetUstazId = (ustazId && ustazId !== 'ustaz_default') ? ustazId : null;
 
+        // Strictly enforce numeric combined exam code format (UstazNumber + StudentRosterNumber, e.g. 011, 081)
         if (/^\d+$/.test(cleanInput)) {
             // 1. If targetUstazId is known, check if cleanInput starts with that Ustaz's examNumber (e.g. 081 -> 08 + 1)
             if (targetUstazId) {
@@ -249,44 +250,16 @@ export const verifyStudent = async (req, res) => {
 
                             if (rosterIndex <= ustazStudents.length) {
                                 student = ustazStudents[rosterIndex - 1];
-                                targetUstazId = uz._id.toString();
                             }
                         }
                         break;
                     }
                 }
             }
-
-            // 3. Fallback: plain roster index (e.g. "1", "2") within targetUstaz or all active students
-            if (!student) {
-                const numericIndex = parseInt(cleanInput, 10);
-                if (!isNaN(numericIndex) && numericIndex > 0 && numericIndex < 500) {
-                    let query = { status: 'active' };
-                    if (targetUstazId) query.assignedUstaz = targetUstazId;
-                    const studentsList = await Student.find(query).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
-                    if (numericIndex <= studentsList.length) {
-                        student = studentsList[numericIndex - 1];
-                    }
-                }
-            }
-        }
-
-        // 4. Search by phone number (fatherPhone, motherPhone) or full name
-        if (!student) {
-            const searchConditions = [
-                { fatherPhone: cleanInput },
-                { motherPhone: cleanInput },
-                { fullName: { $regex: cleanInput, $options: 'i' } }
-            ];
-            const query = targetUstazId
-                ? { assignedUstaz: targetUstazId, status: 'active', $or: searchConditions }
-                : { status: 'active', $or: searchConditions };
-
-            student = await Student.findOne(query).populate('assignedUstaz', 'name');
         }
 
         if (!student) {
-            return res.status(404).json({ message: 'Student not found with provided phone number, name, or exam code' });
+            return res.status(404).json({ message: 'Invalid exam code. Please enter your combined Exam Code (e.g. 011).' });
         }
 
         res.json({

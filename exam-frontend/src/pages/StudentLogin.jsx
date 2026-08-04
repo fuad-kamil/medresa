@@ -18,15 +18,15 @@ const translations = {
     subtitle: 'Identify yourself to begin the exam',
     inputLabel: 'Exam Login Code',
     inputPlaceholder: 'e.g. 011  (Ustaz No. 01 + Your No. 1)',
-    helperText: 'Enter your combined code: Ustaz number + your student number. Example: Ustaz 01, Student 1 → type 011. You can also enter your phone number.',
+    helperText: 'Enter your combined code: Ustaz number + your student number. Example: Ustaz 01, Student 1 → type 011.',
     submitBtn: 'Start Exam ➔',
     verifyingBtn: 'Verifying Identity...',
     systemLockedTitle: '🔒 Online Exam System Locked',
     systemLockedDesc: 'The Administrator has currently locked the online exam system. No exams can be accessed or taken right now.',
     systemLockedNotice: 'Please contact your Ustaz or Administrator to unlock the exam portal.',
-    emptyIdentifierError: 'Please enter your exam login code or phone number.',
+    emptyIdentifierError: 'Please enter your combined exam login code (e.g. 011).',
     verificationFailedError: 'Student verification failed.',
-    studentNotFoundError: 'Student not found with provided phone number, name, or exam code.',
+    studentNotFoundError: 'Invalid exam code. Please enter your combined code (e.g. 011).',
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English'
   },
@@ -35,15 +35,15 @@ const translations = {
     subtitle: 'ፈተናውን ለመጀመር ማንነትዎን ያረጋግጡ',
     inputLabel: 'የፈተና መግቢያ ኮድ',
     inputPlaceholder: 'ምሳሌ፡ 011  (የአስተማሪ ቁጥር 01 + የተማሪ ቁጥር 1)',
-    helperText: 'ጥምር ኮድዎን ያስገቡ፡ የአስተማሪዎ ቁጥር + የተማሪ ቁጥርዎ። ምሳሌ፡ አስተማሪ 01፣ ተማሪ 1 → 011 ይጻፉ። ስልክ ቁጥርም ማስገባት ይቻላል።',
+    helperText: 'ጥምር ኮድዎን ያስገቡ፡ የአስተማሪዎ ቁጥር + የተማሪ ቁጥርዎ። ምሳሌ፡ አስተማሪ 01፣ ተማሪ 1 → 011 ይጻፉ።',
     submitBtn: 'ፈተናውን ጀምር ➔',
     verifyingBtn: 'ማንነትዎ በመረጋገጥ ላይ ነው...',
     systemLockedTitle: '🔒 የመስመር ላይ ፈተና ሥርዓት ተቆልፏል',
     systemLockedDesc: 'የመስመር ላይ ፈተና ሥርዓቱ በአስተዳዳሪው ተቆልፏል። በአሁኑ ጊዜ ምንም ፈተና መውሰድ አይቻልም።',
     systemLockedNotice: 'እባክዎን የፈተና ፖርታሉን ለማስከፈት አስተማሪዎን ወይም አስተዳዳሪዎን ያነጋግሩ።',
-    emptyIdentifierError: 'እባክዎን የፈተና ኮድ ወይም ስልክ ቁጥር ያስገቡ።',
+    emptyIdentifierError: 'እባክዎን ጥምር የፈተና መግቢያ ኮድዎን ያስገቡ (ምሳሌ 011)።',
     verificationFailedError: 'የተማሪ ማንነት ማረጋገጥ አልተሳካም።',
-    studentNotFoundError: 'በተሰጠው ስልክ ቁጥር፣ ስም ወይም የፈተና ኮድ ተማሪው አልተገኘም።',
+    studentNotFoundError: 'ትክክለኛ ያልሆነ የፈተና ኮድ። እባክዎን ጥምር የፈተና ኮድዎን ያስገቡ (ምሳሌ 011)።',
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English'
   }
@@ -112,7 +112,7 @@ export default function StudentLogin({ quizId, onVerified }) {
       const data = await res.json();
       if (!res.ok || !data.success) {
         let errStr = data.message || t('verificationFailedError');
-        if (data.message && data.message.includes('Student not found')) {
+        if (data.message && (data.message.includes('Invalid exam code') || data.message.includes('Student not found'))) {
           errStr = t('studentNotFoundError');
         }
         throw new Error(errStr);
