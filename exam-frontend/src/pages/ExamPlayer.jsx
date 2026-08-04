@@ -14,6 +14,7 @@ const EXAM_API_URL = getCleanApiUrl(import.meta.env.VITE_EXAM_API_URL, 'https://
 const translations = {
   en: {
     portalTitle: 'Ali Medresa Online Exam',
+    nameLabel: 'Name',
     student: 'Student',
     column: 'Column',
     timeRemaining: 'Time Remaining:',
@@ -55,6 +56,7 @@ const translations = {
   },
   am: {
     portalTitle: 'የዓሊ መድረሳ የመስመር ላይ ፈተና',
+    nameLabel: 'ስም',
     student: 'ተማሪ',
     column: 'ዓምድ',
     timeRemaining: 'ቀሪ የፈተና ጊዜ፡',
@@ -382,7 +384,7 @@ export default function ExamPlayer({ quizId, student }) {
                   {t('portalTitle')}
                 </h1>
                 <p className={`text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {student.fullName} • {t('student')}
+                  {t('nameLabel')}: <span className="font-bold">{student.fullName}</span>
                 </p>
               </div>
             </div>
@@ -474,7 +476,7 @@ export default function ExamPlayer({ quizId, student }) {
                 {t('portalTitle')}
               </h1>
               <p className={`text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {student.fullName} • {t('student')}
+                {t('nameLabel')}: <span className="font-bold">{student.fullName}</span>
               </p>
             </div>
           </div>
