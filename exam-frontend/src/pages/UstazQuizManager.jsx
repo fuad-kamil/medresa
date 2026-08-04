@@ -605,8 +605,8 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const downloadStudentHistoryDocx = (submission, quiz) => {
     if (!submission || !quiz) return;
 
-    const studentName = submission.studentName || 'Student';
-    const quizTitle = quiz.title || 'Exam Paper';
+    const studentName = submission.studentName || 'ተማሪ';
+    const quizTitle = quiz.title || 'የፈተና ወረቀት';
     const displayScore = submission.displayScore !== undefined ? submission.displayScore : submission.score;
     const targetMaxScore = submission.targetMaxScore || quiz.maxScore || 100;
     const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
@@ -618,7 +618,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         <meta charset='utf-8'>
         <title>${quizTitle} - ${studentName}</title>
         <style>
-          body { font-family: 'Calibri', 'Arial', sans-serif; padding: 24px; color: #1f2937; line-height: 1.6; }
+          body { font-family: 'Nyala', 'Ethiopic', 'Calibri', 'Arial', sans-serif; padding: 24px; color: #1f2937; line-height: 1.6; }
           .header { border-bottom: 2px solid #059669; padding-bottom: 12px; margin-bottom: 20px; }
           h1 { color: #065f46; font-size: 24px; margin: 0 0 6px 0; }
           h2 { color: #1f2937; font-size: 18px; margin: 0; }
@@ -637,19 +637,19 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       </head>
       <body>
         <div class="header">
-          <h1>Ali Medresa Exam Portal</h1>
-          <h2>Student Exam Results & Answer Paper</h2>
+          <h1>የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
+          <h2>የተማሪ የፈተና ውጤት እና የመልስ ወረቀት (Student Result & Answer Sheet)</h2>
         </div>
 
         <div class="meta-box">
-          <div class="meta-row"><strong>Exam Title:</strong> ${quizTitle}</div>
-          <div class="meta-row"><strong>Student Name:</strong> ${studentName}</div>
-          <div class="meta-row"><strong>Exam Column:</strong> ${quiz.examColumnName || 'N/A'}</div>
-          <div class="meta-row"><strong>Final Score:</strong> ${displayScore} / ${targetMaxScore} (${correctCount} of ${totalCount} questions correct)</div>
-          <div class="meta-row"><strong>Date Submitted:</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString()}</div>
+          <div class="meta-row"><strong>የፈተናው ርዕስ (Exam Title):</strong> ${quizTitle}</div>
+          <div class="meta-row"><strong>የተማሪው ስም (Student Name):</strong> ${studentName}</div>
+          <div class="meta-row"><strong>የውጤት ዓምድ (Exam Column):</strong> ${quiz.examColumnName || 'የለም'}</div>
+          <div class="meta-row"><strong>የመጨረሻ ውጤት (Final Score):</strong> ${displayScore} / ${targetMaxScore} (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
+          <div class="meta-row"><strong>የተላከበት ቀን (Date Submitted):</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
         </div>
 
-        <h3 style="color: #111827; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Detailed Questions & Options Breakdown:</h3>
+        <h3 style="color: #111827; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች (Questions & Options Breakdown):</h3>
     `;
 
     quiz.questions.forEach((q, idx) => {
@@ -659,8 +659,8 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       contentHtml += `
         <div class="q-card">
           <div class="q-title">
-            Question ${idx + 1}: ${q.questionText}
-            ${isCorrect ? '<span class="badge-correct">✅ Correct</span>' : '<span class="badge-wrong">❌ Incorrect</span>'}
+            ጥያቄ ${idx + 1}: ${q.questionText}
+            ${isCorrect ? '<span class="badge-correct">✅ ትክክል</span>' : '<span class="badge-wrong">❌ ስህተት</span>'}
           </div>
           <div>
       `;
@@ -674,13 +674,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
         if (isCorrectOpt && isChosen) {
           optClass = 'opt-correct-student';
-          badgeText = ' — ✅ Student Answer (Correct)';
+          badgeText = ' — ✅ የተማሪው መልስ (ትክክል)';
         } else if (isCorrectOpt) {
           optClass = 'opt-correct-only';
-          badgeText = ' — ✅ Correct Answer';
+          badgeText = ' — ✅ ትክክለኛ መልስ';
         } else if (isChosen) {
           optClass = 'opt-wrong-student';
-          badgeText = ' — ❌ Student Answer (Incorrect)';
+          badgeText = ' — ❌ የተማሪው መልስ (ስህተት)';
         }
 
         const optLabel = String.fromCharCode(65 + optIdx);
@@ -701,7 +701,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success('Word (.docx) exam report downloaded!');
+    toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት በWord ፋይል ወርዷል!' : 'Word (.docx) exam report downloaded!');
   };
 
   const downloadAsWord = (quiz) => {
@@ -709,7 +709,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head><meta charset='utf-8'><title>${quiz.title}</title>
       <style>
-        body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.5; padding: 20px; }
+        body { font-family: 'Nyala', 'Ethiopic', 'Calibri', 'Arial', sans-serif; line-height: 1.5; padding: 20px; }
         h1 { text-align: center; color: #111827; }
         .sub { text-align: center; color: #4B5563; font-size: 14px; margin-bottom: 30px; }
         .q-box { margin-bottom: 20px; page-break-inside: avoid; }
@@ -721,7 +721,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       <body>
         <h1>${quiz.title}</h1>
         <div class="sub">
-          Column: ${quiz.examColumnName} | Duration: ${quiz.hasTimer !== false && quiz.durationMinutes > 0 ? `${quiz.durationMinutes + quiz.addedTimeMinutes} mins` : 'Untimed'} | Max Score: ${quiz.maxScore || 100}
+          የውጤት ዓምድ: ${quiz.examColumnName} | የፈተና ጊዜ: ${quiz.hasTimer !== false && quiz.durationMinutes > 0 ? `${quiz.durationMinutes + quiz.addedTimeMinutes} ደቂቃዎች` : 'ያልተገደበ'} | ከፍተኛ ውጤት: ${quiz.maxScore || 100}
         </div>
         <hr/>
         <br/>
@@ -730,13 +730,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     quiz.questions.forEach((q, idx) => {
       docContent += `
         <div class="q-box">
-          <div class="q-text">${idx + 1}. ${q.questionText}</div>
+          <div class="q-text">ጥያቄ ${idx + 1}. ${q.questionText}</div>
       `;
       q.options.forEach((opt, optIdx) => {
         const isCorrect = optIdx === q.correctOptionIndex;
         docContent += `
           <div class="opt ${isCorrect ? 'correct' : ''}">
-            ${String.fromCharCode(65 + optIdx)}) ${opt} ${isCorrect ? ' (Correct Answer)' : ''}
+            ${String.fromCharCode(65 + optIdx)}) ${opt} ${isCorrect ? ' (ትክክለኛ መልስ)' : ''}
           </div>
         `;
       });
