@@ -206,34 +206,69 @@ export const verifyStudent = async (req, res) => {
 
         const cleanInput = identifier.toString().trim();
         let student = null;
+        let resolvedUstazId = ustazId; // may be overridden by prefix parsing
 
-        // 1. If cleanInput is purely numeric (e.g. 1, 2, 3...), lookup by roster index matching Ustaz Dashboard order
-        const numericIndex = parseInt(cleanInput, 10);
-        if (!isNaN(numericIndex) && numericIndex > 0 && numericIndex < 500) {
-            let query = { status: 'active' };
-            if (ustazId && ustazId !== 'ustaz_default') query.assignedUstaz = ustazId;
-            const studentsList = await Student.find(query).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
-            if (numericIndex <= studentsList.length) {
-                student = studentsList[numericIndex - 1];
+        // ── Combined exam login code: "UstazNumber + StudentRoster" ─────────
+        // e.g. ustaz examNumber="01", student roster=1 → input "011"
+        // We detect this by trying every known ustaz examNumber as a prefix.
+        if (/^\d+$/.test(cleanInput) && (!ustazId || ustazId === 'ustaz_default')) {
+            const allUstazs = await User.find({ role: 'ustaz', isApproved: true, examNumber: { $nin: ['', null] } }).select('_id examNumber name');
+
+            // Sort longest prefix first to avoid "01" matching when "011" is a valid ustaz
+            const sorted = allUstazs.sort((a, b) => b.examNumber.length - a.examNumber.length);
+
+            for (const uz of sorted) {
+                const prefix = uz.examNumber; // e.g. "01"
+                if (cleanInput.startsWith(prefix) && cleanInput.length > prefix.length) {
+                    const studentPart = cleanInput.slice(prefix.length); // e.g. "1"
+                    const rosterIndex = parseInt(studentPart, 10);
+
+                    if (!isNaN(rosterIndex) && rosterIndex > 0) {
+                        // Find students assigned to this ustaz, ordered by creation date
+                        const ustazStudents = await Student.find({
+                            status: 'active',
+                            assignedUstaz: uz._id
+                        }).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
+
+                        if (rosterIndex <= ustazStudents.length) {
+                            student = ustazStudents[rosterIndex - 1];
+                            resolvedUstazId = uz._id.toString();
+                        }
+                    }
+                    break; // matched a prefix, stop looking
+                }
             }
         }
 
-        // 2. Search by phone number (fatherPhone, motherPhone) or full name
+        // ── Fallback 1: purely numeric → roster index within the quiz's own ustaz ──
+        if (!student) {
+            const numericIndex = parseInt(cleanInput, 10);
+            if (!isNaN(numericIndex) && numericIndex > 0 && numericIndex < 500) {
+                let query = { status: 'active' };
+                if (resolvedUstazId && resolvedUstazId !== 'ustaz_default') query.assignedUstaz = resolvedUstazId;
+                const studentsList = await Student.find(query).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
+                if (numericIndex <= studentsList.length) {
+                    student = studentsList[numericIndex - 1];
+                }
+            }
+        }
+
+        // ── Fallback 2: phone number or full name ────────────────────────────
         if (!student) {
             const searchConditions = [
                 { fatherPhone: cleanInput },
                 { motherPhone: cleanInput },
                 { fullName: { $regex: cleanInput, $options: 'i' } }
             ];
-            const query = (ustazId && ustazId !== 'ustaz_default') 
-                ? { assignedUstaz: ustazId, status: 'active', $or: searchConditions }
+            const query = (resolvedUstazId && resolvedUstazId !== 'ustaz_default')
+                ? { assignedUstaz: resolvedUstazId, status: 'active', $or: searchConditions }
                 : { status: 'active', $or: searchConditions };
 
             student = await Student.findOne(query).populate('assignedUstaz', 'name');
         }
 
         if (!student) {
-            return res.status(404).json({ message: 'Student not found with provided phone number, name, or roster ID' });
+            return res.status(404).json({ message: 'Student not found with provided phone number, name, or exam code' });
         }
 
         res.json({
@@ -248,6 +283,7 @@ export const verifyStudent = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // ─── Score Sync (From Exam Microservice) ────────────────────────────────────
 export const syncExamScore = async (req, res) => {

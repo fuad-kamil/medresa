@@ -9,6 +9,7 @@ import upload from '../middleware/upload.js'
 import {
     getAllUstazs,
     approveUstaz,
+    setUstazExamNumber,
     deleteUstaz,
     registerStudent,
     bulkImportStudents,
@@ -46,6 +47,7 @@ router.get('/ustazs', protect, adminOnly, getAllUstazs)
 router.post('/ustazs', protect, adminOnly, registerUstazByAdmin)
 router.get('/ustazs/attendance-status', protect, adminOnly, getUstazAttendanceStatus)
 router.patch('/ustaz/approve/:id', protect, adminOnly, approveUstaz)
+router.patch('/ustaz/:id/exam-number', protect, adminOnly, setUstazExamNumber)
 router.delete('/ustaz/:id', protect, adminOnly, deleteUstaz)
 router.post('/ustaz/:id/reject-semester', protect, adminOnly, rejectUstazSemester)
 router.post('/ustaz/:id/reset-semester', protect, adminOnly, resetUstazSemester)

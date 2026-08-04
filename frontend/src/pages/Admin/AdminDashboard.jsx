@@ -61,10 +61,35 @@ export default function AdminDashboard() {
   const [ustazToReject, setUstazToReject] = useState(null);
   const [rejectingSemester, setRejectingSemester] = useState(false);
 
+  // Exam Number inline-edit state
+  const [editingExamNumId, setEditingExamNumId] = useState(null);
+  const [editingExamNumValue, setEditingExamNumValue] = useState('');
+  const [savingExamNumId, setSavingExamNumId] = useState(null);
+
   const handleRejectSemesterClick = (ustaz, e) => {
     e.stopPropagation();
     setUstazToReject(ustaz);
     setIsSemesterRejectModalOpen(true);
+  };
+
+  const handleSetExamNumber = async (ustazId, e) => {
+    if (e) e.stopPropagation();
+    const trimmed = editingExamNumValue.trim();
+    if (trimmed !== '' && !/^\d{1,3}$/.test(trimmed)) {
+      toast.error('Exam number must be 1-3 digits (e.g. 01, 1, 12)');
+      return;
+    }
+    setSavingExamNumId(ustazId);
+    try {
+      const res = await axiosInstance.patch(`/admin/ustaz/${ustazId}/exam-number`, { examNumber: trimmed });
+      setUstazs(prev => prev.map(u => u._id === ustazId ? { ...u, examNumber: res.data.ustaz.examNumber } : u));
+      setEditingExamNumId(null);
+      toast.success(`Exam number ${trimmed ? `"${trimmed}"` : 'cleared'} saved!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save exam number.');
+    } finally {
+      setSavingExamNumId(null);
+    }
   };
 
   const confirmRejectSemester = async () => {
@@ -528,6 +553,59 @@ export default function AdminDashboard() {
                       </button>
                     </div>
                   )}
+
+                  {/* Exam Number badge + inline edit */}
+                  <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                    {editingExamNumId === ustaz._id ? (
+                      <>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Exam No.</span>
+                        <input
+                          type="text"
+                          autoFocus
+                          value={editingExamNumValue}
+                          onChange={e => setEditingExamNumValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') handleSetExamNumber(ustaz._id, e);
+                            if (e.key === 'Escape') setEditingExamNumId(null);
+                          }}
+                          maxLength={3}
+                          placeholder="01"
+                          className="w-14 text-center text-sm font-bold border-2 border-emerald-400 rounded-lg px-1.5 py-0.5 text-slate-800 dark:bg-zinc-800 dark:text-white dark:border-emerald-600 focus:outline-none"
+                        />
+                        <button
+                          onClick={e => handleSetExamNumber(ustaz._id, e)}
+                          disabled={savingExamNumId === ustaz._id}
+                          className="p-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition disabled:opacity-50 text-xs font-bold cursor-pointer"
+                          title="Save"
+                        >
+                          {savingExamNumId === ustaz._id ? '…' : '✓'}
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setEditingExamNumId(null); }}
+                          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition text-xs cursor-pointer"
+                          title="Cancel"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={e => { e.stopPropagation(); setEditingExamNumId(ustaz._id); setEditingExamNumValue(ustaz.examNumber || ''); }}
+                        title="Set exam login number for students"
+                        className="flex items-center gap-1 cursor-pointer group"
+                      >
+                        {ustaz.examNumber ? (
+                          <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 group-hover:bg-indigo-200 transition">
+                            #{ustaz.examNumber}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 border border-dashed border-slate-300 dark:border-zinc-700 group-hover:bg-slate-200 transition">
+                            + Exam No.
+                          </span>
+                        )}
+                      </button>
+                    )}
+                  </div>
 
                   {/* Delete Ustaz Button */}
                   <button

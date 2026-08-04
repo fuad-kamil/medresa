@@ -42,6 +42,47 @@ export const approveUstaz = async (req, res) => {
     }
 }
 
+// Set / Update Ustaz Exam Number (e.g. "01", "02")
+export const setUstazExamNumber = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { examNumber } = req.body;
+
+        if (examNumber === undefined || examNumber === null) {
+            return res.status(400).json({ message: 'examNumber is required' });
+        }
+
+        const trimmed = String(examNumber).trim();
+
+        // Validate: must be 1-3 digits when non-empty
+        if (trimmed !== '' && !/^\d{1,3}$/.test(trimmed)) {
+            return res.status(400).json({ message: 'examNumber must be 1-3 digits (e.g. "01", "1", "12")' });
+        }
+
+        // Check uniqueness (non-empty only)
+        if (trimmed !== '') {
+            const conflict = await User.findOne({ examNumber: trimmed, _id: { $ne: id } });
+            if (conflict) {
+                return res.status(409).json({ message: `Exam number "${trimmed}" is already assigned to ${conflict.name}` });
+            }
+        }
+
+        const ustaz = await User.findByIdAndUpdate(
+            id,
+            { examNumber: trimmed },
+            { new: true, select: '-password' }
+        );
+
+        if (!ustaz) {
+            return res.status(404).json({ message: 'Ustaz not found' });
+        }
+
+        res.json({ message: 'Exam number updated successfully', ustaz });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Register Student
 export const registerStudent = async (req, res) => {
     try {

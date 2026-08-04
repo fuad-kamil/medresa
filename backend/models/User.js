@@ -56,6 +56,11 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
+    examNumber: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     createdAt: {
         type: Date,
         default: Date.now
