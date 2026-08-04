@@ -467,9 +467,10 @@ export default function AdminDashboard() {
       </div>
       
       <div className="space-y-4">
-        {ustazs.map((ustaz) => {
+        {ustazs.map((ustaz, index) => {
           const ustazStudents = students.filter((s) => s.assignedUstaz && s.assignedUstaz._id === ustaz._id);
           const isExpanded = expandedUstazId === ustaz._id;
+          const displayExamNo = ustaz.examNumber || (index + 1 < 10 ? `0${index + 1}` : `${index + 1}`);
 
           return (
             <div key={ustaz._id} className="bg-white/70 dark:bg-zinc-900/40 backdrop-blur-sm rounded-3xl border border-slate-100 dark:border-zinc-900 shadow-premium overflow-hidden transition-all duration-300">
@@ -482,16 +483,26 @@ export default function AdminDashboard() {
                     <User size={20} />
                   </div>
                   <div className="text-left flex-1 min-w-0">
-                    <p className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2 truncate">
-                      {ustaz.name}
-                      {ustaz.isApproved && <CheckCircle size={16} className="text-emerald-500 shrink-0" title="Approved" />}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2 truncate">
+                        {ustaz.name}
+                        {ustaz.isApproved && <CheckCircle size={16} className="text-emerald-500 shrink-0" title="Approved" />}
+                      </p>
+                      {/* Prominent Exam Code Badge beside name */}
+                      <span
+                        onClick={e => { e.stopPropagation(); setEditingExamNumId(ustaz._id); setEditingExamNumValue(ustaz.examNumber || displayExamNo); }}
+                        className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition cursor-pointer shrink-0"
+                        title="Click to edit Ustaz Exam Number"
+                      >
+                        Exam ID: <strong className="underline decoration-dashed">#{displayExamNo}</strong>
+                      </span>
                       {ustaz.semesterStatus === 'ended' && (
                         <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 shrink-0">
                           {t("Semester Ended")}
                         </span>
                       )}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                       {ustazStudents.length} {t("Students Assigned")}
                     </p>
                     {/* Attendance status pills */}
@@ -554,7 +565,7 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
-                  {/* Exam Number badge + inline edit */}
+                  {/* Exam Number inline edit button */}
                   <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                     {editingExamNumId === ustaz._id ? (
                       <>
@@ -590,19 +601,11 @@ export default function AdminDashboard() {
                       </>
                     ) : (
                       <button
-                        onClick={e => { e.stopPropagation(); setEditingExamNumId(ustaz._id); setEditingExamNumValue(ustaz.examNumber || ''); }}
+                        onClick={e => { e.stopPropagation(); setEditingExamNumId(ustaz._id); setEditingExamNumValue(ustaz.examNumber || displayExamNo); }}
                         title="Set exam login number for students"
-                        className="flex items-center gap-1 cursor-pointer group"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 transition cursor-pointer text-xs font-extrabold"
                       >
-                        {ustaz.examNumber ? (
-                          <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 group-hover:bg-indigo-200 transition">
-                            #{ustaz.examNumber}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 border border-dashed border-slate-300 dark:border-zinc-700 group-hover:bg-slate-200 transition">
-                            + Exam No.
-                          </span>
-                        )}
+                        ✏️ Exam No: #{displayExamNo}
                       </button>
                     )}
                   </div>
@@ -630,12 +633,15 @@ export default function AdminDashboard() {
                     </p>
                   ) : (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                      {ustazStudents.map((student) => {
+                      {ustazStudents.map((student, sIdx) => {
                         const status = getStudentAttendanceStatus(student._id);
                         let statusColor = "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
                         if (status === "present") statusColor = "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
                         if (status === "absent") statusColor = "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
                         if (status === "excused") statusColor = "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+
+                        const rosterId = sIdx + 1;
+                        const studentExamCode = `${displayExamNo}${rosterId}`;
 
                         return (
                           <div key={student._id} className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-md transition-shadow group">
@@ -645,10 +651,13 @@ export default function AdminDashboard() {
                                 <History size={18} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-800 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate">
+                                <p className="font-semibold text-gray-800 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate flex items-center gap-2">
                                   {student.fullName}
+                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                    Login Code: {studentExamCode}
+                                  </span>
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Click to view history</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Roster No. #{rosterId} • Click to view history</p>
                               </div>
                             </div>
 

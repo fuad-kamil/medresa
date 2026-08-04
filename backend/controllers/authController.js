@@ -32,6 +32,15 @@ export const registerUstaz = async (req, res) => {
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
 
+        const existingUstazs = await User.find({ role: 'ustaz' }).select('examNumber');
+        const usedNumbers = new Set(existingUstazs.map(u => u.examNumber).filter(Boolean));
+        let seq = 1;
+        let examNumber = String(seq).padStart(2, '0');
+        while (usedNumbers.has(examNumber)) {
+            seq++;
+            examNumber = String(seq).padStart(2, '0');
+        }
+
         const user = await User.create({
             name,
             email: normalizedEmail,
@@ -42,6 +51,7 @@ export const registerUstaz = async (req, res) => {
             teachingDays: teachingDays && teachingDays.length > 0 ? teachingDays : [0, 1, 2, 3, 4, 5, 6],
             studentPhoneOption: studentPhoneOption ? Number(studentPhoneOption) : 1,
             role: 'ustaz',
+            examNumber,
             isApproved: false
         })
 

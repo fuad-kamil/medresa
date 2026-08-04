@@ -11,10 +11,29 @@ import SemesterArchive from '../models/SemesterArchive.js'
 // Get all Ustazs (Pending + Approved)
 export const getAllUstazs = async (req, res) => {
     try {
-        const ustazs = await User.find({ role: 'ustaz' }).select('-password')
-        res.json(ustazs)
+        const ustazs = await User.find({ role: 'ustaz' }).sort({ createdAt: 1 }).select('-password');
+        
+        // Auto-assign sequential exam numbers (01, 02, 03...) to any Ustaz missing an examNumber
+        const usedNumbers = new Set(ustazs.map(u => u.examNumber).filter(Boolean));
+        let seq = 1;
+
+        for (const ustaz of ustazs) {
+            if (!ustaz.examNumber) {
+                let numStr = String(seq).padStart(2, '0');
+                while (usedNumbers.has(numStr)) {
+                    seq++;
+                    numStr = String(seq).padStart(2, '0');
+                }
+                ustaz.examNumber = numStr;
+                usedNumbers.add(numStr);
+                await User.updateOne({ _id: ustaz._id }, { examNumber: numStr });
+                seq++;
+            }
+        }
+
+        res.json(ustazs);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
 }
 
@@ -642,8 +661,14 @@ export const registerUstazByAdmin = async (req, res) => {
             return res.status(400).json({ message: 'Ustaz already exists with this email' })
         }
 
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
+        const existingUstazs = await User.find({ role: 'ustaz' }).select('examNumber');
+        const usedNumbers = new Set(existingUstazs.map(u => u.examNumber).filter(Boolean));
+        let seq = 1;
+        let examNumber = String(seq).padStart(2, '0');
+        while (usedNumbers.has(examNumber)) {
+            seq++;
+            examNumber = String(seq).padStart(2, '0');
+        }
 
         const user = await User.create({
             name,
@@ -655,6 +680,7 @@ export const registerUstazByAdmin = async (req, res) => {
             teachingDays: teachingDays && teachingDays.length > 0 ? teachingDays : [0, 1, 2, 3, 4, 5, 6],
             studentPhoneOption: studentPhoneOption ? Number(studentPhoneOption) : 1,
             role: 'ustaz',
+            examNumber,
             isApproved: true // Auto-approved since created by Admin
         })
 
