@@ -14,15 +14,13 @@ import {
     syncExamScore,
     clearExamScore,
     getExamSystemStatus,
-    toggleExamSystemLock,
-    reportSuspiciousActivity
+    toggleExamSystemLock
 } from '../controllers/examController.js';
 
 const router = express.Router();
 
 // Public / Service endpoints (No user token required)
 router.post('/verify-student', verifyStudent);
-router.post('/report-suspicious', reportSuspiciousActivity);
 router.post('/sync-score', syncExamScore);
 router.post('/clear-score', clearExamScore);
 router.get('/system-status', getExamSystemStatus);

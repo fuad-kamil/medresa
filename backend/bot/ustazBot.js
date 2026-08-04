@@ -634,31 +634,6 @@ const handlePollAnswer = async (bot, pollAnswer) => {
     }
 };
 
-let ustazBotInstance = null;
-
-// Helper to send cheating / suspicious activity alerts to Ustaz Telegram Chat
-export const sendUstazCheatingAlert = async ({ ustazId, studentName, studentCode, quizTitle, actionCount }) => {
-    try {
-        if (!ustazBotInstance || !ustazId) return;
-        const ustaz = await User.findById(ustazId);
-        if (!ustaz || !ustaz.telegramChatId) return;
-
-        const message = 
-`🚨 *SUSPICIOUS EXAM ACTIVITY ALERT* 🚨
-
-👤 *Student Name:* ${studentName}
-🔢 *Exam Login Code:* \`${studentCode || 'N/A'}\`
-📝 *Exam Paper:* ${quizTitle || 'Online Exam'}
-⚠️ *Action:* Left exam screen / switched browser tab (*Count: ${actionCount}*)
-
-_Please monitor this student during the examination._`;
-
-        await ustazBotInstance.sendMessage(ustaz.telegramChatId, message, { parse_mode: 'Markdown' });
-    } catch (err) {
-        console.error('Failed to send Ustaz cheating alert via Telegram Bot:', err.message);
-    }
-};
-
 // ─── Bot Initialization ───────────────────────────────────────────────────────
 export function initUstazBot() {
     if (!token || token === 'your_ustaz_bot_token_here') {
@@ -671,7 +646,6 @@ export function initUstazBot() {
     if (renderUrl) {
         // Webhook Mode (Production)
         const bot         = new TelegramBot(token, { webHook: false });
-        ustazBotInstance  = bot;
         const webhookPath = `/ustazbot${token}`;
         const webhookUrl  = `${renderUrl}${webhookPath}`;
 
@@ -700,7 +674,6 @@ export function initUstazBot() {
     } else {
         // Polling Mode (Local Dev)
         const bot = new TelegramBot(token, { polling: true });
-        ustazBotInstance = bot;
         bot.on('polling_error', (err) => console.error('Ustaz Telegram polling error:', err.message));
         bot.on('message', (msg) => handleMessage(bot, msg));
         bot.on('callback_query', (query) => handleCallbackQuery(bot, query));

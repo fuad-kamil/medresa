@@ -27,6 +27,8 @@ const translations = {
     emptyIdentifierError: 'Please enter your combined exam login code (e.g. 011).',
     verificationFailedError: 'Student verification failed.',
     studentNotFoundError: 'Invalid exam code. Please enter your combined code (e.g. 011).',
+    multiDeviceError: '🔒 Exam code ({code}) is currently active on another device. Multi-device access is locked.',
+    deviceAlreadyActiveError: '🔒 You are currently taking an exam as "{name}" on this device. Logging into another student account is locked.',
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English'
   },
@@ -44,6 +46,8 @@ const translations = {
     emptyIdentifierError: 'እባክዎን ጥምር የፈተና መግቢያ ኮድዎን ያስገቡ (ምሳሌ 011)።',
     verificationFailedError: 'የተማሪ ማንነት ማረጋገጥ አልተሳካም።',
     studentNotFoundError: 'ትክክለኛ ያልሆነ የፈተና ኮድ። እባክዎን ጥምር የፈተና ኮድዎን ያስገቡ (ምሳሌ 011)።',
+    multiDeviceError: '🔒 የፈተና ኮድ ({code}) በአሁኑ ጊዜ በሌላ ስልክ ላይ እየሰራ ነው። በበርካታ ስልኮች መግባት ተቆልፏል።',
+    deviceAlreadyActiveError: '🔒 በዚህ ስልክ ላይ እንደ "{name}" ፈተና በመውሰድ ላይ ነዎት። ወደ ሌላ ተማሪ መለያ መግባት ተቆልፏል።',
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English'
   }
@@ -119,7 +123,11 @@ export default function StudentLogin({ quizId, onVerified }) {
       const data = await res.json();
       if (!res.ok || !data.success) {
         let errStr = data.message || t('verificationFailedError');
-        if (data.message && (data.message.includes('Invalid exam code') || data.message.includes('Student not found'))) {
+        if (data.code === 'MULTI_DEVICE_LOCKED') {
+          errStr = t('multiDeviceError').replace('{code}', data.examCode || identifier.trim());
+        } else if (data.code === 'DEVICE_ALREADY_ACTIVE') {
+          errStr = t('deviceAlreadyActiveError').replace('{name}', data.studentName || '');
+        } else if (data.message && (data.message.includes('Invalid exam code') || data.message.includes('Student not found'))) {
           errStr = t('studentNotFoundError');
         }
         throw new Error(errStr);

@@ -309,6 +309,8 @@ export const verifyStudent = async (req, res) => {
             if (existingSidSession && (Date.now() - existingSidSession.startedAt < TWO_HOURS)) {
                 if (existingSidSession.deviceToken !== deviceToken) {
                     return res.status(403).json({
+                        code: 'MULTI_DEVICE_LOCKED',
+                        examCode: cleanInput,
                         message: `🔒 Exam code (${cleanInput}) is currently active on another device. Multi-device access is locked.`
                     });
                 }
@@ -320,6 +322,8 @@ export const verifyStudent = async (req, res) => {
                 const activeDeviceSession = activeStudentSessions.get(existingDeviceStudentId);
                 if (activeDeviceSession && (Date.now() - activeDeviceSession.startedAt < TWO_HOURS)) {
                     return res.status(403).json({
+                        code: 'DEVICE_ALREADY_ACTIVE',
+                        studentName: activeDeviceSession.studentName,
                         message: `🔒 You are currently taking an exam as "${activeDeviceSession.studentName}" on this device. Logging into another student account is locked.`
                     });
                 }
@@ -359,19 +363,6 @@ export const clearActiveStudentSession = (studentId) => {
     if (session) {
         activeDeviceStudents.delete(session.deviceToken);
         activeStudentSessions.delete(sidStr);
-    }
-};
-
-// ─── Report Suspicious Activity (Cheating Alert to Ustaz Telegram Bot) ────────
-import { sendUstazCheatingAlert } from '../bot/ustazBot.js';
-
-export const reportSuspiciousActivity = async (req, res) => {
-    try {
-        const { ustazId, studentName, studentCode, quizTitle, actionCount } = req.body;
-        await sendUstazCheatingAlert({ ustazId, studentName, studentCode, quizTitle, actionCount });
-        res.json({ success: true, message: 'Suspicious activity reported to Ustaz Telegram Bot' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
 };
 

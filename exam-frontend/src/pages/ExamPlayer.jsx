@@ -116,8 +116,6 @@ export default function ExamPlayer({ quizId, student }) {
   const [isSystemLocked, setIsSystemLocked] = useState(false);
   const [unansweredList, setUnansweredList] = useState([]);
   const [showUnansweredModal, setShowUnansweredModal] = useState(false);
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
-  const [showCheatingModal, setShowCheatingModal] = useState(false);
 
   // Language state (en | am)
   const [lang, setLang] = useState(() => localStorage.getItem('student_exam_lang') || 'en');
@@ -220,51 +218,6 @@ export default function ExamPlayer({ quizId, student }) {
 
     return () => clearInterval(interval);
   }, [quiz, timeLeftSeconds, result, submitting, lang]);
-
-  // Tab Switch & App Minimizing Anti-Cheat Detection + Telegram Bot Alert
-  useEffect(() => {
-    if (!quiz || result || submitting || isSystemLocked) return;
-
-    let isReporting = false;
-
-    const handleVisibilityOrBlur = () => {
-      if (document.hidden && !isReporting) {
-        isReporting = true;
-        setTabSwitchCount((prev) => {
-          const nextCount = prev + 1;
-
-          // Send alert to Ustaz Telegram Bot via backend
-          fetch(`${MAIN_API_URL}/exams/report-suspicious`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ustazId: quiz.ustazId,
-              studentName: student.fullName,
-              studentCode: student.identifier || '',
-              quizTitle: quiz.title,
-              actionCount: nextCount
-            })
-          }).catch(e => console.warn('Cheating report warning:', e));
-
-          if (nextCount >= 2) {
-            toast.error(t('autoSubmittedCheating'));
-            executeSubmit(true);
-          } else {
-            setShowCheatingModal(true);
-          }
-          return nextCount;
-        });
-
-        setTimeout(() => { isReporting = false; }, 3000);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityOrBlur);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityOrBlur);
-    };
-  }, [quiz, result, submitting, isSystemLocked]);
 
   const handleOptionSelect = (questionIndex, optionIndex) => {
     const updated = { ...answers, [questionIndex]: optionIndex };
@@ -765,35 +718,6 @@ export default function ExamPlayer({ quizId, student }) {
                 {t('yesSubmitNowBtn')}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cheating / Tab-Switch Warning Modal */}
-      {showCheatingModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn space-y-4 ${
-            isDark ? 'bg-gray-900 border-red-900/60 text-white' : 'bg-white border-red-200 text-gray-900'
-          }`}>
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">
-              ⚠️
-            </div>
-
-            <h3 className="text-xl font-black text-red-600 dark:text-red-400">{t('cheatingWarningTitle')}</h3>
-            <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              {t('tabSwitchWarning')}
-            </p>
-
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 rounded-xl text-xs font-bold border border-red-200 dark:border-red-900/50">
-              ⚠️ Warning count: {tabSwitchCount}/2 (Leaving screen again will auto-submit exam!)
-            </div>
-
-            <button
-              onClick={() => setShowCheatingModal(false)}
-              className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer text-sm"
-            >
-              Return to Exam
-            </button>
           </div>
         </div>
       )}
