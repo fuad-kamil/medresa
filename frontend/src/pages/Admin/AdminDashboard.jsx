@@ -488,13 +488,13 @@ export default function AdminDashboard() {
                         {ustaz.name}
                         {ustaz.isApproved && <CheckCircle size={16} className="text-emerald-500 shrink-0" title="Approved" />}
                       </p>
-                      {/* Prominent Exam Code Badge beside name */}
+                      {/* Prominent ID Badge beside name */}
                       <span
                         onClick={e => { e.stopPropagation(); setEditingExamNumId(ustaz._id); setEditingExamNumValue(ustaz.examNumber || displayExamNo); }}
-                        className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition cursor-pointer shrink-0"
-                        title="Click to edit Ustaz Exam Number"
+                        className="px-2 py-0.5 rounded-lg text-xs font-black bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition cursor-pointer shrink-0"
+                        title="Click to edit Ustaz ID"
                       >
-                        Exam ID: <strong className="underline decoration-dashed">#{displayExamNo}</strong>
+                        ID: <strong className="underline decoration-dashed">{displayExamNo}</strong>
                       </span>
                       {ustaz.semesterStatus === 'ended' && (
                         <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 shrink-0">
@@ -605,7 +605,7 @@ export default function AdminDashboard() {
                         title="Set exam login number for students"
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 transition cursor-pointer text-xs font-extrabold"
                       >
-                        ✏️ Exam No: #{displayExamNo}
+                        ✏️ ID: {displayExamNo}
                       </button>
                     )}
                   </div>
