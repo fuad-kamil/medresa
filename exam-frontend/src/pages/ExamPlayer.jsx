@@ -49,6 +49,9 @@ const translations = {
     timeUpToast: '⏰ Time is up! Submitting exam automatically...',
     submissionSuccessToast: '🎉 Exam submitted successfully!',
     submissionFailedToast: 'Submission failed.',
+    cheatingWarningTitle: '⚠️ Suspicious Activity Warning',
+    tabSwitchWarning: 'You left the exam screen / switched browser tabs! Your Ustaz has been notified via Telegram Bot.',
+    autoSubmittedCheating: '⚠️ Exam automatically submitted due to repeated tab switching.',
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English',
     themeToastDark: 'የጨለማ ገጽታ (Dark Mode) ተቀይሯል',
@@ -91,6 +94,9 @@ const translations = {
     timeUpToast: '⏰ የፈተና ጊዜ አልቋል! ፈተናው በራሱ እየተላከ ነው...',
     submissionSuccessToast: '🎉 ፈተናው በተሳካ ሁኔታ ተልኳል!',
     submissionFailedToast: 'ፈተናውን መላክ አልተቻለም።',
+    cheatingWarningTitle: '⚠️ የማታለል ማስጠንቀቂያ',
+    tabSwitchWarning: 'ከፈተናው ገጽ ወጥተዋል ወይም ታብ ቀይረዋል! ለኡስታዝዎ በቴሌግራም ቦት ማስጠንቀቂያ ተልኳል።',
+    autoSubmittedCheating: '⚠️ ደጋግመው ታብ በመቀየርዎ ምክንያት ፈተናው በራስ-ሰር ተጠናቋል።',
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English',
     themeToastDark: 'የጨለማ ገጽታ (Dark Mode) ተቀይሯል',
@@ -110,6 +116,8 @@ export default function ExamPlayer({ quizId, student }) {
   const [isSystemLocked, setIsSystemLocked] = useState(false);
   const [unansweredList, setUnansweredList] = useState([]);
   const [showUnansweredModal, setShowUnansweredModal] = useState(false);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [showCheatingModal, setShowCheatingModal] = useState(false);
 
   // Language state (en | am)
   const [lang, setLang] = useState(() => localStorage.getItem('student_exam_lang') || 'en');
@@ -212,6 +220,51 @@ export default function ExamPlayer({ quizId, student }) {
 
     return () => clearInterval(interval);
   }, [quiz, timeLeftSeconds, result, submitting, lang]);
+
+  // Tab Switch & App Minimizing Anti-Cheat Detection + Telegram Bot Alert
+  useEffect(() => {
+    if (!quiz || result || submitting || isSystemLocked) return;
+
+    let isReporting = false;
+
+    const handleVisibilityOrBlur = () => {
+      if (document.hidden && !isReporting) {
+        isReporting = true;
+        setTabSwitchCount((prev) => {
+          const nextCount = prev + 1;
+
+          // Send alert to Ustaz Telegram Bot via backend
+          fetch(`${MAIN_API_URL}/exams/report-suspicious`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ustazId: quiz.ustazId,
+              studentName: student.fullName,
+              studentCode: student.identifier || '',
+              quizTitle: quiz.title,
+              actionCount: nextCount
+            })
+          }).catch(e => console.warn('Cheating report warning:', e));
+
+          if (nextCount >= 2) {
+            toast.error(t('autoSubmittedCheating'));
+            executeSubmit(true);
+          } else {
+            setShowCheatingModal(true);
+          }
+          return nextCount;
+        });
+
+        setTimeout(() => { isReporting = false; }, 3000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityOrBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityOrBlur);
+    };
+  }, [quiz, result, submitting, isSystemLocked]);
 
   const handleOptionSelect = (questionIndex, optionIndex) => {
     const updated = { ...answers, [questionIndex]: optionIndex };
@@ -457,9 +510,17 @@ export default function ExamPlayer({ quizId, student }) {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 pb-12 ${
-      isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'
-    }`}>
+    <div 
+      onContextMenu={(e) => { e.preventDefault(); toast.error(lang === 'am' ? 'ኮፒ ማድረግ ወይም ማየት ተከልክሏል!' : 'Copying or right click is disabled during exam!'); }}
+      onCopy={(e) => { e.preventDefault(); toast.error(lang === 'am' ? 'የፈተና ጽሑፍ ኮፒ ማድረግ አይቻልም!' : 'Copying exam text is disabled!'); }}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
+      onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'u', 's', 'p'].includes(e.key.toLowerCase())) { e.preventDefault(); toast.error(lang === 'am' ? 'የቁልፍ ትዕዛዝ ተከልክሏል!' : 'Keyboard shortcuts disabled!'); } }}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
+      className={`min-h-screen transition-colors duration-200 pb-12 select-none ${
+        isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'
+      }`}
+    >
       {/* ─── DEDICATED TOP NAVIGATION BAR ───────────────────────────────────── */}
       <header className={`sticky top-0 z-40 border-b px-4 sm:px-8 py-3.5 transition-colors ${
         isDark ? 'bg-gray-900/90 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900 shadow-sm'
@@ -704,6 +765,35 @@ export default function ExamPlayer({ quizId, student }) {
                 {t('yesSubmitNowBtn')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cheating / Tab-Switch Warning Modal */}
+      {showCheatingModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn space-y-4 ${
+            isDark ? 'bg-gray-900 border-red-900/60 text-white' : 'bg-white border-red-200 text-gray-900'
+          }`}>
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">
+              ⚠️
+            </div>
+
+            <h3 className="text-xl font-black text-red-600 dark:text-red-400">{t('cheatingWarningTitle')}</h3>
+            <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              {t('tabSwitchWarning')}
+            </p>
+
+            <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 rounded-xl text-xs font-bold border border-red-200 dark:border-red-900/50">
+              ⚠️ Warning count: {tabSwitchCount}/2 (Leaving screen again will auto-submit exam!)
+            </div>
+
+            <button
+              onClick={() => setShowCheatingModal(false)}
+              className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer text-sm"
+            >
+              Return to Exam
+            </button>
           </div>
         </div>
       )}

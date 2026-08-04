@@ -298,6 +298,42 @@ export const verifyStudent = async (req, res) => {
             return res.status(404).json({ message: 'Invalid exam code. Please enter your combined Exam Code (e.g. 011).' });
         }
 
+        // ── Single Active Session & Device Lock Enforcement ───────────────────
+        const { deviceToken } = req.body;
+        if (deviceToken) {
+            const sidStr = student._id.toString();
+            const TWO_HOURS = 2 * 60 * 60 * 1000;
+
+            // 1. Check if another device is currently using this student code
+            const existingSidSession = activeStudentSessions.get(sidStr);
+            if (existingSidSession && (Date.now() - existingSidSession.startedAt < TWO_HOURS)) {
+                if (existingSidSession.deviceToken !== deviceToken) {
+                    return res.status(403).json({
+                        message: `🔒 Exam code (${cleanInput}) is currently active on another device. Multi-device access is locked.`
+                    });
+                }
+            }
+
+            // 2. Check if this device is already bound to another active student code
+            const existingDeviceStudentId = activeDeviceStudents.get(deviceToken);
+            if (existingDeviceStudentId && existingDeviceStudentId !== sidStr) {
+                const activeDeviceSession = activeStudentSessions.get(existingDeviceStudentId);
+                if (activeDeviceSession && (Date.now() - activeDeviceSession.startedAt < TWO_HOURS)) {
+                    return res.status(403).json({
+                        message: `🔒 You are currently taking an exam as "${activeDeviceSession.studentName}" on this device. Logging into another student account is locked.`
+                    });
+                }
+            }
+
+            // Bind session to this deviceToken
+            activeStudentSessions.set(sidStr, {
+                deviceToken,
+                studentName: student.fullName,
+                startedAt: Date.now()
+            });
+            activeDeviceStudents.set(deviceToken, sidStr);
+        }
+
         res.json({
             success: true,
             student: {
@@ -306,6 +342,34 @@ export const verifyStudent = async (req, res) => {
                 assignedUstaz: student.assignedUstaz ? student.assignedUstaz.name : 'Unassigned'
             }
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Map to track active student exam sessions in memory
+const activeStudentSessions = new Map();
+const activeDeviceStudents = new Map();
+
+// Clear active student session (used when retake is granted or exam ends)
+export const clearActiveStudentSession = (studentId) => {
+    if (!studentId) return;
+    const sidStr = studentId.toString();
+    const session = activeStudentSessions.get(sidStr);
+    if (session) {
+        activeDeviceStudents.delete(session.deviceToken);
+        activeStudentSessions.delete(sidStr);
+    }
+};
+
+// ─── Report Suspicious Activity (Cheating Alert to Ustaz Telegram Bot) ────────
+import { sendUstazCheatingAlert } from '../bot/ustazBot.js';
+
+export const reportSuspiciousActivity = async (req, res) => {
+    try {
+        const { ustazId, studentName, studentCode, quizTitle, actionCount } = req.body;
+        await sendUstazCheatingAlert({ ustazId, studentName, studentCode, quizTitle, actionCount });
+        res.json({ success: true, message: 'Suspicious activity reported to Ustaz Telegram Bot' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

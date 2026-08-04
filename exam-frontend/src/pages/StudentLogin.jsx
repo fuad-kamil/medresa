@@ -98,9 +98,16 @@ export default function StudentLogin({ quizId, onVerified }) {
     setError('');
 
     try {
+      let deviceToken = localStorage.getItem('medresa_device_id');
+      if (!deviceToken) {
+        deviceToken = 'dev_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+        localStorage.setItem('medresa_device_id', deviceToken);
+      }
+
       const payload = { 
         identifier: identifier.trim(),
-        ustazId: quizInfo?.ustazId 
+        ustazId: quizInfo?.ustazId,
+        deviceToken
       };
 
       const res = await fetch(`${MAIN_API_URL}/exams/verify-student`, {
@@ -127,6 +134,7 @@ export default function StudentLogin({ quizId, onVerified }) {
             if (checkData.hasSubmitted) {
               onVerified({
                 ...data.student,
+                identifier: identifier.trim(),
                 alreadySubmittedResult: checkData
               });
               return;
@@ -137,7 +145,7 @@ export default function StudentLogin({ quizId, onVerified }) {
         }
       }
 
-      onVerified(data.student);
+      onVerified({ ...data.student, identifier: identifier.trim() });
     } catch (err) {
       setError(err.message || t('verificationFailedError'));
     } finally {
