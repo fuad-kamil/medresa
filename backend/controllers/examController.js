@@ -208,52 +208,88 @@ export const verifyStudent = async (req, res) => {
         let student = null;
         let targetUstazId = (ustazId && ustazId !== 'ustaz_default') ? ustazId : null;
 
-        // Strictly enforce numeric combined exam code format (UstazNumber + StudentRosterNumber, e.g. 011, 081)
         if (/^\d+$/.test(cleanInput)) {
-            // 1. If targetUstazId is known, check if cleanInput starts with that Ustaz's examNumber (e.g. 081 -> 08 + 1)
-            if (targetUstazId) {
-                const targetUstaz = await User.findById(targetUstazId).select('_id examNumber name');
-                if (targetUstaz && targetUstaz.examNumber) {
-                    const prefix = targetUstaz.examNumber;
-                    if (cleanInput.startsWith(prefix) && cleanInput.length > prefix.length) {
-                        const rosterStr = cleanInput.slice(prefix.length);
-                        const rosterIndex = parseInt(rosterStr, 10);
-                        if (!isNaN(rosterIndex) && rosterIndex > 0) {
-                            const ustazStudents = await Student.find({
-                                status: 'active',
-                                assignedUstaz: targetUstaz._id
-                            }).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
+            // Fetch all ustazs sorted by createdAt to determine position-based prefixes if needed
+            const allUstazs = await User.find({ role: 'ustaz' }).sort({ createdAt: 1 }).select('_id examNumber name');
 
-                            if (rosterIndex <= ustazStudents.length) {
-                                student = ustazStudents[rosterIndex - 1];
+            // Helper to find a student under an ustaz by roster index
+            const findStudentByRoster = async (uId, rIndex) => {
+                const ustazStudents = await Student.find({
+                    assignedUstaz: uId,
+                    status: { $ne: 'inactive' }
+                }).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
+
+                if (rIndex > 0 && rIndex <= ustazStudents.length) {
+                    return ustazStudents[rIndex - 1];
+                }
+                return null;
+            };
+
+            // 1. If targetUstazId (quiz's Ustaz) is provided, check candidate prefixes for this Ustaz
+            if (targetUstazId) {
+                const uIdx = allUstazs.findIndex(u => u._id.toString() === targetUstazId.toString());
+                const targetUstaz = uIdx !== -1 ? allUstazs[uIdx] : await User.findById(targetUstazId);
+
+                if (targetUstaz) {
+                    const prefixes = new Set();
+                    if (targetUstaz.examNumber) {
+                        prefixes.add(targetUstaz.examNumber);
+                        prefixes.add(String(parseInt(targetUstaz.examNumber, 10)));
+                    }
+                    if (uIdx !== -1) {
+                        const seqNum = uIdx + 1;
+                        prefixes.add(String(seqNum).padStart(2, '0'));
+                        prefixes.add(String(seqNum));
+                    }
+
+                    // Sort prefixes by length descending (e.g. "08" before "8")
+                    const sortedPrefixes = Array.from(prefixes).filter(Boolean).sort((a, b) => b.length - a.length);
+
+                    for (const prefix of sortedPrefixes) {
+                        if (cleanInput.startsWith(prefix) && cleanInput.length > prefix.length) {
+                            const rosterStr = cleanInput.slice(prefix.length);
+                            const rosterIndex = parseInt(rosterStr, 10);
+                            if (!isNaN(rosterIndex) && rosterIndex > 0) {
+                                const found = await findStudentByRoster(targetUstaz._id, rosterIndex);
+                                if (found) {
+                                    student = found;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // 2. If not matched yet, check across ALL ustazs for prefix (e.g. Ustaz 08 + Student 1 -> "081")
+            // 2. If student not found yet (or targetUstazId was not provided), check ALL ustazs
             if (!student) {
-                const allUstazs = await User.find({ role: 'ustaz', isApproved: true, examNumber: { $nin: ['', null] } }).select('_id examNumber name');
-                const sortedUstazs = allUstazs.sort((a, b) => b.examNumber.length - a.examNumber.length);
+                for (let i = 0; i < allUstazs.length; i++) {
+                    const uz = allUstazs[i];
+                    const seqNum = i + 1;
+                    const prefixes = new Set();
+                    if (uz.examNumber) {
+                        prefixes.add(uz.examNumber);
+                        prefixes.add(String(parseInt(uz.examNumber, 10)));
+                    }
+                    prefixes.add(String(seqNum).padStart(2, '0'));
+                    prefixes.add(String(seqNum));
 
-                for (const uz of sortedUstazs) {
-                    const prefix = uz.examNumber;
-                    if (cleanInput.startsWith(prefix) && cleanInput.length > prefix.length) {
-                        const rosterStr = cleanInput.slice(prefix.length);
-                        const rosterIndex = parseInt(rosterStr, 10);
-                        if (!isNaN(rosterIndex) && rosterIndex > 0) {
-                            const ustazStudents = await Student.find({
-                                status: 'active',
-                                assignedUstaz: uz._id
-                            }).sort({ createdAt: 1 }).populate('assignedUstaz', 'name');
+                    const sortedPrefixes = Array.from(prefixes).filter(Boolean).sort((a, b) => b.length - a.length);
 
-                            if (rosterIndex <= ustazStudents.length) {
-                                student = ustazStudents[rosterIndex - 1];
+                    for (const prefix of sortedPrefixes) {
+                        if (cleanInput.startsWith(prefix) && cleanInput.length > prefix.length) {
+                            const rosterStr = cleanInput.slice(prefix.length);
+                            const rosterIndex = parseInt(rosterStr, 10);
+                            if (!isNaN(rosterIndex) && rosterIndex > 0) {
+                                const found = await findStudentByRoster(uz._id, rosterIndex);
+                                if (found) {
+                                    student = found;
+                                    break;
+                                }
                             }
                         }
-                        break;
                     }
+                    if (student) break;
                 }
             }
         }
