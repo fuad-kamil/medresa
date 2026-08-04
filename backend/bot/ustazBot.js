@@ -632,6 +632,8 @@ const handlePollAnswer = async (bot, pollAnswer) => {
         console.error("Failed to save poll attendance:", err);
         await bot.sendMessage(chatId, "❌ በፖል በኩል ክትትል ማስቀመጥ አልተሳካም።\nFailed to save poll attendance.");
     }
+};
+
 let ustazBotInstance = null;
 
 // Helper to send cheating / suspicious activity alerts to Ustaz Telegram Chat
