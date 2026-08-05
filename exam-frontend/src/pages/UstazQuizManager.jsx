@@ -613,164 +613,28 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
     const totalCount = submission.totalQuestions || quiz.questions.length || 0;
 
-    const printWindow = window.open('', '_blank', 'width=850,height=950');
-    if (!printWindow) {
-      toast.error(lang === 'am' ? 'እባክዎን ፖፕአፕ (Pop-up) ያስፈቅዱ' : 'Please allow pop-ups to view PDF');
-      return;
-    }
+    const element = document.createElement('div');
+    element.style.padding = '24px';
+    element.style.fontFamily = "'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', 'Segoe UI', Arial, sans-serif";
+    element.style.color = '#1f2937';
+    element.style.backgroundColor = '#ffffff';
+    element.style.width = '750px';
 
     let contentHtml = `
-      <!DOCTYPE html>
-      <html lang="am">
-      <head>
-        <meta charset="utf-8">
-        <title>${studentName} - ${quizTitle} የፈተና ውጤት</title>
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 12mm 12mm 12mm 12mm;
-          }
-          * {
-            box-sizing: border-box;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          body {
-            font-family: 'Noto Sans Ethiopic', 'Abyssinica SIL', 'Nyala', 'Ethiopic', 'Segoe UI', sans-serif;
-            padding: 20px;
-            color: #1f2937;
-            background: #ffffff;
-            margin: 0;
-            line-height: 1.5;
-          }
-          .header {
-            border-bottom: 3px solid #059669;
-            padding-bottom: 10px;
-            margin-bottom: 18px;
-          }
-          .header h1 {
-            color: #065f46;
-            font-size: 22px;
-            margin: 0 0 4px 0;
-            font-weight: 800;
-          }
-          .header h2 {
-            color: #374151;
-            font-size: 14px;
-            margin: 0;
-            font-weight: 700;
-          }
-          .meta-box {
-            background-color: #f0fdf4;
-            border: 1px solid #a7f3d0;
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-          }
-          .meta-row {
-            font-size: 13.5px;
-            margin-bottom: 5px;
-            color: #1f2937;
-          }
-          .meta-row:last-child {
-            margin-bottom: 0;
-          }
-          .meta-row strong {
-            color: #065f46;
-          }
-          .section-title {
-            color: #111827;
-            border-bottom: 1.5px solid #d1d5db;
-            padding-bottom: 6px;
-            font-size: 14.5px;
-            font-weight: 800;
-            margin-top: 20px;
-            margin-bottom: 14px;
-          }
-          .q-card {
-            border: 1px solid #e5e7eb;
-            padding: 14px 16px;
-            margin-bottom: 14px;
-            border-radius: 10px;
-            background-color: #fafafa;
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-          .q-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-          }
-          .q-title {
-            font-weight: 800;
-            font-size: 13.5px;
-            color: #111827;
-          }
-          .badge-correct {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #34d399;
-            font-size: 10.5px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 800;
-          }
-          .badge-wrong {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #f87171;
-            font-size: 10.5px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 800;
-          }
-          .opt {
-            padding: 7px 10px;
-            margin: 5px 0;
-            border-radius: 6px;
-            font-size: 12.5px;
-          }
-          .opt-correct-student {
-            background-color: #d1fae5;
-            border: 1.5px solid #10b981;
-            font-weight: 800;
-            color: #065f46;
-          }
-          .opt-correct-only {
-            background-color: #ecfdf5;
-            border: 1px dashed #34d399;
-            color: #047857;
-            font-weight: 700;
-          }
-          .opt-wrong-student {
-            background-color: #fee2e2;
-            border: 1.5px solid #ef4444;
-            color: #991b1b;
-            font-weight: 700;
-          }
-          .opt-normal {
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            color: #4b5563;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
-          <h2>የተማሪ የፈተና ውጤት እና የመልስ ወረቀት</h2>
-        </div>
+      <div style="border-bottom: 3px solid #059669; padding-bottom: 12px; margin-bottom: 20px;">
+        <h1 style="color: #065f46; font-size: 24px; margin: 0 0 6px 0; font-weight: 800;">የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
+        <h2 style="color: #1f2937; font-size: 15px; margin: 0; font-weight: 700;">የተማሪ የፈተና ውጤት እና የመልስ ወረቀት</h2>
+      </div>
 
-        <div class="meta-box">
-          <div class="meta-row"><strong>የፈተናው ርዕስ፡</strong> ${quizTitle}</div>
-          <div class="meta-row"><strong>የተማሪው ስም፡</strong> ${studentName}</div>
-          <div class="meta-row"><strong>የውጤት ዓምድ፡</strong> ${quiz.examColumnName || 'የለም'}</div>
-          <div class="meta-row"><strong>የመጨረሻ ውጤት፡</strong> <strong style="color: #047857;">${displayScore} / ${targetMaxScore}</strong> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
-          <div class="meta-row"><strong>የተላከበት ቀን፡</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
-        </div>
+      <div style="background: #f0fdf4; border: 1px solid #a7f3d0; padding: 14px 18px; border-radius: 12px; margin-bottom: 24px;">
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የፈተናው ርዕስ፡</strong> ${quizTitle}</div>
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የተማሪው ስም፡</strong> ${studentName}</div>
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የውጤት ዓምድ፡</strong> ${quiz.examColumnName || 'የለም'}</div>
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የመጨረሻ ውጤት፡</strong> <span style="color: #047857; font-weight: 800;">${displayScore} / ${targetMaxScore}</span> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
+        <div style="font-size: 14px;"><strong>የተላከበት ቀን፡</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
+      </div>
 
-        <div class="section-title">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች፡</div>
+      <h3 style="color: #111827; border-bottom: 1.5px solid #d1d5db; padding-bottom: 8px; font-size: 15px; font-weight: 800; margin-bottom: 16px;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች፡</h3>
     `;
 
     quiz.questions.forEach((q, idx) => {
@@ -778,12 +642,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
 
       contentHtml += `
-        <div class="q-card">
-          <div class="q-header">
-            <span class="q-title">ጥያቄ ${idx + 1}፡ ${q.questionText}</span>
+        <div style="border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 16px; border-radius: 12px; background-color: #fafafa; page-break-inside: avoid;">
+          <div style="font-weight: 800; font-size: 14px; margin-bottom: 10px; color: #111827;">
+            ጥያቄ ${idx + 1}፡ ${q.questionText}
             ${isCorrect 
-              ? '<span class="badge-correct">✅ ትክክል</span>' 
-              : '<span class="badge-wrong">❌ ስህተት</span>'
+              ? '<span style="background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 800; margin-left: 10px;">✅ ትክክል</span>' 
+              : '<span style="background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 800; margin-left: 10px;">❌ ስህተት</span>'
             }
           </div>
           <div>
@@ -793,43 +657,48 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         const isChosen = studentChoiceIdx === optIdx;
         const isCorrectOpt = q.correctOptionIndex === optIdx;
 
-        let optClass = 'opt-normal';
+        let optStyle = 'background-color: #ffffff; border: 1px solid #e5e7eb; color: #4b5563;';
         let badgeText = '';
 
         if (isCorrectOpt && isChosen) {
-          optClass = 'opt-correct-student';
+          optStyle = 'background-color: #d1fae5; border: 1.5px solid #10b981; font-weight: 800; color: #065f46;';
           badgeText = ' — ✅ የተማሪው መልስ (ትክክል)';
         } else if (isCorrectOpt) {
-          optClass = 'opt-correct-only';
+          optStyle = 'background-color: #ecfdf5; border: 1px dashed #34d399; color: #047857; font-weight: 700;';
           badgeText = ' — ✅ ትክክለኛ መልስ';
         } else if (isChosen) {
-          optClass = 'opt-wrong-student';
+          optStyle = 'background-color: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; font-weight: 700;';
           badgeText = ' — ❌ የተማሪው መልስ (ስህተት)';
         }
 
         const optLabel = String.fromCharCode(65 + optIdx);
-        contentHtml += `<div class="opt ${optClass}">${optLabel}) ${opt}${badgeText}</div>`;
+        contentHtml += `<div style="padding: 8px 12px; margin: 6px 0; border-radius: 8px; font-size: 13px; ${optStyle}">${optLabel}) ${opt}${badgeText}</div>`;
       });
 
       contentHtml += `</div></div>`;
     });
 
-    contentHtml += `
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 300);
-          };
-        </script>
-      </body>
-      </html>
-    `;
+    element.innerHTML = contentHtml;
 
-    printWindow.document.open();
-    printWindow.document.write(contentHtml);
-    printWindow.document.close();
-    toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት PDF ተከፍቷል!' : 'Student PDF document generated!');
+    const filename = `${studentName.replace(/\s+/g, '_')}_${quizTitle.replace(/\s+/g, '_')}_Result.pdf`;
+
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: filename,
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { scale: 3, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF...', { id: 'pdf-toast' });
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት PDF በስኬት ወርዷል!' : 'Student PDF downloaded successfully!', { id: 'pdf-toast' });
+    }).catch(err => {
+      console.error('PDF generation error:', err);
+      toast.error('Failed to download PDF.', { id: 'pdf-toast' });
+    });
   };
 
   const downloadAsWord = (quiz) => {
