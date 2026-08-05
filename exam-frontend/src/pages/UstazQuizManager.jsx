@@ -613,78 +613,80 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
     const totalCount = submission.totalQuestions || quiz.questions.length || 0;
 
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.zIndex = '-9999';
-    container.style.pointerEvents = 'none';
-    container.style.width = '750px';
-    container.style.padding = '24px';
-    container.style.fontFamily = "'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', 'Segoe UI', Arial, sans-serif";
-    container.style.color = '#1f2937';
-    container.style.backgroundColor = '#ffffff';
-
-    let contentHtml = `
-      <div style="border-bottom: 3px solid #059669; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="color: #065f46; font-size: 24px; margin: 0 0 6px 0; font-weight: 800;">የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
-        <h2 style="color: #1f2937; font-size: 15px; margin: 0; font-weight: 700;">የተማሪ የፈተና ውጤት እና የመልስ ወረቀት</h2>
-      </div>
-
-      <div style="background: #f0fdf4; border: 1px solid #a7f3d0; padding: 14px 18px; border-radius: 12px; margin-bottom: 24px;">
-        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የፈተናው ርዕስ፡</strong> ${quizTitle}</div>
-        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የተማሪው ስም፡</strong> ${studentName}</div>
-        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የውጤት ዓምድ፡</strong> ${quiz.examColumnName || 'የለም'}</div>
-        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የመጨረሻ ውጤት፡</strong> <span style="color: #047857; font-weight: 800;">${displayScore} / ${targetMaxScore}</span> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
-        <div style="font-size: 14px;"><strong>የተላከበት ቀን፡</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
-      </div>
-
-      <h3 style="color: #111827; border-bottom: 1.5px solid #d1d5db; padding-bottom: 8px; font-size: 15px; font-weight: 800; margin-bottom: 16px;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች፡</h3>
-    `;
-
+    let questionsHtml = '';
     quiz.questions.forEach((q, idx) => {
       const studentChoiceIdx = submission.answers?.[idx];
       const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
 
-      contentHtml += `
-        <div style="border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 16px; border-radius: 12px; background-color: #fafafa; page-break-inside: avoid;">
-          <div style="font-weight: 800; font-size: 14px; margin-bottom: 10px; color: #111827;">
-            ጥያቄ ${idx + 1}፡ ${q.questionText}
-            ${isCorrect 
-              ? '<span style="background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 800; margin-left: 10px;">✅ ትክክል</span>' 
-              : '<span style="background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 800; margin-left: 10px;">❌ ስህተት</span>'
-            }
-          </div>
-          <div>
-      `;
-
+      let optionsHtml = '';
       q.options.forEach((opt, optIdx) => {
         const isChosen = studentChoiceIdx === optIdx;
         const isCorrectOpt = q.correctOptionIndex === optIdx;
-
-        let optStyle = 'background-color: #ffffff; border: 1px solid #e5e7eb; color: #4b5563;';
-        let badgeText = '';
-
+        let bgColor = '#ffffff'; let border = '1px solid #e5e7eb'; let color = '#374151'; let fw = 'normal';
+        let badge = '';
         if (isCorrectOpt && isChosen) {
-          optStyle = 'background-color: #d1fae5; border: 1.5px solid #10b981; font-weight: 800; color: #065f46;';
-          badgeText = ' — ✅ የተማሪው መልስ (ትክክል)';
+          bgColor = '#d1fae5'; border = '2px solid #10b981'; color = '#065f46'; fw = 'bold';
+          badge = '<span style="margin-left:8px;background:#065f46;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px;">✅ ትክክለኛ መልስ</span>';
         } else if (isCorrectOpt) {
-          optStyle = 'background-color: #ecfdf5; border: 1px dashed #34d399; color: #047857; font-weight: 700;';
-          badgeText = ' — ✅ ትክክለኛ መልስ';
+          bgColor = '#ecfdf5'; border = '1px dashed #34d399'; color = '#047857'; fw = 'bold';
+          badge = '<span style="margin-left:8px;background:#047857;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px;">✅ ትክክለኛ</span>';
         } else if (isChosen) {
-          optStyle = 'background-color: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; font-weight: 700;';
-          badgeText = ' — ❌ የተማሪው መልስ (ስህተት)';
+          bgColor = '#fee2e2'; border = '2px solid #ef4444'; color = '#991b1b'; fw = 'bold';
+          badge = '<span style="margin-left:8px;background:#991b1b;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px;">❌ ስህተት</span>';
         }
-
-        const optLabel = String.fromCharCode(65 + optIdx);
-        contentHtml += `<div style="padding: 8px 12px; margin: 6px 0; border-radius: 8px; font-size: 13px; ${optStyle}">${optLabel}) ${opt}${badgeText}</div>`;
+        const label = String.fromCharCode(65 + optIdx);
+        optionsHtml += `<div style="padding:8px 12px;margin:5px 0;border-radius:6px;background:${bgColor};border:${border};color:${color};font-weight:${fw};font-size:13px;">${label}) ${opt}${badge}</div>`;
       });
 
-      contentHtml += `</div></div>`;
+      const statusBadge = isCorrect
+        ? '<span style="background:#065f46;color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;">✅ ትክክል</span>'
+        : '<span style="background:#991b1b;color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;">❌ ስህተት</span>';
+
+      questionsHtml += `
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:14px;background:#fafafa;page-break-inside:avoid;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div style="font-weight:bold;font-size:14px;color:#111827;flex:1;padding-right:10px;">ጥያቄ ${idx + 1}፡ ${q.questionText}</div>
+            ${statusBadge}
+          </div>
+          ${optionsHtml}
+        </div>`;
     });
 
-    container.innerHTML = contentHtml;
-    document.body.appendChild(container);
+    const fullHtml = `<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', Arial, sans-serif;
+      background: #ffffff;
+      color: #1f2937;
+      padding: 28px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div style="border-bottom:3px solid #059669;padding-bottom:14px;margin-bottom:22px;">
+    <h1 style="color:#065f46;font-size:22px;font-weight:900;margin-bottom:4px;">የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
+    <h2 style="color:#374151;font-size:14px;font-weight:700;">የተማሪ የፈተና ውጤት እና የመልስ ወረቀት</h2>
+  </div>
+
+  <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:14px 18px;margin-bottom:22px;">
+    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የፈተናው ርዕስ፡</strong> ${quizTitle}</div>
+    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የተማሪው ስም፡</strong> ${studentName}</div>
+    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የውጤት ዓምድ፡</strong> ${quiz.examColumnName || 'የለም'}</div>
+    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የመጨረሻ ውጤት፡</strong> <strong style="color:#047857;font-size:16px;">${displayScore} / ${targetMaxScore}</strong> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
+    <div><strong style="color:#065f46;">የተላከበት ቀን፡</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
+  </div>
+
+  <h3 style="color:#111827;border-bottom:1.5px solid #d1d5db;padding-bottom:8px;margin-bottom:16px;font-size:15px;font-weight:900;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች፡</h3>
+  ${questionsHtml}
+</body>
+</html>`;
 
     const safeStudentName = studentName.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
     const safeQuizTitle = quizTitle.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
@@ -694,30 +696,17 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       margin: [10, 10, 10, 10],
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true, 
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 800
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF file...', { id: 'pdf-toast' });
+    toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF...', { id: 'pdf-toast' });
 
-    html2pdf().set(opt).from(container).save().then(() => {
-      toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት PDF ፋይል በስኬት ወርዷል!' : 'PDF file downloaded directly!', { id: 'pdf-toast' });
+    html2pdf().set(opt).from(fullHtml, 'string').save().then(() => {
+      toast.success(lang === 'am' ? 'PDF ፋይሉ በስኬት ወርዷል!' : 'PDF downloaded!', { id: 'pdf-toast' });
     }).catch(err => {
-      console.error('PDF generation error:', err);
-      toast.error('Failed to download PDF file.', { id: 'pdf-toast' });
-    }).finally(() => {
-      if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
+      console.error('PDF error:', err);
+      toast.error('PDF download failed.', { id: 'pdf-toast' });
     });
   };
 
