@@ -622,32 +622,39 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       q.options.forEach((opt, optIdx) => {
         const isChosen = studentChoiceIdx === optIdx;
         const isCorrectOpt = q.correctOptionIndex === optIdx;
-        let bgColor = '#ffffff'; let border = '1px solid #e5e7eb'; let color = '#374151'; let fw = 'normal';
-        let badge = '';
+        let bgColor = '#ffffff';
+        let border = '1px solid #e5e7eb';
+        let color = '#374151';
+        let fw = 'normal';
+        let noteLine = '';
+
         if (isCorrectOpt && isChosen) {
           bgColor = '#d1fae5'; border = '2px solid #10b981'; color = '#065f46'; fw = 'bold';
-          badge = '<span style="margin-left:8px;background:#065f46;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px;">✅ ትክክለኛ መልስ</span>';
+          noteLine = '<div style="font-size:11px;color:#065f46;margin-top:3px;font-weight:bold;">&#9989; ትክክለኛ መልስ - የተማሪው ምርጫ</div>';
         } else if (isCorrectOpt) {
-          bgColor = '#ecfdf5'; border = '1px dashed #34d399'; color = '#047857'; fw = 'bold';
-          badge = '<span style="margin-left:8px;background:#047857;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px;">✅ ትክክለኛ</span>';
+          bgColor = '#ecfdf5'; border = '1px solid #34d399'; color = '#047857'; fw = 'bold';
+          noteLine = '<div style="font-size:11px;color:#047857;margin-top:3px;font-weight:bold;">&#9989; ትክክለኛ መልስ</div>';
         } else if (isChosen) {
           bgColor = '#fee2e2'; border = '2px solid #ef4444'; color = '#991b1b'; fw = 'bold';
-          badge = '<span style="margin-left:8px;background:#991b1b;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px;">❌ ስህተት</span>';
+          noteLine = '<div style="font-size:11px;color:#991b1b;margin-top:3px;font-weight:bold;">&#10060; የተማሪው ምርጫ - ስህተት</div>';
         }
+
         const label = String.fromCharCode(65 + optIdx);
-        optionsHtml += `<div style="padding:8px 12px;margin:5px 0;border-radius:6px;background:${bgColor};border:${border};color:${color};font-weight:${fw};font-size:13px;">${label}) ${opt}${badge}</div>`;
+        optionsHtml += `<div style="padding:8px 12px;margin:5px 0;border-radius:6px;background:${bgColor};border:${border};color:${color};font-weight:${fw};font-size:13px;">${label}) ${opt}${noteLine}</div>`;
       });
 
-      const statusBadge = isCorrect
-        ? '<span style="background:#065f46;color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;">✅ ትክክል</span>'
-        : '<span style="background:#991b1b;color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;">❌ ስህተት</span>';
+      const statusLabel = isCorrect
+        ? '<span style="color:#065f46;font-weight:bold;font-size:12px;">&#9989; ትክክል</span>'
+        : '<span style="color:#991b1b;font-weight:bold;font-size:12px;">&#10060; ስህተት</span>';
 
       questionsHtml += `
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:14px;background:#fafafa;page-break-inside:avoid;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-            <div style="font-weight:bold;font-size:14px;color:#111827;flex:1;padding-right:10px;">ጥያቄ ${idx + 1}፡ ${q.questionText}</div>
-            ${statusBadge}
-          </div>
+        <div style="border:1px solid #d1d5db;border-radius:8px;padding:14px 14px 10px 14px;margin-bottom:14px;background:#f9fafb;page-break-inside:avoid;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:10px;">
+            <tr>
+              <td style="font-weight:bold;font-size:14px;color:#111827;padding-right:10px;">ጥያቄ ${idx + 1}፡ ${q.questionText}</td>
+              <td width="80" style="text-align:right;vertical-align:top;white-space:nowrap;">${statusLabel}</td>
+            </tr>
+          </table>
           ${optionsHtml}
         </div>`;
     });
