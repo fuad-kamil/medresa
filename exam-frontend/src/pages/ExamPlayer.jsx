@@ -600,34 +600,48 @@ export default function ExamPlayer({ quizId, student }) {
           const qType = q.questionType || 'multiple_choice';
           const isAnswered = isQuestionAnswered(q, qIdx);
           return (
-            <div
-              id={`question-card-${qIdx}`}
-              key={q._id || qIdx}
-              className={`rounded-3xl p-6 border transition-all ${
-                isAnswered
-                  ? (isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200 shadow-xs')
-                  : (isDark ? 'bg-gray-900 border-amber-500/60 ring-2 ring-amber-500/20' : 'bg-white border-amber-300 ring-2 ring-amber-100')
-              }`}
-            >
-              <div className="flex items-start space-x-3 mb-4">
-                <span className={`font-bold px-3 py-1 rounded-xl text-sm border shrink-0 ${
-                  isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-800 border-emerald-200/50'
+            <React.Fragment key={q._id || qIdx}>
+              {q.sectionTitle && (
+                <div className={`p-4 rounded-2xl border font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs mt-4 mb-2 ${
+                  isDark
+                    ? 'bg-emerald-950/50 border-emerald-800 text-emerald-300'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 }`}>
-                  {t('questionLabel')} {qIdx + 1}
-                </span>
-                {(qType === 'short_answer' || qType === 'fill_blank') && (
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border shrink-0 ${
-                    qType === 'fill_blank'
-                      ? (isDark ? 'bg-purple-950 text-purple-300 border-purple-800' : 'bg-purple-100 text-purple-800 border-purple-200')
-                      : (isDark ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-blue-100 text-blue-800 border-blue-200')
-                  }`}>
-                    {qType === 'fill_blank' ? t('fillBlankLabel') : t('shortAnswerLabel')}
-                  </span>
-                )}
-                <h3 className={`text-base font-semibold pt-0.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {q.questionText}
-                </h3>
-              </div>
+                  <span className="text-base">📌</span>
+                  <span>{q.sectionTitle}</span>
+                </div>
+              )}
+
+              <div
+                id={`question-card-${qIdx}`}
+                className={`rounded-3xl p-5 sm:p-6 border transition-all space-y-4 ${
+                  isAnswered
+                    ? (isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200 shadow-xs')
+                    : (isDark ? 'bg-gray-900 border-amber-500/60 ring-2 ring-amber-500/20' : 'bg-white border-amber-300 ring-2 ring-amber-100')
+                }`}
+              >
+                {/* Header: Badges on top row, Question text full width below */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`font-bold px-3 py-1 rounded-xl text-xs sm:text-sm border ${
+                      isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-800 border-emerald-200/50'
+                    }`}>
+                      {t('questionLabel')} {qIdx + 1}
+                    </span>
+                    {(qType === 'short_answer' || qType === 'fill_blank') && (
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                        qType === 'fill_blank'
+                          ? (isDark ? 'bg-purple-950 text-purple-300 border-purple-800' : 'bg-purple-100 text-purple-800 border-purple-200')
+                          : (isDark ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-blue-100 text-blue-800 border-blue-200')
+                      }`}>
+                        {qType === 'fill_blank' ? t('fillBlankLabel') : t('shortAnswerLabel')}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className={`text-base sm:text-lg font-bold leading-relaxed w-full block ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {q.questionText}
+                  </h3>
+                </div>
 
               {/* Multiple Choice */}
               {qType === 'multiple_choice' && (
@@ -684,8 +698,9 @@ export default function ExamPlayer({ quizId, student }) {
                 </div>
               )}
             </div>
-          );
-        })}
+          </React.Fragment>
+        );
+      })}
 
         {/* Submit Button */}
         <div className="pt-4 flex justify-end">

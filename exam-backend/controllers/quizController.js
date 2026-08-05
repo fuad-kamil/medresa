@@ -57,9 +57,11 @@ export const createQuiz = async (req, res) => {
 
     const cleanedQuestions = questions.map(q => {
       const qType = q.questionType || 'multiple_choice';
+      const sectionTitle = String(q.sectionTitle || '').trim();
       if (qType === 'short_answer' || qType === 'fill_blank') {
         return {
           questionType: qType,
+          sectionTitle,
           questionText: String(q.questionText || '').trim(),
           options: [],
           correctOptionIndex: null
@@ -67,6 +69,7 @@ export const createQuiz = async (req, res) => {
       }
       return {
         questionType: 'multiple_choice',
+        sectionTitle,
         questionText: String(q.questionText || '').trim(),
         options: (q.options || []).map(opt => String(opt || '').trim()).filter(Boolean),
         correctOptionIndex: Number(q.correctOptionIndex) || 0
@@ -149,6 +152,7 @@ export const getQuizForStudent = async (req, res) => {
       _id: q._id,
       index: idx,
       questionType: q.questionType || 'multiple_choice',
+      sectionTitle: q.sectionTitle || '',
       questionText: q.questionText,
       options: q.options
     }));

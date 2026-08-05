@@ -250,25 +250,36 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const parsed = [];
     let currentQ = null;
+    let currentSectionTitle = '';
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      // Check if it is a question: e.g. starts with "1. ", "1) ", "Question 1:", etc.
+      const isSectionHeader = line.match(/^(ክፍል|Section|Part|===)\s*.*$/i);
       const isQuestionStart = line.match(/^(\d+)[\.\)]\s+(.+)$/) || line.match(/^(Q\d+|Question\s*\d+)[\:\.]\s*(.+)$/i);
-      
-      // Check if it is an option: e.g. "A) ...", "B. ...", "A - ...", "1) ..."
       const optionMatch = line.match(/^([A-D])[\)\.\:-]\s*(.+)$/i) || line.match(/^([1-4])\)\s*(.+)$/);
 
+      if (isSectionHeader && !isQuestionStart && !optionMatch) {
+        if (currentQ && currentQ.questionText) {
+          parsed.push(currentQ);
+          currentQ = null;
+        }
+        currentSectionTitle = line.replace(/^=+\s*/, '').replace(/\s*=+\s*$/, '').trim();
+        continue;
+      }
+
       if (isQuestionStart) {
-        if (currentQ && currentQ.questionText && currentQ.options.length >= 2) {
+        if (currentQ && currentQ.questionText) {
           parsed.push(currentQ);
         }
         currentQ = {
+          sectionTitle: currentSectionTitle,
+          questionType: 'multiple_choice',
           questionText: isQuestionStart[2].trim(),
           options: [],
           correctOptionIndex: 0
         };
+        currentSectionTitle = '';
       } else if (currentQ) {
         let optText = line;
         let isCorrect = false;
@@ -298,7 +309,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       }
     }
 
-    if (currentQ && currentQ.questionText && currentQ.options.length >= 2) {
+    if (currentQ && currentQ.questionText) {
       parsed.push(currentQ);
     }
 
@@ -374,8 +385,14 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const handleAddQuestion = () => {
     setQuestions([
       ...questions,
-      { questionType: 'multiple_choice', questionText: '', options: ['', ''], correctOptionIndex: 0 }
+      { sectionTitle: '', questionType: 'multiple_choice', questionText: '', options: ['', ''], correctOptionIndex: 0 }
     ]);
+  };
+
+  const handleSectionTitleChange = (qIndex, value) => {
+    const updated = [...questions];
+    updated[qIndex].sectionTitle = value;
+    setQuestions(updated);
   };
 
   const handleRemoveQuestion = (qIndex) => {
@@ -473,6 +490,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         hasTimer: Boolean(hasTimer),
         durationMinutes: hasTimer ? Number(durationMinutes) : 0,
         questions: questions.map(q => ({
+          sectionTitle: q.sectionTitle ? q.sectionTitle.trim() : '',
           questionType: q.questionType || 'multiple_choice',
           questionText: q.questionText.trim(),
           options: (q.questionType === 'short_answer' || q.questionType === 'fill_blank')
@@ -1440,8 +1458,24 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                           )}
                         </div>
 
+                        {/* Section Header / Title Input (Optional) */}
+                        <div className="space-y-1">
+                          <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                            {lang === 'am' ? '📌 የክፍል ርዕስ (አማራጭ)' : '📌 Section Title / Header (Optional)'}
+                          </label>
+                          <input
+                            type="text"
+                            value={q.sectionTitle || ''}
+                            onChange={(e) => handleSectionTitleChange(qIdx, e.target.value)}
+                            placeholder={lang === 'am' ? 'ምሳሌ፡ ክፍል ሦስት፡ አጭር መልስ ይጻፉ' : 'e.g. Section 2: Write short answers'}
+                            className={`w-full p-2 rounded-xl border text-xs ${
+                              isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                            }`}
+                          />
+                        </div>
+
                         {/* Question Type Selector */}
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-2 flex-wrap pt-1">
                           {[
                             { value: 'multiple_choice', label: lang === 'am' ? '🔵 ምርጫ' : '🔵 Multiple Choice' },
                             { value: 'short_answer',   label: lang === 'am' ? '✏️ ጭብጥ መልስ' : '✏️ Short Answer' },

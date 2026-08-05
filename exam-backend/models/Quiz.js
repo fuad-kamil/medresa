@@ -6,6 +6,7 @@ const questionSchema = new mongoose.Schema({
     enum: ['multiple_choice', 'short_answer', 'fill_blank'],
     default: 'multiple_choice'
   },
+  sectionTitle: { type: String, default: '' },
   questionText: { type: String, required: true },
   options: [{ type: String }],
   correctOptionIndex: { type: Number, default: null }
