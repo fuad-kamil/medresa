@@ -710,6 +710,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       setSubmissions(prev => prev.map(sub => sub._id === selectedStudentHistory._id ? {
         ...sub,
         score: data.newScore,
+        correctAnswers: data.correctAnswers !== undefined ? data.correctAnswers : sub.correctAnswers,
         manualGradeStatus: 'graded',
         openAnswerScores: openScoresArray
       } : sub));
@@ -718,6 +719,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         ...prev,
         score: data.newScore,
         displayScore: data.newScore,
+        correctAnswers: data.correctAnswers !== undefined ? data.correctAnswers : prev.correctAnswers,
         manualGradeStatus: 'graded',
         openAnswerScores: openScoresArray
       }));

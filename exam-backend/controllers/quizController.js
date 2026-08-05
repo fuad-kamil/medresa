@@ -554,6 +554,7 @@ export const gradeOpenAnswers = async (req, res) => {
 
     // Calculate weighted scores for MCQ and Open questions
     let mcqCorrect = 0;
+    let openCorrect = 0;
     let earnedPoints = 0;
     let totalQuizPoints = 0;
 
@@ -572,6 +573,9 @@ export const gradeOpenAnswers = async (req, res) => {
       } else {
         const openScore = Number(openAnswerScores[openCounter]) || 0;
         earnedPoints += Math.min(qMarks, Math.max(0, openScore));
+        if (openScore > 0) {
+          openCorrect++;
+        }
         openCounter++;
       }
     });
@@ -583,7 +587,7 @@ export const gradeOpenAnswers = async (req, res) => {
 
     submission.openAnswerScores = openAnswerScores;
     submission.score = Math.min(newScore, quiz.maxScore);
-    submission.correctAnswers = mcqCorrect;
+    submission.correctAnswers = mcqCorrect + openCorrect;
     submission.manualGradeStatus = 'graded';
     await submission.save();
 
@@ -612,7 +616,12 @@ export const gradeOpenAnswers = async (req, res) => {
       }
     }
 
-    res.json({ success: true, newScore: submission.score, manualGradeStatus: 'graded' });
+    res.json({
+      success: true,
+      newScore: submission.score,
+      correctAnswers: submission.correctAnswers,
+      manualGradeStatus: 'graded'
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
