@@ -58,10 +58,12 @@ export const createQuiz = async (req, res) => {
     const cleanedQuestions = questions.map(q => {
       const qType = q.questionType || 'multiple_choice';
       const sectionTitle = String(q.sectionTitle || '').trim();
+      const marks = Number(q.marks) > 0 ? Number(q.marks) : 1;
       if (qType === 'short_answer' || qType === 'fill_blank') {
         return {
           questionType: qType,
           sectionTitle,
+          marks,
           questionText: String(q.questionText || '').trim(),
           options: [],
           correctOptionIndex: null
@@ -70,6 +72,7 @@ export const createQuiz = async (req, res) => {
       return {
         questionType: 'multiple_choice',
         sectionTitle,
+        marks,
         questionText: String(q.questionText || '').trim(),
         options: (q.options || []).map(opt => String(opt || '').trim()).filter(Boolean),
         correctOptionIndex: Number(q.correctOptionIndex) || 0
@@ -153,6 +156,7 @@ export const getQuizForStudent = async (req, res) => {
       index: idx,
       questionType: q.questionType || 'multiple_choice',
       sectionTitle: q.sectionTitle || '',
+      marks: q.marks || 1,
       questionText: q.questionText,
       options: q.options
     }));
@@ -228,11 +232,14 @@ export const submitQuiz = async (req, res) => {
 
     // Grade student answers & build detailed question breakdown
     let correctCount = 0;
-    let mcqTotal = 0;
-    const hasOpenQuestions = quiz.questions.some(q => q.questionType === 'short_answer' || q.questionType === 'fill_blank');
+    let earnedPoints = 0;
+    let totalQuizPoints = 0;
+    const hasOpenQuestions = quiz.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice');
 
     const breakdown = quiz.questions.map((q, idx) => {
       const qType = q.questionType || 'multiple_choice';
+      const qMarks = q.marks || 1;
+      totalQuizPoints += qMarks;
       const studentAnswer = answers[idx];
 
       if (qType === 'short_answer' || qType === 'fill_blank') {
@@ -240,6 +247,7 @@ export const submitQuiz = async (req, res) => {
           questionNumber: idx + 1,
           questionType: qType,
           questionText: q.questionText,
+          marks: qMarks,
           options: [],
           studentOpenAnswer: typeof studentAnswer === 'string' ? studentAnswer : '',
           isCorrect: null, // will be manually graded
@@ -248,15 +256,18 @@ export const submitQuiz = async (req, res) => {
       }
 
       // MCQ
-      mcqTotal++;
       const studentChoiceIdx = typeof studentAnswer === 'number' ? studentAnswer : -1;
       const isCorrect = studentChoiceIdx >= 0 && studentChoiceIdx === q.correctOptionIndex;
-      if (isCorrect) correctCount++;
+      if (isCorrect) {
+        correctCount++;
+        earnedPoints += qMarks;
+      }
 
       return {
         questionNumber: idx + 1,
         questionType: 'multiple_choice',
         questionText: q.questionText,
+        marks: qMarks,
         options: q.options,
         studentChoiceIndex: studentChoiceIdx,
         studentChoiceText: (studentChoiceIdx >= 0) ? (q.options[studentChoiceIdx] || 'Not Answered') : 'Not Answered',
@@ -267,13 +278,9 @@ export const submitQuiz = async (req, res) => {
     });
 
     const totalQuestions = quiz.questions.length;
-    // Score only MCQ portion for now; open questions start at 0 until Ustaz grades
-    const mcqScore = mcqTotal > 0
-      ? Math.round((correctCount / mcqTotal) * (mcqTotal / totalQuestions) * quiz.maxScore)
+    const finalScore = totalQuizPoints > 0
+      ? Math.round((earnedPoints / totalQuizPoints) * quiz.maxScore)
       : 0;
-    const finalScore = hasOpenQuestions ? mcqScore : (
-      totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * quiz.maxScore) : 0
-    );
 
     // Save submission to MongoDB BEFORE responding!
     const submission = new QuizSubmission({
@@ -542,32 +549,33 @@ export const gradeOpenAnswers = async (req, res) => {
     const submission = await QuizSubmission.findById(submissionId);
     if (!submission) return res.status(404).json({ message: 'Submission not found.' });
 
-    // Calculate MCQ score portion
+    // Calculate weighted scores for MCQ and Open questions
     let mcqCorrect = 0;
-    let mcqTotal = 0;
+    let earnedPoints = 0;
+    let totalQuizPoints = 0;
+
+    let openCounter = 0;
     quiz.questions.forEach((q, idx) => {
       const qType = q.questionType || 'multiple_choice';
+      const qMarks = q.marks || 1;
+      totalQuizPoints += qMarks;
+
       if (qType === 'multiple_choice') {
-        mcqTotal++;
         const studentChoice = submission.answers[idx];
         if (typeof studentChoice === 'number' && studentChoice === q.correctOptionIndex) {
           mcqCorrect++;
+          earnedPoints += qMarks;
         }
+      } else {
+        const openScore = Number(openAnswerScores[openCounter]) || 0;
+        earnedPoints += Math.min(qMarks, Math.max(0, openScore));
+        openCounter++;
       }
     });
 
-    // Sum open answer scores provided by Ustaz
-    const openTotal = openAnswerScores.reduce((sum, s) => sum + (Number(s) || 0), 0);
-    const openCount = quiz.questions.filter(q => q.questionType === 'short_answer' || q.questionType === 'fill_blank').length;
-    const totalQuestions = quiz.questions.length;
-
-    // Recalculate full score
     let newScore = 0;
-    if (totalQuestions > 0) {
-      const mcqShare = mcqTotal > 0 ? (mcqCorrect / mcqTotal) * (mcqTotal / totalQuestions) * quiz.maxScore : 0;
-      const openShare = openCount > 0 ? (openTotal / (openCount * 10)) * (openCount / totalQuestions) * quiz.maxScore : 0;
-      // openTotal assumes each open question is scored /10 by ustaz; adjust proportionally
-      newScore = Math.round(mcqShare + openShare);
+    if (totalQuizPoints > 0) {
+      newScore = Math.round((earnedPoints / totalQuizPoints) * quiz.maxScore);
     }
 
     submission.openAnswerScores = openAnswerScores;

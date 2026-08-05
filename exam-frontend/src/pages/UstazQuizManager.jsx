@@ -245,12 +245,18 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Grading State for Short Answer / Fill in Blank
+  const [gradingScores, setGradingScores] = useState({});
+  const [submittingGrading, setSubmittingGrading] = useState(false);
+
   const parseRawTextToQuestions = (text) => {
     if (!text || !text.trim()) return [];
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const parsed = [];
     let currentQ = null;
     let currentSectionTitle = '';
+    let currentSectionMarks = 1;
+    let currentSectionType = 'multiple_choice';
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -265,6 +271,21 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           currentQ = null;
         }
         currentSectionTitle = line.replace(/^=+\s*/, '').replace(/\s*=+\s*$/, '').trim();
+
+        // Extract marks from section header e.g. "(2 ነጥብ)" or "(5 marks)"
+        const marksMatch = line.match(/\((\d+)\s*(ነጥብ|mark|marks|pt|pts)\)/i) || line.match(/(\d+)\s*(ነጥብ|mark|marks|pt|pts)/i);
+        if (marksMatch) {
+          currentSectionMarks = Number(marksMatch[1]) || 1;
+        }
+
+        // Extract type from section header
+        if (line.match(/(አጭር|short)/i)) {
+          currentSectionType = 'short_answer';
+        } else if (line.match(/(ክፍተት|fill|blank)/i)) {
+          currentSectionType = 'fill_blank';
+        } else {
+          currentSectionType = 'multiple_choice';
+        }
         continue;
       }
 
@@ -272,10 +293,18 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         if (currentQ && currentQ.questionText) {
           parsed.push(currentQ);
         }
+
+        const qText = isQuestionStart[2].trim();
+        let qType = currentSectionType;
+        if (qText.includes('___')) {
+          qType = 'fill_blank';
+        }
+
         currentQ = {
           sectionTitle: currentSectionTitle,
-          questionType: 'multiple_choice',
-          questionText: isQuestionStart[2].trim(),
+          marks: currentSectionMarks || 1,
+          questionType: qType,
+          questionText: qText,
           options: [],
           correctOptionIndex: 0
         };
@@ -312,6 +341,15 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     if (currentQ && currentQ.questionText) {
       parsed.push(currentQ);
     }
+
+    // Final clean-up: if question has no options and type was multiple_choice, switch to short_answer
+    parsed.forEach(q => {
+      if (q.questionType === 'multiple_choice' && q.options.length < 2) {
+        q.questionType = 'short_answer';
+        q.options = [];
+        q.correctOptionIndex = null;
+      }
+    });
 
     return parsed;
   };
@@ -383,15 +421,30 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   };
 
   const handleAddQuestion = () => {
+    const lastQ = questions[questions.length - 1];
     setQuestions([
       ...questions,
-      { sectionTitle: '', questionType: 'multiple_choice', questionText: '', options: ['', ''], correctOptionIndex: 0 }
+      {
+        sectionTitle: '',
+        marks: lastQ ? (lastQ.marks || 1) : 1,
+        questionType: lastQ ? (lastQ.questionType || 'multiple_choice') : 'multiple_choice',
+        questionText: '',
+        options: ['', ''],
+        correctOptionIndex: 0
+      }
     ]);
   };
 
   const handleSectionTitleChange = (qIndex, value) => {
     const updated = [...questions];
     updated[qIndex].sectionTitle = value;
+    setQuestions(updated);
+  };
+
+  const handleMarksChange = (qIndex, value) => {
+    const updated = [...questions];
+    const val = Number(value) > 0 ? Number(value) : 1;
+    updated[qIndex].marks = val;
     setQuestions(updated);
   };
 
@@ -491,6 +544,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         durationMinutes: hasTimer ? Number(durationMinutes) : 0,
         questions: questions.map(q => ({
           sectionTitle: q.sectionTitle ? q.sectionTitle.trim() : '',
+          marks: Number(q.marks) > 0 ? Number(q.marks) : 1,
           questionType: q.questionType || 'multiple_choice',
           questionText: q.questionText.trim(),
           options: (q.questionType === 'short_answer' || q.questionType === 'fill_blank')
@@ -604,11 +658,67 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
             const data = await res.json();
             toast.error(data.message || 'Failed to allow retake.');
           }
-        } catch (e) {
-          toast.error('Failed to clear student score.');
+  const handleOpenStudentHistory = (s, quiz, targetMaxScore, displayScore) => {
+    const initialScores = {};
+    if (quiz && quiz.questions) {
+      let openCounter = 0;
+      quiz.questions.forEach((q, idx) => {
+        const qType = q.questionType || 'multiple_choice';
+        if (qType === 'short_answer' || qType === 'fill_blank') {
+          const existing = s.openAnswerScores?.[openCounter];
+          initialScores[idx] = existing !== undefined ? existing : 10;
+          openCounter++;
         }
-      }
-    });
+      });
+    }
+    setGradingScores(initialScores);
+    setSelectedStudentHistory({ ...s, displayScore, targetMaxScore });
+  };
+
+  const handleSaveGrading = async () => {
+    if (!selectedStudentHistory || !selectedSubmissionQuiz) return;
+
+    const openQIndices = selectedSubmissionQuiz.questions
+      .map((q, idx) => ({ q, idx }))
+      .filter(({ q }) => (q.questionType || 'multiple_choice') !== 'multiple_choice');
+
+    const openScoresArray = openQIndices.map(({ idx }) => Number(gradingScores[idx] ?? 10));
+
+    try {
+      setSubmittingGrading(true);
+      const res = await fetch(`${EXAM_API_URL}/quizzes/${selectedSubmissionQuiz._id}/grade-open`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submissionId: selectedStudentHistory._id,
+          openAnswerScores: openScoresArray
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to save grade.');
+
+      toast.success(lang === 'am' ? 'ውጤቱ በስኬት ተመዝግቧል!' : 'Grade saved & total score updated!');
+
+      setSubmissions(prev => prev.map(sub => sub._id === selectedStudentHistory._id ? {
+        ...sub,
+        score: data.newScore,
+        manualGradeStatus: 'graded',
+        openAnswerScores: openScoresArray
+      } : sub));
+
+      setSelectedStudentHistory(prev => ({
+        ...prev,
+        score: data.newScore,
+        displayScore: data.newScore,
+        manualGradeStatus: 'graded',
+        openAnswerScores: openScoresArray
+      }));
+    } catch (err) {
+      toast.error(err.message || 'Failed to save grade.');
+    } finally {
+      setSubmittingGrading(false);
+    }
   };
 
   const handleAddTime = async (quizId, minutes) => {
@@ -1145,9 +1255,9 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                           <td className="p-3 text-center">
                             <div className="flex gap-1.5 justify-center items-center">
                               <button
-                                onClick={() => setSelectedStudentHistory({ ...s, displayScore, targetMaxScore })}
+                                onClick={() => handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
-                                title="View Student's Question & Answer History"
+                                title="View Student's Question & Answer History & Grade Answers"
                               >
                                 <span>👁️</span>
                                 <span>{t('history')}</span>
@@ -1265,20 +1375,89 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
                       <p className={`font-bold text-sm mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{q.questionText}</p>
 
-                      {/* Open question: show typed answer */}
+                      {/* Open question: show typed answer + grading controls */}
                       {isOpen ? (
-                        <div className={`p-3 rounded-xl border text-sm ${
-                          isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
-                        }`}>
-                          <span className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {lang === 'am' ? 'የተማሪው መልስ:' : "Student's Answer:"}
-                          </span>
-                          <p className="leading-relaxed">
-                            {(typeof studentAnswer === 'string' && studentAnswer.trim())
-                              ? studentAnswer
-                              : <em className={isDark ? 'text-gray-500' : 'text-gray-400'}>{lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>
-                            }
-                          </p>
+                        <div className="space-y-3">
+                          <div className={`p-3 rounded-xl border text-sm ${
+                            isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
+                          }`}>
+                            <span className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {lang === 'am' ? 'የተማሪው መልስ:' : "Student's Answer:"}
+                            </span>
+                            <p className="leading-relaxed font-medium">
+                              {(typeof studentAnswer === 'string' && studentAnswer.trim())
+                                ? studentAnswer
+                                : <em className={isDark ? 'text-gray-500' : 'text-gray-400'}>{lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>
+                              }
+                            </p>
+                          </div>
+
+                          {/* Ustaz Manual Score Input */}
+                          {(() => {
+                            const maxQMarks = q.marks || 1;
+                            const halfQMarks = Math.round(maxQMarks / 2);
+                            const currentScore = gradingScores[qIdx] !== undefined ? gradingScores[qIdx] : maxQMarks;
+
+                            return (
+                              <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 ${
+                                isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
+                              }`}>
+                                <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  {lang === 'am' ? `ለዚህ ጥያቄ የተሰጠ ነጥብ (ከ ${maxQMarks}):` : `Score for this question (out of ${maxQMarks}):`}
+                                </span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 0 }))}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                                      currentScore === 0
+                                        ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                                        : (isDark ? 'bg-gray-900 text-red-400 border-red-900/50 hover:bg-red-950' : 'bg-white text-red-700 border-red-200 hover:bg-red-50')
+                                    }`}
+                                  >
+                                    ❌ 0
+                                  </button>
+                                  {maxQMarks > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: halfQMarks }))}
+                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                                        currentScore === halfQMarks
+                                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                          : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
+                                      }`}
+                                    >
+                                      🟡 {halfQMarks}
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: maxQMarks }))}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                                      currentScore === maxQMarks
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                        : (isDark ? 'bg-gray-900 text-emerald-400 border-emerald-900/50 hover:bg-emerald-950' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50')
+                                    }`}
+                                  >
+                                    ✅ {maxQMarks}
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={maxQMarks}
+                                    value={currentScore}
+                                    onChange={(e) => {
+                                      const val = Math.min(maxQMarks, Math.max(0, Number(e.target.value) || 0));
+                                      setGradingScores(prev => ({ ...prev, [qIdx]: val }));
+                                    }}
+                                    className={`w-14 p-1 text-center font-bold text-xs rounded-lg border focus:ring-1 focus:ring-emerald-500 ${
+                                      isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       ) : (
                         <div className="space-y-1.5 text-xs">
@@ -1320,6 +1499,24 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                 })}
               </div>
 
+              {/* Save Grade Button (if quiz has open questions) */}
+              {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                <div className={`pt-4 mt-4 border-t flex items-center justify-between gap-3 ${
+                  isDark ? 'border-gray-800' : 'border-gray-200'
+                }`}>
+                  <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {lang === 'am' ? '💡 የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ "ውጤት መዝግብ" የሚለውን ይጫኑ።' : '💡 Select scores for open questions above and click Save Grade.'}
+                  </p>
+                  <button
+                    onClick={handleSaveGrading}
+                    disabled={submittingGrading}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+                  >
+                    <span>💾</span>
+                    <span>{submittingGrading ? (lang === 'am' ? 'እየተመዘገበ ነው...' : 'Saving Grade...') : (lang === 'am' ? 'ውጤት መዝግብ እና አዘምን' : 'Save Grade & Update Score')}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1458,20 +1655,37 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                           )}
                         </div>
 
-                        {/* Section Header / Title Input (Optional) */}
-                        <div className="space-y-1">
-                          <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                            {lang === 'am' ? '📌 የክፍል ርዕስ (አማራጭ)' : '📌 Section Title / Header (Optional)'}
-                          </label>
-                          <input
-                            type="text"
-                            value={q.sectionTitle || ''}
-                            onChange={(e) => handleSectionTitleChange(qIdx, e.target.value)}
-                            placeholder={lang === 'am' ? 'ምሳሌ፡ ክፍል ሦስት፡ አጭር መልስ ይጻፉ' : 'e.g. Section 2: Write short answers'}
-                            className={`w-full p-2 rounded-xl border text-xs ${
-                              isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                            }`}
-                          />
+                        {/* Section Header & Marks Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <div className="sm:col-span-2 space-y-1">
+                            <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                              {lang === 'am' ? '📌 የክፍል ርዕስ (አማራጭ)' : '📌 Section Title / Header (Optional)'}
+                            </label>
+                            <input
+                              type="text"
+                              value={q.sectionTitle || ''}
+                              onChange={(e) => handleSectionTitleChange(qIdx, e.target.value)}
+                              placeholder={lang === 'am' ? 'ምሳሌ፡ ክፍል ሦስት፡ አጭር መልስ ይጻፉ' : 'e.g. Section 2: Write short answers'}
+                              className={`w-full p-2 rounded-xl border text-xs ${
+                                isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                              }`}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                              {lang === 'am' ? '🎯 ነጥብ (Marks)' : '🎯 Question Marks'}
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={q.marks || 1}
+                              onChange={(e) => handleMarksChange(qIdx, e.target.value)}
+                              className={`w-full p-2 rounded-xl border text-xs font-bold text-center ${
+                                isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                              }`}
+                            />
+                          </div>
                         </div>
 
                         {/* Question Type Selector */}

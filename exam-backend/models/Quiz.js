@@ -7,6 +7,7 @@ const questionSchema = new mongoose.Schema({
     default: 'multiple_choice'
   },
   sectionTitle: { type: String, default: '' },
+  marks: { type: Number, default: 1 },
   questionText: { type: String, required: true },
   options: [{ type: String }],
   correctOptionIndex: { type: Number, default: null }
