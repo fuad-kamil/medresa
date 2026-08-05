@@ -245,9 +245,39 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Action Dropdown State
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+
   // Grading State for Short Answer / Fill in Blank
   const [gradingScores, setGradingScores] = useState({});
   const [submittingGrading, setSubmittingGrading] = useState(false);
+
+  const computeTotalCorrectCount = (sub, quiz) => {
+    if (!quiz || !quiz.questions) return sub.correctAnswers || 0;
+    if (sub.manualGradeStatus === 'pending') return 0;
+
+    let mcqCorrect = 0;
+    let openCorrect = 0;
+    let openIdx = 0;
+
+    quiz.questions.forEach((q, idx) => {
+      const qType = q.questionType || 'multiple_choice';
+      if (qType === 'multiple_choice') {
+        const choice = sub.answers?.[idx];
+        if (typeof choice === 'number' && choice === q.correctOptionIndex) {
+          mcqCorrect++;
+        }
+      } else {
+        const openScore = sub.openAnswerScores?.[openIdx];
+        if (typeof openScore === 'number' && openScore > 0) {
+          openCorrect++;
+        }
+        openIdx++;
+      }
+    });
+
+    return mcqCorrect + openCorrect;
+  };
 
   const parseRawTextToQuestions = (text) => {
     if (!text || !text.trim()) return [];
@@ -1273,53 +1303,100 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                 ⏳ {lang === 'am' ? 'በግምገማ ላይ' : 'Pending'}
                               </span>
                             ) : (
-                              `${s.correctAnswers} / ${s.totalQuestions}`
+                              `${computeTotalCorrectCount(s, selectedSubmissionQuiz)} / ${s.totalQuestions}`
                             )}
                           </td>
-                          <td className="p-3 text-center">
-                            <div className="flex gap-1.5 justify-center items-center flex-wrap">
-                              {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
-                                <button
-                                  onClick={() => handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore)}
-                                  className={`font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-sm ${
-                                    s.manualGradeStatus === 'graded'
-                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                      : 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
-                                  }`}
-                                  title="Grade Student's Open Answers"
-                                >
-                                  <span>{s.manualGradeStatus === 'graded' ? '✅' : '✏️'}</span>
-                                  <span>{s.manualGradeStatus === 'graded' ? (lang === 'am' ? 'ተገምግሟል' : 'Graded') : (lang === 'am' ? 'መልስ ገምግም' : 'Grade Answers')}</span>
-                                </button>
-                              )}
+                          <td className="p-3 text-center relative">
+                            <div className="relative inline-block text-left">
                               <button
-                                onClick={() => handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
-                                title="View Student's Question & Answer History & Grade Answers"
-                              >
-                                <span>👁️</span>
-                                <span>{t('history')}</span>
-                              </button>
-                              <button
-                                disabled={isPending}
-                                onClick={() => !isPending && downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz)}
-                                className={`font-medium px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shadow-xs ${
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveActionMenuId(activeActionMenuId === s._id ? null : s._id);
+                                }}
+                                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition cursor-pointer ${
                                   isPending
-                                    ? (isDark ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed opacity-50' : 'bg-gray-200 text-gray-400 border border-gray-300 cursor-not-allowed opacity-50')
-                                    : 'bg-red-600 hover:bg-red-700 text-white cursor-pointer'
+                                    ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
+                                    : (isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300')
                                 }`}
-                                title={isPending ? (lang === 'am' ? 'ኡስታዝ እስኪገመግም ድረስ PDF ማውረድ አይቻልም' : 'PDF disabled until Ustaz finishes grading') : "Download Student's Exam Paper PDF File"}
                               >
-                                <span>📄</span>
-                                <span>PDF</span>
+                                <span>{isPending ? (lang === 'am' ? '✏️ ገምግም' : '✏️ Grade') : (lang === 'am' ? '⚡ እርምጃዎች' : '⚡ Action')}</span>
+                                <span className="text-[10px]">▼</span>
                               </button>
-                              <button
-                                onClick={() => handleAllowRetake(selectedSubmissionQuiz._id, s.studentId, s.studentName)}
-                                className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer shadow-xs"
-                                title="Delete submission and clear history from database"
-                              >
-                                {t('allowRetake')}
-                              </button>
+
+                              {activeActionMenuId === s._id && (
+                                <div
+                                  className={`absolute right-0 mt-1 w-48 rounded-2xl shadow-2xl border z-50 py-1.5 text-xs animate-fadeIn ${
+                                    isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+                                  }`}
+                                >
+                                  {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveActionMenuId(null);
+                                        handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
+                                      }}
+                                      className={`w-full text-left px-3.5 py-2 font-bold flex items-center gap-2 transition ${
+                                        s.manualGradeStatus === 'graded'
+                                          ? (isDark ? 'text-emerald-400 hover:bg-emerald-950/40' : 'text-emerald-700 hover:bg-emerald-50')
+                                          : (isDark ? 'text-amber-400 hover:bg-amber-950/50' : 'text-amber-700 hover:bg-amber-50')
+                                      }`}
+                                    >
+                                      <span>{s.manualGradeStatus === 'graded' ? '✅' : '✏️'}</span>
+                                      <span>{s.manualGradeStatus === 'graded' ? (lang === 'am' ? 'ተገምግሟል' : 'Graded') : (lang === 'am' ? 'መልስ ገምግም' : 'Grade Answers')}</span>
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveActionMenuId(null);
+                                      handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
+                                    }}
+                                    className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
+                                      isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'
+                                    }`}
+                                  >
+                                    <span>👁️</span>
+                                    <span>{lang === 'am' ? 'ታሪክ ተመልከት' : 'View History'}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    disabled={isPending}
+                                    onClick={() => {
+                                      if (!isPending) {
+                                        setActiveActionMenuId(null);
+                                        downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz);
+                                      }
+                                    }}
+                                    className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
+                                      isPending
+                                        ? 'opacity-40 cursor-not-allowed text-gray-500'
+                                        : (isDark ? 'hover:bg-gray-800 text-red-400' : 'hover:bg-gray-100 text-red-600')
+                                    }`}
+                                    title={isPending ? (lang === 'am' ? 'ኡስታዝ እስኪገመግም ድረስ PDF ማውረድ አይቻልም' : 'PDF disabled until Ustaz finishes grading') : ''}
+                                  >
+                                    <span>📄</span>
+                                    <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
+                                  </button>
+
+                                  <div className={`my-1 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`} />
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveActionMenuId(null);
+                                      handleAllowRetake(selectedSubmissionQuiz._id, s.studentId, s.studentName);
+                                    }}
+                                    className="w-full text-left px-3.5 py-2 font-medium text-orange-500 hover:bg-orange-500/10 flex items-center gap-2 transition"
+                                  >
+                                    <span>🔄</span>
+                                    <span>{t('allowRetake')}</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
