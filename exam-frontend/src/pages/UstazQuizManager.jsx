@@ -658,6 +658,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
             const data = await res.json();
             toast.error(data.message || 'Failed to allow retake.');
           }
+        } catch (e) {
+          toast.error('Failed to clear student score.');
+        }
+      }
+    });
+  };
+
   const handleOpenStudentHistory = (s, quiz, targetMaxScore, displayScore) => {
     const initialScores = {};
     if (quiz && quiz.questions) {
@@ -666,7 +673,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         const qType = q.questionType || 'multiple_choice';
         if (qType === 'short_answer' || qType === 'fill_blank') {
           const existing = s.openAnswerScores?.[openCounter];
-          initialScores[idx] = existing !== undefined ? existing : 10;
+          initialScores[idx] = existing !== undefined ? existing : (q.marks || 1);
           openCounter++;
         }
       });
@@ -1253,7 +1260,21 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                           </td>
                           <td className={`p-3 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{s.correctAnswers} / {s.totalQuestions}</td>
                           <td className="p-3 text-center">
-                            <div className="flex gap-1.5 justify-center items-center">
+                            <div className="flex gap-1.5 justify-center items-center flex-wrap">
+                              {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                                <button
+                                  onClick={() => handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore)}
+                                  className={`font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-sm ${
+                                    s.manualGradeStatus === 'graded'
+                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                      : 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
+                                  }`}
+                                  title="Grade Student's Open Answers"
+                                >
+                                  <span>{s.manualGradeStatus === 'graded' ? '✅' : '✏️'}</span>
+                                  <span>{s.manualGradeStatus === 'graded' ? (lang === 'am' ? 'ተገምግሟል' : 'Graded') : (lang === 'am' ? 'መልስ ገምግም' : 'Grade Answers')}</span>
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
@@ -1319,6 +1340,19 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                   </button>
                 </div>
               </div>
+
+              {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                <div className={`mb-4 p-3 rounded-2xl border text-xs font-medium flex items-center gap-2 ${
+                  isDark ? 'bg-amber-950/40 border-amber-900/60 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+                }`}>
+                  <span className="text-base shrink-0">✏️</span>
+                  <span>
+                    {lang === 'am'
+                      ? 'የኡስታዝ መገምገሚያ፡ የተማሪውን የጽሑፍ መልስ ከታች ይመልከቱ እና ነጥብ ይስጡ። ከጨረሱ በኋላ በስተታች ያለው "ውጤት መዝግብ" የሚለውን ይጫኑ።'
+                      : 'Ustaz Grading: Review the student\'s typed response below and assign score (0 to max marks). Click "Save Grade & Update Score" below.'}
+                  </span>
+                </div>
+              )}
 
               <div className="space-y-4">
                 {selectedSubmissionQuiz?.questions.map((q, qIdx) => {
