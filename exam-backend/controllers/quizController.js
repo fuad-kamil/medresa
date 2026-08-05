@@ -296,38 +296,41 @@ export const submitQuiz = async (req, res) => {
     });
     await submission.save();
 
-    // Sync score to Main Ali Medresa Database BEFORE responding
+    // Sync score to Main Ali Medresa Database ONLY IF exam has NO open questions
+    // If exam has open questions, score sync happens ONLY inside gradeOpenAnswers when Ustaz completes manual grading!
     let synced = false;
-    const candidateUrls = [
-      MAIN_MEDRESA_URL,
-      'http://localhost:5000/api',
-      'https://medresa.onrender.com/api'
-    ].filter(Boolean);
+    if (!hasOpenQuestions) {
+      const candidateUrls = [
+        MAIN_MEDRESA_URL,
+        'http://localhost:5000/api',
+        'https://medresa.onrender.com/api'
+      ].filter(Boolean);
 
-    for (const rawUrl of candidateUrls) {
-      try {
-        const cleanBase = rawUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
-        const syncRes = await fetch(`${cleanBase}/api/exams/sync-score`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-sync-secret': SYNC_SECRET_KEY
-          },
-          body: JSON.stringify({
-            studentId: String(studentId),
-            examId: quiz.examColumnId,
-            score: finalScore
-          })
-        });
-        const syncData = await syncRes.json();
-        if (syncRes.ok && syncData.success) {
-          synced = true;
-          submission.syncedToMain = true;
-          await submission.save();
-          break;
+      for (const rawUrl of candidateUrls) {
+        try {
+          const cleanBase = rawUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+          const syncRes = await fetch(`${cleanBase}/api/exams/sync-score`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-sync-secret': SYNC_SECRET_KEY
+            },
+            body: JSON.stringify({
+              studentId: String(studentId),
+              examId: quiz.examColumnId,
+              score: finalScore
+            })
+          });
+          const syncData = await syncRes.json();
+          if (syncRes.ok && syncData.success) {
+            synced = true;
+            submission.syncedToMain = true;
+            await submission.save();
+            break;
+          }
+        } catch (syncErr) {
+          console.warn('Score sync attempt warning:', syncErr.message);
         }
-      } catch (syncErr) {
-        console.warn('Score sync attempt warning:', syncErr.message);
       }
     }
 

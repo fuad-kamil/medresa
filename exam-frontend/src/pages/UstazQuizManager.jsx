@@ -1244,21 +1244,36 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                     {submissions.map((s) => {
                       const matchingCol = examColumns.find(c => String(c._id) === String(selectedSubmissionQuiz?.examColumnId) || c.name === selectedSubmissionQuiz?.examColumnName);
                       const targetMaxScore = matchingCol?.maxScore || selectedSubmissionQuiz?.maxScore || 100;
-                      const displayScore = (s.correctAnswers !== undefined && s.totalQuestions > 0)
-                        ? Math.round((s.correctAnswers / s.totalQuestions) * targetMaxScore)
-                        : s.score;
+                      const isPending = s.manualGradeStatus === 'pending';
+                      const displayScore = s.score !== undefined ? s.score : 0;
 
                       return (
                         <tr key={s._id} className={`hover:bg-opacity-50 ${isDark ? 'hover:bg-gray-800/40' : 'hover:bg-gray-50'}`}>
                           <td className={`p-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.studentName}</td>
                           <td className="p-3 text-center">
-                            <span className={`px-2.5 py-1 font-bold rounded-full text-xs ${
-                              isDark ? 'bg-emerald-950 text-emerald-300' : 'bg-emerald-100 text-emerald-800'
-                            }`}>
-                              {displayScore} / {targetMaxScore}
-                            </span>
+                            {isPending ? (
+                              <span className={`px-2.5 py-1 font-bold rounded-full text-xs border inline-block ${
+                                isDark ? 'bg-amber-950/80 border-amber-800 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-800'
+                              }`}>
+                                ⏳ {lang === 'am' ? 'ግምገማ በጠበቅ ላይ' : 'Pending Grade'}
+                              </span>
+                            ) : (
+                              <span className={`px-2.5 py-1 font-bold rounded-full text-xs inline-block ${
+                                isDark ? 'bg-emerald-950 text-emerald-300' : 'bg-emerald-100 text-emerald-800'
+                              }`}>
+                                {displayScore} / {targetMaxScore}
+                              </span>
+                            )}
                           </td>
-                          <td className={`p-3 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{s.correctAnswers} / {s.totalQuestions}</td>
+                          <td className={`p-3 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {isPending ? (
+                              <span className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                                ⏳ {lang === 'am' ? 'በግምገማ ላይ' : 'Pending'}
+                              </span>
+                            ) : (
+                              `${s.correctAnswers} / ${s.totalQuestions}`
+                            )}
+                          </td>
                           <td className="p-3 text-center">
                             <div className="flex gap-1.5 justify-center items-center flex-wrap">
                               {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
@@ -1284,9 +1299,14 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                 <span>{t('history')}</span>
                               </button>
                               <button
-                                onClick={() => downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz)}
-                                className="bg-red-600 hover:bg-red-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
-                                title="Download Student's Exam Paper PDF File"
+                                disabled={isPending}
+                                onClick={() => !isPending && downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz)}
+                                className={`font-medium px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shadow-xs ${
+                                  isPending
+                                    ? (isDark ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed opacity-50' : 'bg-gray-200 text-gray-400 border border-gray-300 cursor-not-allowed opacity-50')
+                                    : 'bg-red-600 hover:bg-red-700 text-white cursor-pointer'
+                                }`}
+                                title={isPending ? (lang === 'am' ? 'ኡስታዝ እስኪገመግም ድረስ PDF ማውረድ አይቻልም' : 'PDF disabled until Ustaz finishes grading') : "Download Student's Exam Paper PDF File"}
                               >
                                 <span>📄</span>
                                 <span>PDF</span>
