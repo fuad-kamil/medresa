@@ -614,9 +614,11 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const totalCount = submission.totalQuestions || quiz.questions.length || 0;
 
     const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
+    container.style.position = 'absolute';
     container.style.top = '0';
+    container.style.left = '0';
+    container.style.zIndex = '-9999';
+    container.style.pointerEvents = 'none';
     container.style.width = '750px';
     container.style.padding = '24px';
     container.style.fontFamily = "'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', 'Segoe UI', Arial, sans-serif";
@@ -691,8 +693,16 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const opt = {
       margin: [10, 10, 10, 10],
       filename: filename,
-      image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 800
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
