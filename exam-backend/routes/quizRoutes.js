@@ -9,7 +9,8 @@ import {
   addQuizTime,
   endQuiz,
   deleteQuiz,
-  getQuizSubmissions
+  getQuizSubmissions,
+  gradeOpenAnswers
 } from '../controllers/quizController.js';
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router.delete('/:id', deleteQuiz);
 router.get('/submissions/:id', getQuizSubmissions);
 router.get('/:id/submissions', getQuizSubmissions);
 router.post('/allow-retake', allowRetake);
+router.put('/:id/grade-open', gradeOpenAnswers);
 
 // Student Endpoints
 router.get('/student/check-submission', checkStudentSubmission);

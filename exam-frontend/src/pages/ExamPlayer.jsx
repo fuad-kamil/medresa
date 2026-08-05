@@ -55,7 +55,13 @@ const translations = {
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English',
     themeToastDark: 'የጨለማ ገጽታ (Dark Mode) ተቀይሯል',
-    themeToastLight: 'Switched to Light Mode'
+    themeToastLight: 'Switched to Light Mode',
+    shortAnswerLabel: '✏️ Short Answer',
+    fillBlankLabel: '🔲 Fill in the Blank',
+    shortAnswerPlaceholder: 'Write your answer here...',
+    fillBlankPlaceholder: 'Fill in the blank here...',
+    openAnswerHint: 'Your Ustaz will review and grade this answer manually.',
+    openAnswerPendingNotice: '⏳ This question will be graded by your Ustaz.'
   },
   am: {
     portalTitle: 'የዓሊ መድረሳ የመስመር ላይ ፈተና',
@@ -82,7 +88,7 @@ const translations = {
     submitExamBtn: 'መልሶችን በሙሉ አስገባ',
     submittingBtn: 'ፈተናው በመላክ ላይ ነው...',
     unansweredTitle: 'ያልተመለሱ ጥያቄዎች ቀርተዋል!',
-    unansweredDescPrefix: 'ፈተናዎን ከመላክዎ በፊት የሁሉም ጥያቄዎች መልስ መምረጥ አለብዎት።',
+    unansweredDescPrefix: '',
     unansweredDescSuffix: 'ያልተመለሱ ጥያቄዎች ቀርተዋል።',
     clickQuestionToAnswer: 'ለመመለስ ጥያቄውን ይጫኑ፡',
     backToAnswerBtn: 'ተመልሰው መልስ ይምረጡ',
@@ -100,7 +106,13 @@ const translations = {
     langToastAm: 'ቋንቋ ወደ አማርኛ ተቀይሯል',
     langToastEn: 'Language switched to English',
     themeToastDark: 'የጨለማ ገጽታ (Dark Mode) ተቀይሯል',
-    themeToastLight: 'Switched to Light Mode'
+    themeToastLight: 'Switched to Light Mode',
+    shortAnswerLabel: '✏️ ጭብጥ መልስ',
+    fillBlankLabel: '🔲 ክፍተት መሙያ',
+    shortAnswerPlaceholder: 'መልስዎን እዚህ ይፃፉ...',
+    fillBlankPlaceholder: 'ክፍተቱን እዚህ ይሙሉ...',
+    openAnswerHint: 'ይህ ጥያቄ በኡስታዝዎ ይታያል እና ውጤቱ ይሰጣል።',
+    openAnswerPendingNotice: '⏳ ይህ ጥያቄ በኡስታዝዎ ይገመገማል።'
   }
 };
 
@@ -222,25 +234,35 @@ export default function ExamPlayer({ quizId, student }) {
   const handleOptionSelect = (questionIndex, optionIndex) => {
     const updated = { ...answers, [questionIndex]: optionIndex };
     setAnswers(updated);
-    // Save draft to localStorage
     const savedKey = `exam_draft_${quizId}_${student._id}`;
     localStorage.setItem(savedKey, JSON.stringify(updated));
   };
 
+  const handleTextAnswer = (questionIndex, text) => {
+    const updated = { ...answers, [questionIndex]: text };
+    setAnswers(updated);
+    const savedKey = `exam_draft_${quizId}_${student._id}`;
+    localStorage.setItem(savedKey, JSON.stringify(updated));
+  };
+
+  const isQuestionAnswered = (q, idx) => {
+    const qType = q.questionType || 'multiple_choice';
+    if (qType === 'short_answer' || qType === 'fill_blank') {
+      return typeof answers[idx] === 'string' && answers[idx].trim().length > 0;
+    }
+    return answers[idx] !== undefined && answers[idx] !== null && answers[idx] >= 0;
+  };
+
   const triggerSubmitPrompt = () => {
     const missing = [];
-    quiz.questions.forEach((_, idx) => {
-      if (answers[idx] === undefined || answers[idx] === null || answers[idx] < 0) {
-        missing.push(idx + 1);
-      }
+    quiz.questions.forEach((q, idx) => {
+      if (!isQuestionAnswered(q, idx)) missing.push(idx + 1);
     });
-
     if (missing.length > 0) {
       setUnansweredList(missing);
       setShowUnansweredModal(true);
       return;
     }
-
     setShowConfirmModal(true);
   };
 
@@ -258,12 +280,9 @@ export default function ExamPlayer({ quizId, student }) {
 
     if (!isAutoSubmit) {
       const missing = [];
-      quiz.questions.forEach((_, idx) => {
-        if (answers[idx] === undefined || answers[idx] === null || answers[idx] < 0) {
-          missing.push(idx + 1);
-        }
+      quiz.questions.forEach((q, idx) => {
+        if (!isQuestionAnswered(q, idx)) missing.push(idx + 1);
       });
-
       if (missing.length > 0) {
         setUnansweredList(missing);
         setShowUnansweredModal(true);
@@ -274,8 +293,14 @@ export default function ExamPlayer({ quizId, student }) {
     setSubmitting(true);
     setError('');
 
-    // Format answers array
-    const formattedAnswers = quiz.questions.map((_, idx) => answers[idx] ?? -1);
+    // Format answers: numbers for MCQ, strings for open, -1/'' for unanswered
+    const formattedAnswers = quiz.questions.map((q, idx) => {
+      const qType = q.questionType || 'multiple_choice';
+      if (qType === 'short_answer' || qType === 'fill_blank') {
+        return typeof answers[idx] === 'string' ? answers[idx] : '';
+      }
+      return answers[idx] ?? -1;
+    });
 
     try {
       const res = await fetch(`${EXAM_API_URL}/quizzes/student/submit`, {
@@ -571,58 +596,96 @@ export default function ExamPlayer({ quizId, student }) {
           </div>
         )}
 
-        {quiz.questions.map((q, qIdx) => (
-          <div
-            id={`question-card-${qIdx}`}
-            key={q._id || qIdx}
-            className={`rounded-3xl p-6 border transition-all ${
-              answers[qIdx] !== undefined && answers[qIdx] !== null && answers[qIdx] >= 0
-                ? (isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200 shadow-xs')
-                : (isDark ? 'bg-gray-900 border-amber-500/60 ring-2 ring-amber-500/20' : 'bg-white border-amber-300 ring-2 ring-amber-100')
-            }`}
-          >
-            <div className="flex items-start space-x-3 mb-4">
-              <span className={`font-bold px-3 py-1 rounded-xl text-sm border ${
-                isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-800 border-emerald-200/50'
-              }`}>
-                {t('questionLabel')} {qIdx + 1}
-              </span>
-              <h3 className={`text-base font-semibold pt-0.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {q.questionText}
-              </h3>
-            </div>
+        {quiz.questions.map((q, qIdx) => {
+          const qType = q.questionType || 'multiple_choice';
+          const isAnswered = isQuestionAnswered(q, qIdx);
+          return (
+            <div
+              id={`question-card-${qIdx}`}
+              key={q._id || qIdx}
+              className={`rounded-3xl p-6 border transition-all ${
+                isAnswered
+                  ? (isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200 shadow-xs')
+                  : (isDark ? 'bg-gray-900 border-amber-500/60 ring-2 ring-amber-500/20' : 'bg-white border-amber-300 ring-2 ring-amber-100')
+              }`}
+            >
+              <div className="flex items-start space-x-3 mb-4">
+                <span className={`font-bold px-3 py-1 rounded-xl text-sm border shrink-0 ${
+                  isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-800 border-emerald-200/50'
+                }`}>
+                  {t('questionLabel')} {qIdx + 1}
+                </span>
+                {(qType === 'short_answer' || qType === 'fill_blank') && (
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border shrink-0 ${
+                    qType === 'fill_blank'
+                      ? (isDark ? 'bg-purple-950 text-purple-300 border-purple-800' : 'bg-purple-100 text-purple-800 border-purple-200')
+                      : (isDark ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-blue-100 text-blue-800 border-blue-200')
+                  }`}>
+                    {qType === 'fill_blank' ? t('fillBlankLabel') : t('shortAnswerLabel')}
+                  </span>
+                )}
+                <h3 className={`text-base font-semibold pt-0.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {q.questionText}
+                </h3>
+              </div>
 
-            <div className="space-y-3 pl-2">
-              {q.options.map((opt, optIdx) => {
-                const isSelected = answers[qIdx] === optIdx;
-                return (
-                  <label
-                    key={optIdx}
-                    onClick={() => handleOptionSelect(qIdx, optIdx)}
-                    className={`flex items-center p-4 rounded-2xl border cursor-pointer transition ${
-                      isSelected
-                        ? (isDark 
-                            ? 'border-emerald-500 bg-emerald-950/60 text-emerald-300 font-medium shadow-sm' 
-                            : 'border-emerald-600 bg-emerald-50 text-emerald-900 font-medium shadow-xs')
-                        : (isDark 
-                            ? 'border-gray-800 hover:bg-gray-800/50 text-gray-300' 
-                            : 'border-gray-200 hover:bg-gray-50 text-gray-700')
+              {/* Multiple Choice */}
+              {qType === 'multiple_choice' && (
+                <div className="space-y-3 pl-2">
+                  {q.options.map((opt, optIdx) => {
+                    const isSelected = answers[qIdx] === optIdx;
+                    return (
+                      <label
+                        key={optIdx}
+                        onClick={() => handleOptionSelect(qIdx, optIdx)}
+                        className={`flex items-center p-4 rounded-2xl border cursor-pointer transition ${
+                          isSelected
+                            ? (isDark
+                                ? 'border-emerald-500 bg-emerald-950/60 text-emerald-300 font-medium shadow-sm'
+                                : 'border-emerald-600 bg-emerald-50 text-emerald-900 font-medium shadow-xs')
+                            : (isDark
+                                ? 'border-gray-800 hover:bg-gray-800/50 text-gray-300'
+                                : 'border-gray-200 hover:bg-gray-50 text-gray-700')
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`question_${qIdx}`}
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                        />
+                        <span className="ml-3 text-sm">{opt}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Short Answer / Fill in the Blank */}
+              {(qType === 'short_answer' || qType === 'fill_blank') && (
+                <div className="pl-2 space-y-2">
+                  <textarea
+                    rows={qType === 'short_answer' ? 4 : 2}
+                    value={typeof answers[qIdx] === 'string' ? answers[qIdx] : ''}
+                    onChange={(e) => handleTextAnswer(qIdx, e.target.value)}
+                    placeholder={qType === 'fill_blank' ? t('fillBlankPlaceholder') : t('shortAnswerPlaceholder')}
+                    className={`w-full rounded-2xl border p-4 text-sm resize-none transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                      isDark
+                        ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
                     }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`question_${qIdx}`}
-                      checked={isSelected}
-                      onChange={() => {}}
-                      className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                    />
-                    <span className="ml-3 text-sm">{opt}</span>
-                  </label>
-                );
-              })}
+                  />
+                  <p className={`text-xs flex items-center gap-1.5 ${
+                    isDark ? 'text-amber-400' : 'text-amber-700'
+                  }`}>
+                    ⏳ {t('openAnswerHint')}
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Submit Button */}
         <div className="pt-4 flex justify-end">

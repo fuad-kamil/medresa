@@ -240,7 +240,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [hasTimer, setHasTimer] = useState(true);
   const [questions, setQuestions] = useState([
-    { questionText: '', options: ['', ''], correctOptionIndex: 0 }
+    { questionType: 'multiple_choice', questionText: '', options: ['', ''], correctOptionIndex: 0 }
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
@@ -374,7 +374,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const handleAddQuestion = () => {
     setQuestions([
       ...questions,
-      { questionText: '', options: ['', ''], correctOptionIndex: 0 }
+      { questionType: 'multiple_choice', questionText: '', options: ['', ''], correctOptionIndex: 0 }
     ]);
   };
 
@@ -420,6 +420,21 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     setQuestions(updated);
   };
 
+  const handleQuestionTypeChange = (qIndex, newType) => {
+    const updated = [...questions];
+    updated[qIndex].questionType = newType;
+    if (newType === 'short_answer' || newType === 'fill_blank') {
+      updated[qIndex].options = [];
+      updated[qIndex].correctOptionIndex = null;
+    } else {
+      if (!updated[qIndex].options.length) {
+        updated[qIndex].options = ['', ''];
+      }
+      updated[qIndex].correctOptionIndex = 0;
+    }
+    setQuestions(updated);
+  };
+
   const handleCreateQuizSubmit = async (e) => {
     e.preventDefault();
     if (!quizTitle.trim()) {
@@ -458,9 +473,14 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         hasTimer: Boolean(hasTimer),
         durationMinutes: hasTimer ? Number(durationMinutes) : 0,
         questions: questions.map(q => ({
+          questionType: q.questionType || 'multiple_choice',
           questionText: q.questionText.trim(),
-          options: q.options.map(opt => String(opt || '').trim()).filter(Boolean),
-          correctOptionIndex: q.correctOptionIndex
+          options: (q.questionType === 'short_answer' || q.questionType === 'fill_blank')
+            ? []
+            : q.options.map(opt => String(opt || '').trim()).filter(Boolean),
+          correctOptionIndex: (q.questionType === 'short_answer' || q.questionType === 'fill_blank')
+            ? null
+            : q.correctOptionIndex
         }))
       };
 
@@ -477,7 +497,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       setQuizzes(prev => [data, ...prev]);
       toast.success(t('publishBtn'));
       setQuizTitle('');
-      setQuestions([{ questionText: '', options: ['', ''], correctOptionIndex: 0 }]);
+      setQuestions([{ questionType: 'multiple_choice', questionText: '', options: ['', ''], correctOptionIndex: 0 }]);
     } catch (err) {
       toast.error(err.message || 'Failed to create exam.');
     } finally {
@@ -1174,21 +1194,47 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
               <div className="space-y-4">
                 {selectedSubmissionQuiz?.questions.map((q, qIdx) => {
-                  const studentChoiceIdx = selectedStudentHistory.answers?.[qIdx];
-                  const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+                  const qType = q.questionType || 'multiple_choice';
+                  const studentAnswer = selectedStudentHistory.answers?.[qIdx];
+                  const isOpen = qType === 'short_answer' || qType === 'fill_blank';
+                  const studentChoiceIdx = !isOpen ? studentAnswer : undefined;
+                  const isCorrect = !isOpen && studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
 
                   return (
                     <div
                       key={qIdx}
                       className={`p-4 rounded-2xl border ${
-                        isCorrect 
-                          ? (isDark ? 'bg-emerald-950/20 border-emerald-900/50' : 'bg-emerald-50/40 border-emerald-200') 
-                          : (isDark ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50/40 border-red-200')
+                        isOpen
+                          ? (isDark ? 'bg-blue-950/20 border-blue-900/50' : 'bg-blue-50/60 border-blue-200')
+                          : isCorrect
+                            ? (isDark ? 'bg-emerald-950/20 border-emerald-900/50' : 'bg-emerald-50/40 border-emerald-200')
+                            : (isDark ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50/40 border-red-200')
                       }`}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className={`font-bold text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('questionLabel')} {qIdx + 1}</span>
-                        {isCorrect ? (
+                        <span className={`font-bold text-xs flex items-center gap-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {t('questionLabel')} {qIdx + 1}
+                          {isOpen && (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              qType === 'fill_blank'
+                                ? (isDark ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800')
+                                : (isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800')
+                            }`}>
+                              {qType === 'fill_blank' ? (lang === 'am' ? 'ክፍተት' : 'Fill Blank') : (lang === 'am' ? 'ጭብጥ' : 'Short Ans.')}
+                            </span>
+                          )}
+                        </span>
+                        {isOpen ? (
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                            selectedStudentHistory.manualGradeStatus === 'graded'
+                              ? (isDark ? 'bg-emerald-900 text-emerald-300' : 'bg-emerald-100 text-emerald-800')
+                              : (isDark ? 'bg-amber-900 text-amber-300' : 'bg-amber-100 text-amber-800')
+                          }`}>
+                            {selectedStudentHistory.manualGradeStatus === 'graded'
+                              ? (lang === 'am' ? '✅ ተገምግሟል' : '✅ Graded')
+                              : (lang === 'am' ? '⏳ ግምገማ በጠበቅ ላይ' : '⏳ Pending Grade')}
+                          </span>
+                        ) : isCorrect ? (
                           <span className="bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
                             {t('correctBadge')}
                           </span>
@@ -1201,43 +1247,61 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
                       <p className={`font-bold text-sm mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{q.questionText}</p>
 
-                      <div className="space-y-1.5 text-xs">
-                        {q.options.map((opt, optIdx) => {
-                          const isChosen = studentChoiceIdx === optIdx;
-                          const isCorrectOpt = q.correctOptionIndex === optIdx;
+                      {/* Open question: show typed answer */}
+                      {isOpen ? (
+                        <div className={`p-3 rounded-xl border text-sm ${
+                          isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
+                        }`}>
+                          <span className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {lang === 'am' ? 'የተማሪው መልስ:' : "Student's Answer:"}
+                          </span>
+                          <p className="leading-relaxed">
+                            {(typeof studentAnswer === 'string' && studentAnswer.trim())
+                              ? studentAnswer
+                              : <em className={isDark ? 'text-gray-500' : 'text-gray-400'}>{lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>
+                            }
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 text-xs">
+                          {q.options.map((opt, optIdx) => {
+                            const isChosen = studentChoiceIdx === optIdx;
+                            const isCorrectOpt = q.correctOptionIndex === optIdx;
 
-                          let style = isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700';
-                          let tag = null;
+                            let style = isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700';
+                            let tag = null;
 
-                          if (isCorrectOpt) {
-                            style = isDark ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300 font-extrabold' : 'bg-emerald-100 border-emerald-400 text-emerald-900 font-extrabold';
-                            tag = t('correctAnswerTag');
-                          }
-                          if (isChosen && !isCorrectOpt) {
-                            style = isDark ? 'bg-red-950/80 border-red-700 text-red-300 font-extrabold' : 'bg-red-100 border-red-400 text-red-900 font-extrabold';
-                            tag = t('studentChoiceWrong');
-                          }
-                          if (isChosen && isCorrectOpt) {
-                            tag = t('studentChoiceCorrect');
-                          }
+                            if (isCorrectOpt) {
+                              style = isDark ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300 font-extrabold' : 'bg-emerald-100 border-emerald-400 text-emerald-900 font-extrabold';
+                              tag = t('correctAnswerTag');
+                            }
+                            if (isChosen && !isCorrectOpt) {
+                              style = isDark ? 'bg-red-950/80 border-red-700 text-red-300 font-extrabold' : 'bg-red-100 border-red-400 text-red-900 font-extrabold';
+                              tag = t('studentChoiceWrong');
+                            }
+                            if (isChosen && isCorrectOpt) {
+                              tag = t('studentChoiceCorrect');
+                            }
 
-                          return (
-                            <div key={optIdx} className={`p-2.5 rounded-xl border flex items-center justify-between ${style}`}>
-                              <span className="flex items-center gap-2">
-                                <span className="font-bold text-[11px] opacity-60">{String.fromCharCode(65 + optIdx)})</span>
-                                <span>{opt}</span>
-                              </span>
-                              {tag && <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
-                                isDark ? 'bg-gray-900/80 border-current' : 'bg-white/80 border-current'
-                              }`}>{tag}</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
+                            return (
+                              <div key={optIdx} className={`p-2.5 rounded-xl border flex items-center justify-between ${style}`}>
+                                <span className="flex items-center gap-2">
+                                  <span className="font-bold text-[11px] opacity-60">{String.fromCharCode(65 + optIdx)})</span>
+                                  <span>{opt}</span>
+                                </span>
+                                {tag && <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
+                                  isDark ? 'bg-gray-900/80 border-current' : 'bg-white/80 border-current'
+                                }`}>{tag}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
+
             </div>
           </div>
         )}
@@ -1376,59 +1440,105 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                           )}
                         </div>
 
+                        {/* Question Type Selector */}
+                        <div className="flex gap-2 flex-wrap">
+                          {[
+                            { value: 'multiple_choice', label: lang === 'am' ? '🔵 ምርጫ' : '🔵 Multiple Choice' },
+                            { value: 'short_answer',   label: lang === 'am' ? '✏️ ጭብጥ መልስ' : '✏️ Short Answer' },
+                            { value: 'fill_blank',     label: lang === 'am' ? '🔲 ክፍተት መሙያ' : '🔲 Fill in the Blank' }
+                          ].map(({ value, label }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => handleQuestionTypeChange(qIdx, value)}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition cursor-pointer ${
+                                (q.questionType || 'multiple_choice') === value
+                                  ? (isDark ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-emerald-600 border-emerald-600 text-white')
+                                  : (isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100')
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+
                         <input
                           type="text"
                           value={q.questionText}
                           onChange={(e) => handleQuestionTextChange(qIdx, e.target.value)}
-                          placeholder={t('enterQuestionPlaceholder')}
+                          placeholder={
+                            (q.questionType === 'fill_blank')
+                              ? (lang === 'am' ? 'ምሳሌ: ___ ቁርዓን ውስጥ ምን ሱራ ነው?' : 'e.g. The first Surah in the Quran is ___')
+                              : t('enterQuestionPlaceholder')
+                          }
                           className={`w-full p-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-emerald-500 ${
                             isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
                           }`}
                           required
                         />
 
-                        {/* Options */}
-                        <div className="space-y-2">
-                          <label className={`block text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {t('correctAnswerLabel')}
-                          </label>
-                          {q.options.map((opt, oIdx) => (
-                            <div key={oIdx} className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name={`correct_${qIdx}`}
-                                checked={q.correctOptionIndex === oIdx}
-                                onChange={() => handleCorrectOptionChange(qIdx, oIdx)}
-                                className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                              />
-                              <input
-                                type="text"
-                                value={opt}
-                                onChange={(e) => handleOptionChange(qIdx, oIdx, e.target.value)}
-                                placeholder={`${t('optionLabel')} ${String.fromCharCode(65 + oIdx)}`}
-                                className={`flex-1 p-2 rounded-xl border text-sm ${
-                                  isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                                } ${
-                                  q.correctOptionIndex === oIdx
-                                    ? 'border-emerald-500 ring-1 ring-emerald-400 font-medium'
-                                    : (isDark ? 'border-gray-700' : 'border-gray-300')
-                                }`}
-                                required
-                              />
-                              {q.options.length > 2 && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveOption(qIdx, oIdx)}
-                                  className="text-gray-400 hover:text-red-500 font-bold px-1"
-                                >
-                                  &times;
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                        {/* Fill in the blank hint */}
+                        {q.questionType === 'fill_blank' && (
+                          <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                            💡 {lang === 'am' ? 'ባዶ ቦታ ለማመልከት ___ ይጠቀሙ' : 'Use ___ in the question text to mark the blank'}
+                          </p>
+                        )}
 
-                        {q.options.length < 10 && (
+                        {/* Open question notice */}
+                        {(q.questionType === 'short_answer' || q.questionType === 'fill_blank') && (
+                          <div className={`p-3 rounded-xl text-xs border ${
+                            isDark ? 'bg-blue-950/40 border-blue-900/60 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-800'
+                          }`}>
+                            ⏳ {lang === 'am'
+                              ? 'ተማሪው ጽሑፍ ይጽፋል። ኡስታዝ ከፈተናው ማብቂያ በኋላ ውጤት ይሰጣሉ።'
+                              : 'Student will write a text answer. Ustaz grades this manually after the exam.'}
+                          </div>
+                        )}
+
+                        {/* MCQ Options */}
+                        {(!q.questionType || q.questionType === 'multiple_choice') && (
+                          <div className="space-y-2">
+                            <label className={`block text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {t('correctAnswerLabel')}
+                            </label>
+                            {q.options.map((opt, oIdx) => (
+                              <div key={oIdx} className="flex items-center gap-2">
+                                <input
+                                  type="radio"
+                                  name={`correct_${qIdx}`}
+                                  checked={q.correctOptionIndex === oIdx}
+                                  onChange={() => handleCorrectOptionChange(qIdx, oIdx)}
+                                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={opt}
+                                  onChange={(e) => handleOptionChange(qIdx, oIdx, e.target.value)}
+                                  placeholder={`${t('optionLabel')} ${String.fromCharCode(65 + oIdx)}`}
+                                  className={`flex-1 p-2 rounded-xl border text-sm ${
+                                    isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                                  } ${
+                                    q.correctOptionIndex === oIdx
+                                      ? 'border-emerald-500 ring-1 ring-emerald-400 font-medium'
+                                      : (isDark ? 'border-gray-700' : 'border-gray-300')
+                                  }`}
+                                  required
+                                />
+                                {q.options.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveOption(qIdx, oIdx)}
+                                    className="text-gray-400 hover:text-red-500 font-bold px-1"
+                                  >
+                                    &times;
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {(!q.questionType || q.questionType === 'multiple_choice') && q.options.length < 10 && (
                           <button
                             type="button"
                             onClick={() => handleAddOption(qIdx)}

@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 
 const questionSchema = new mongoose.Schema({
+  questionType: {
+    type: String,
+    enum: ['multiple_choice', 'short_answer', 'fill_blank'],
+    default: 'multiple_choice'
+  },
   questionText: { type: String, required: true },
-  options: [{ type: String, required: true }],
-  correctOptionIndex: { type: Number, required: true, default: 0 }
+  options: [{ type: String }],
+  correctOptionIndex: { type: Number, default: null }
 });
 
 const quizSchema = new mongoose.Schema(

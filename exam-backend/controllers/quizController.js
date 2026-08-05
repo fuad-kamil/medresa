@@ -55,14 +55,30 @@ export const createQuiz = async (req, res) => {
       });
     }
 
-    const cleanedQuestions = questions.map(q => ({
-      questionText: String(q.questionText || '').trim(),
-      options: (q.options || []).map(opt => String(opt || '').trim()).filter(Boolean),
-      correctOptionIndex: Number(q.correctOptionIndex) || 0
-    })).filter(q => q.questionText && q.options.length >= 2);
+    const cleanedQuestions = questions.map(q => {
+      const qType = q.questionType || 'multiple_choice';
+      if (qType === 'short_answer' || qType === 'fill_blank') {
+        return {
+          questionType: qType,
+          questionText: String(q.questionText || '').trim(),
+          options: [],
+          correctOptionIndex: null
+        };
+      }
+      return {
+        questionType: 'multiple_choice',
+        questionText: String(q.questionText || '').trim(),
+        options: (q.options || []).map(opt => String(opt || '').trim()).filter(Boolean),
+        correctOptionIndex: Number(q.correctOptionIndex) || 0
+      };
+    }).filter(q => {
+      if (!q.questionText) return false;
+      if (q.questionType === 'multiple_choice') return q.options.length >= 2;
+      return true; // open questions only need question text
+    });
 
     if (cleanedQuestions.length === 0) {
-      return res.status(400).json({ message: 'Questions must have at least 2 non-empty options.' });
+      return res.status(400).json({ message: 'Please add at least one valid question.' });
     }
 
     const timerEnabled = hasTimer !== false && hasTimer !== 'false';
@@ -132,6 +148,7 @@ export const getQuizForStudent = async (req, res) => {
     const sanitizedQuestions = quiz.questions.map((q, idx) => ({
       _id: q._id,
       index: idx,
+      questionType: q.questionType || 'multiple_choice',
       questionText: q.questionText,
       options: q.options
     }));
@@ -207,17 +224,38 @@ export const submitQuiz = async (req, res) => {
 
     // Grade student answers & build detailed question breakdown
     let correctCount = 0;
+    let mcqTotal = 0;
+    const hasOpenQuestions = quiz.questions.some(q => q.questionType === 'short_answer' || q.questionType === 'fill_blank');
+
     const breakdown = quiz.questions.map((q, idx) => {
-      const studentChoiceIdx = answers[idx];
-      const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+      const qType = q.questionType || 'multiple_choice';
+      const studentAnswer = answers[idx];
+
+      if (qType === 'short_answer' || qType === 'fill_blank') {
+        return {
+          questionNumber: idx + 1,
+          questionType: qType,
+          questionText: q.questionText,
+          options: [],
+          studentOpenAnswer: typeof studentAnswer === 'string' ? studentAnswer : '',
+          isCorrect: null, // will be manually graded
+          pendingGrade: true
+        };
+      }
+
+      // MCQ
+      mcqTotal++;
+      const studentChoiceIdx = typeof studentAnswer === 'number' ? studentAnswer : -1;
+      const isCorrect = studentChoiceIdx >= 0 && studentChoiceIdx === q.correctOptionIndex;
       if (isCorrect) correctCount++;
 
       return {
         questionNumber: idx + 1,
+        questionType: 'multiple_choice',
         questionText: q.questionText,
         options: q.options,
         studentChoiceIndex: studentChoiceIdx,
-        studentChoiceText: (studentChoiceIdx !== undefined && studentChoiceIdx >= 0) ? q.options[studentChoiceIdx] : 'Not Answered',
+        studentChoiceText: (studentChoiceIdx >= 0) ? (q.options[studentChoiceIdx] || 'Not Answered') : 'Not Answered',
         correctChoiceIndex: q.correctOptionIndex,
         correctChoiceText: q.options[q.correctOptionIndex],
         isCorrect
@@ -225,9 +263,13 @@ export const submitQuiz = async (req, res) => {
     });
 
     const totalQuestions = quiz.questions.length;
-    const finalScore = totalQuestions > 0 
-      ? Math.round((correctCount / totalQuestions) * quiz.maxScore) 
+    // Score only MCQ portion for now; open questions start at 0 until Ustaz grades
+    const mcqScore = mcqTotal > 0
+      ? Math.round((correctCount / mcqTotal) * (mcqTotal / totalQuestions) * quiz.maxScore)
       : 0;
+    const finalScore = hasOpenQuestions ? mcqScore : (
+      totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * quiz.maxScore) : 0
+    );
 
     // Save submission to MongoDB BEFORE responding!
     const submission = new QuizSubmission({
@@ -237,7 +279,9 @@ export const submitQuiz = async (req, res) => {
       score: finalScore,
       totalQuestions,
       correctAnswers: correctCount,
-      answers
+      answers,
+      openAnswerScores: [],
+      manualGradeStatus: hasOpenQuestions ? 'pending' : 'not_required'
     });
     await submission.save();
 
@@ -473,6 +517,87 @@ export const getQuizSubmissions = async (req, res) => {
     }
     const submissions = await QuizSubmission.find(filter).sort({ completedAt: -1 });
     res.json(submissions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ── 9. Ustaz: Grade Open-Ended Answers Manually ─────────────────────────────
+export const gradeOpenAnswers = async (req, res) => {
+  try {
+    const { id } = req.params; // quizId
+    const { submissionId, openAnswerScores } = req.body;
+
+    if (!submissionId || !Array.isArray(openAnswerScores)) {
+      return res.status(400).json({ message: 'submissionId and openAnswerScores array are required.' });
+    }
+
+    const quiz = await Quiz.findById(id);
+    if (!quiz) return res.status(404).json({ message: 'Exam not found.' });
+
+    const submission = await QuizSubmission.findById(submissionId);
+    if (!submission) return res.status(404).json({ message: 'Submission not found.' });
+
+    // Calculate MCQ score portion
+    let mcqCorrect = 0;
+    let mcqTotal = 0;
+    quiz.questions.forEach((q, idx) => {
+      const qType = q.questionType || 'multiple_choice';
+      if (qType === 'multiple_choice') {
+        mcqTotal++;
+        const studentChoice = submission.answers[idx];
+        if (typeof studentChoice === 'number' && studentChoice === q.correctOptionIndex) {
+          mcqCorrect++;
+        }
+      }
+    });
+
+    // Sum open answer scores provided by Ustaz
+    const openTotal = openAnswerScores.reduce((sum, s) => sum + (Number(s) || 0), 0);
+    const openCount = quiz.questions.filter(q => q.questionType === 'short_answer' || q.questionType === 'fill_blank').length;
+    const totalQuestions = quiz.questions.length;
+
+    // Recalculate full score
+    let newScore = 0;
+    if (totalQuestions > 0) {
+      const mcqShare = mcqTotal > 0 ? (mcqCorrect / mcqTotal) * (mcqTotal / totalQuestions) * quiz.maxScore : 0;
+      const openShare = openCount > 0 ? (openTotal / (openCount * 10)) * (openCount / totalQuestions) * quiz.maxScore : 0;
+      // openTotal assumes each open question is scored /10 by ustaz; adjust proportionally
+      newScore = Math.round(mcqShare + openShare);
+    }
+
+    submission.openAnswerScores = openAnswerScores;
+    submission.score = Math.min(newScore, quiz.maxScore);
+    submission.correctAnswers = mcqCorrect;
+    submission.manualGradeStatus = 'graded';
+    await submission.save();
+
+    // Re-sync updated score to main DB
+    const candidateUrls = [
+      MAIN_MEDRESA_URL,
+      'http://localhost:5000/api',
+      'https://medresa.onrender.com/api'
+    ].filter(Boolean);
+
+    for (const rawUrl of candidateUrls) {
+      try {
+        const cleanBase = rawUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+        const syncRes = await fetch(`${cleanBase}/api/exams/sync-score`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-sync-secret': SYNC_SECRET_KEY },
+          body: JSON.stringify({
+            studentId: String(submission.studentId),
+            examId: quiz.examColumnId,
+            score: submission.score
+          })
+        });
+        if (syncRes.ok) break;
+      } catch (syncErr) {
+        console.warn('Score re-sync warning:', syncErr.message);
+      }
+    }
+
+    res.json({ success: true, newScore: submission.score, manualGradeStatus: 'graded' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

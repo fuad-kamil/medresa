@@ -8,7 +8,13 @@ const quizSubmissionSchema = new mongoose.Schema(
     score: { type: Number, required: true },
     totalQuestions: { type: Number, required: true },
     correctAnswers: { type: Number, required: true },
-    answers: [{ type: Number }], // option indices chosen by student
+    answers: [{ type: mongoose.Schema.Types.Mixed }], // Numbers for MCQ, strings for open questions
+    openAnswerScores: [{ type: Number }],              // Ustaz-assigned scores per open question
+    manualGradeStatus: {
+      type: String,
+      enum: ['pending', 'graded', 'not_required'],
+      default: 'not_required'
+    },
     syncedToMain: { type: Boolean, default: false },
     completedAt: { type: Date, default: Date.now }
   },
