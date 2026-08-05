@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import mammoth from 'mammoth';
+import html2pdf from 'html2pdf.js';
 import { Globe, Sun, Moon, LogOut, FileUp, PlusCircle, FileQuestion } from 'lucide-react';
 
 const getCleanApiUrl = (url, defaultUrl) => {
@@ -602,7 +603,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     }
   };
 
-  const downloadStudentHistoryDocx = (submission, quiz) => {
+  const downloadStudentHistoryPdf = (submission, quiz) => {
     if (!submission || !quiz) return;
 
     const studentName = submission.studentName || 'ተማሪ';
@@ -612,44 +613,28 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
     const totalCount = submission.totalQuestions || quiz.questions.length || 0;
 
+    const element = document.createElement('div');
+    element.style.padding = '24px';
+    element.style.fontFamily = "'Nyala', 'Ethiopic', 'Segoe UI', Arial, sans-serif";
+    element.style.color = '#1f2937';
+    element.style.backgroundColor = '#ffffff';
+    element.style.width = '750px';
+
     let contentHtml = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head>
-        <meta charset='utf-8'>
-        <title>${quizTitle} - ${studentName}</title>
-        <style>
-          body { font-family: 'Nyala', 'Ethiopic', 'Calibri', 'Arial', sans-serif; padding: 24px; color: #1f2937; line-height: 1.6; }
-          .header { border-bottom: 2px solid #059669; padding-bottom: 12px; margin-bottom: 20px; }
-          h1 { color: #065f46; font-size: 24px; margin: 0 0 6px 0; }
-          h2 { color: #1f2937; font-size: 18px; margin: 0; }
-          .meta-box { background: #f0fdf4; border: 1px solid #a7f3d0; padding: 14px; border-radius: 8px; margin-bottom: 24px; }
-          .meta-row { font-size: 14px; margin-bottom: 6px; }
-          .q-card { border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 18px; border-radius: 8px; background: #fafafa; }
-          .q-title { font-weight: bold; font-size: 15px; margin-bottom: 10px; color: #111827; }
-          .badge-correct { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: bold; display: inline-block; margin-left: 8px; }
-          .badge-wrong { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: bold; display: inline-block; margin-left: 8px; }
-          .opt { padding: 8px 12px; margin: 6px 0; border-radius: 6px; font-size: 13px; }
-          .opt-correct-student { background-color: #d1fae5; border: 1.5px solid #10b981; font-weight: bold; color: #065f46; }
-          .opt-correct-only { background-color: #ecfdf5; border: 1px dashed #34d399; color: #047857; }
-          .opt-wrong-student { background-color: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; }
-          .opt-normal { background-color: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
-          <h2>የተማሪ የፈተና ውጤት እና የመልስ ወረቀት (Student Result & Answer Sheet)</h2>
-        </div>
+      <div style="border-bottom: 3px solid #059669; padding-bottom: 12px; margin-bottom: 20px;">
+        <h1 style="color: #065f46; font-size: 24px; margin: 0 0 6px 0; font-weight: 800;">የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
+        <h2 style="color: #1f2937; font-size: 15px; margin: 0; font-weight: 700;">የተማሪ የፈተና ውጤት እና የመልስ ወረቀት (Student Result & Answer Sheet)</h2>
+      </div>
 
-        <div class="meta-box">
-          <div class="meta-row"><strong>የፈተናው ርዕስ (Exam Title):</strong> ${quizTitle}</div>
-          <div class="meta-row"><strong>የተማሪው ስም (Student Name):</strong> ${studentName}</div>
-          <div class="meta-row"><strong>የውጤት ዓምድ (Exam Column):</strong> ${quiz.examColumnName || 'የለም'}</div>
-          <div class="meta-row"><strong>የመጨረሻ ውጤት (Final Score):</strong> ${displayScore} / ${targetMaxScore} (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
-          <div class="meta-row"><strong>የተላከበት ቀን (Date Submitted):</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
-        </div>
+      <div style="background: #f0fdf4; border: 1px solid #a7f3d0; padding: 14px 18px; border-radius: 12px; margin-bottom: 24px;">
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የፈተናው ርዕስ (Exam Title):</strong> ${quizTitle}</div>
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የተማሪው ስም (Student Name):</strong> ${studentName}</div>
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የውጤት ዓምድ (Exam Column):</strong> ${quiz.examColumnName || 'የለም'}</div>
+        <div style="font-size: 14px; margin-bottom: 6px;"><strong>የመጨረሻ ውጤት (Final Score):</strong> <span style="color: #047857; font-weight: 800;">${displayScore} / ${targetMaxScore}</span> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
+        <div style="font-size: 14px;"><strong>የተላከበት ቀን (Date Submitted):</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
+      </div>
 
-        <h3 style="color: #111827; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች (Questions & Options Breakdown):</h3>
+      <h3 style="color: #111827; border-bottom: 1.5px solid #d1d5db; padding-bottom: 8px; font-size: 15px; font-weight: 800; margin-bottom: 16px;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች (Questions & Options Breakdown):</h3>
     `;
 
     quiz.questions.forEach((q, idx) => {
@@ -657,10 +642,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
 
       contentHtml += `
-        <div class="q-card">
-          <div class="q-title">
+        <div style="border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 16px; border-radius: 12px; background-color: #fafafa; page-break-inside: avoid;">
+          <div style="font-weight: 800; font-size: 14px; margin-bottom: 10px; color: #111827;">
             ጥያቄ ${idx + 1}: ${q.questionText}
-            ${isCorrect ? '<span class="badge-correct">✅ ትክክል</span>' : '<span class="badge-wrong">❌ ስህተት</span>'}
+            ${isCorrect 
+              ? '<span style="background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 800; margin-left: 10px;">✅ ትክክል</span>' 
+              : '<span style="background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 800; margin-left: 10px;">❌ ስህተት</span>'
+            }
           </div>
           <div>
       `;
@@ -669,39 +657,47 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         const isChosen = studentChoiceIdx === optIdx;
         const isCorrectOpt = q.correctOptionIndex === optIdx;
 
-        let optClass = 'opt-normal';
+        let optStyle = 'background-color: #ffffff; border: 1px solid #e5e7eb; color: #4b5563;';
         let badgeText = '';
 
         if (isCorrectOpt && isChosen) {
-          optClass = 'opt-correct-student';
+          optStyle = 'background-color: #d1fae5; border: 1.5px solid #10b981; font-weight: 800; color: #065f46;';
           badgeText = ' — ✅ የተማሪው መልስ (ትክክል)';
         } else if (isCorrectOpt) {
-          optClass = 'opt-correct-only';
+          optStyle = 'background-color: #ecfdf5; border: 1px dashed #34d399; color: #047857; font-weight: 700;';
           badgeText = ' — ✅ ትክክለኛ መልስ';
         } else if (isChosen) {
-          optClass = 'opt-wrong-student';
+          optStyle = 'background-color: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; font-weight: 700;';
           badgeText = ' — ❌ የተማሪው መልስ (ስህተት)';
         }
 
         const optLabel = String.fromCharCode(65 + optIdx);
-        contentHtml += `<div class="opt ${optClass}">${optLabel}) ${opt}${badgeText}</div>`;
+        contentHtml += `<div style="padding: 8px 12px; margin: 6px 0; border-radius: 8px; font-size: 13px; ${optStyle}">${optLabel}) ${opt}${badgeText}</div>`;
       });
 
       contentHtml += `</div></div>`;
     });
 
-    contentHtml += `</body></html>`;
+    element.innerHTML = contentHtml;
 
-    const blob = new Blob(['\ufeff', contentHtml], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${studentName.replace(/\s+/g, '_')}_${quizTitle.replace(/\s+/g, '_')}_Result.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት በWord ፋይል ወርዷል!' : 'Word (.docx) exam report downloaded!');
+    const filename = `${studentName.replace(/\s+/g, '_')}_${quizTitle.replace(/\s+/g, '_')}_Result.pdf`;
+
+    const opt = {
+      margin: 10,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    toast.loading(lang === 'am' ? 'PDF እየተዘጋጀ ነው...' : 'Generating PDF...', { id: 'pdf-toast' });
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት በPDF ፋይል ወርዷል!' : 'Student PDF report downloaded successfully!', { id: 'pdf-toast' });
+    }).catch(err => {
+      console.error('PDF generation error:', err);
+      toast.error('Failed to generate PDF.', { id: 'pdf-toast' });
+    });
   };
 
   const downloadAsWord = (quiz) => {
@@ -1102,12 +1098,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                 <span>{t('history')}</span>
                               </button>
                               <button
-                                onClick={() => downloadStudentHistoryDocx({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz)}
-                                className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
-                                title="Download Student's Exam Paper Word (.docx) File"
+                                onClick={() => downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz)}
+                                className="bg-red-600 hover:bg-red-700 text-white font-medium px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1 shadow-xs"
+                                title="Download Student's Exam Paper PDF File"
                               >
                                 <span>📄</span>
-                                <span>Word</span>
+                                <span>PDF</span>
                               </button>
                               <button
                                 onClick={() => handleAllowRetake(selectedSubmissionQuiz._id, s.studentId, s.studentName)}
@@ -1143,12 +1139,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => downloadStudentHistoryDocx(selectedStudentHistory, selectedSubmissionQuiz)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
-                    title="Download Word (.docx) Exam Report"
+                    onClick={() => downloadStudentHistoryPdf(selectedStudentHistory, selectedSubmissionQuiz)}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
+                    title="Download PDF Exam Report"
                   >
                     <span>📄</span>
-                    <span>Download Word (.docx)</span>
+                    <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
                   </button>
                   <button
                     onClick={() => setSelectedStudentHistory(null)}
