@@ -61,8 +61,13 @@ const translations = {
     clickToUploadWord: 'Click to upload a .docx file',
     wordUploaded: 'Word Document Uploaded',
     pasteRawText: 'Or Paste Raw Question Text Below:',
-    formatInstructions: 'Instructions & Format Example:',
-    formatGuideText: 'Write each question starting with a number (1., 2.). Write choices starting with A), B) or 1), 2). Put an asterisk (*) at the end of the correct answer choice.',
+    formatInstructions: 'Instructions & Format Examples:',
+    formatGuideText: `1. 📌 Section Titles & Marks: Write "=== Section Title (Marks) ===" to create sections (e.g. === Section 1: Multiple Choice (2 marks) ===).
+2. 🔵 Multiple Choice: Start questions with numbers (1., 2.) and choices with A), B) or 1), 2). Put an asterisk (*) at the end of the correct choice.
+3. ✏️ Short Answer: Place questions under a section header containing "Short Answer" or "አጭር መልስ".
+4. 🔲 Fill in the Blank: Put "___" inside your question text or place under a "Fill in the Blank" header.
+5. 🎯 Default Marks: All imported questions get 1 mark by default (unless specified in the section title header).`,
+    bulkPlaceholder: `=== Section 1: Multiple Choice ===\n1. What is the first Surah in the Holy Qur'an?\nA) Al-Baqarah\nB) Al-Fatiha*\nC) Al-Ikhlas\nD) An-Nas\n\n=== Section 2: Short Answer ===\n2. Briefly explain what Tawheed Al-Uloohiyyah means.\n\n=== Section 3: Fill in the Blank ===\n3. The Holy Qur'an was revealed to Prophet ___ (PBUH).`,
     parseImportBtn: 'Parse & Import Questions',
     processing: 'Processing...',
     results: 'Results',
@@ -144,8 +149,13 @@ const translations = {
     clickToUploadWord: 'የ.docx ፋይል ለመጫን እዚህ ይጫኑ',
     wordUploaded: 'Word ሰነድ ተጭኗል',
     pasteRawText: 'ወይም ጥያቄዎችን እዚህ ይለጥፉ፡',
-    formatInstructions: 'መመሪያ እና የአጻጻፍ ምሳሌ፡',
-    formatGuideText: 'እያንዳንዱን ጥያቄ በቁጥር ይጀምሩ (1., 2.)። አማራጮችን A), B) ወይም 1), 2) ብለው ይጻፉ። በትክክለኛው መልስ መጨረሻ ላይ ኮከብ (*) ያድርጉ።',
+    formatInstructions: 'መመሪያ እና የአጻጻፍ ምሳሌዎች፡',
+    formatGuideText: `1. 📌 የክፍል ርዕስ እና ነጥብ፡ ጥያቄዎችን በክፍል ለመደደብ መስመሩን በ "=== ክፍል ርዕስ (ነጥብ) ===" ይጀምሩ (ምሳሌ፡ === ክፍል 1: ምርጫ (2 ነጥብ) ===)።
+2. 🔵 የሕብረ-ምርጫ ጥያቄዎች፡ ጥያቄዎችን በቁጥር (1.፣ 2.)፣ አማራጮችን በ A)፣ B) ይጀምሩ። በትክክለኛው መልስ መጨረሻ ኮከብ (*) ያድርጉ።
+3. ✏️ አጭር መልስ፡ ጥያቄዎችን "አጭር መልስ" በሚል ክፍል ርዕስ ስር ይጻፉ።
+4. 🔲 ክፍተት መሙያ፡ በጥያቄው ውስጥ "___" ያስገቡ ወይም "ክፍተት" በሚል ርዕስ ስር ይጻፉ።
+5. 🎯 ነጥብ፡ እያንዳንዱ ጥያቄ በነባሪ 1 ነጥብ ይሰጠዋል (በክፍሉ ርዕስ ላይ ካልተገለጸ በስተቀር)።`,
+    bulkPlaceholder: `=== ክፍል አንድ፡ ምርጫ ===\n1. ተውሒድ ማለት አላህን በሚገባው ነገር መነጠል ነው።\nA) እውነት*\nB) ሐሰት\n\n=== ክፍል ሁለት፡ አጭር መልስ ===\n2. በአቂዳ ውስጥ «ኢሕሳን» ማለት ምን ማለት ነው? በአጭሩ አብራሩ።\n\n=== ክፍል ሦስት፡ ክፍተት መሙያ ===\n3. የመጀመሪያው የቁርኣን ሱራ ___ ይባላል።`,
     parseImportBtn: 'ጥያቄዎችን መርምር እና አስገባ',
     processing: 'በማስኬድ ላይ...',
     results: 'ውጤቶች',
@@ -2010,23 +2020,25 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                     {t('pasteRawText')}
                   </label>
                   <textarea
-                    rows={8}
+                    rows={10}
                     value={bulkText}
                     onChange={(e) => setBulkText(e.target.value)}
-                    placeholder={`1. What is the first Surah in the Holy Qur'an?\nA) Al-Baqarah\nB) Al-Fatiha*\nC) Al-Ikhlas\nD) An-Nas`}
-                    className={`w-full p-3 rounded-2xl border font-mono text-xs focus:ring-2 focus:ring-emerald-500 ${
+                    placeholder={t('bulkPlaceholder')}
+                    className={`w-full p-3 rounded-2xl border font-mono text-xs focus:ring-2 focus:ring-emerald-500 whitespace-pre-wrap ${
                       isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
                     }`}
                   />
                 </div>
 
-                <div className={`p-3.5 rounded-2xl border text-xs space-y-1 ${
+                <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
                   isDark ? 'bg-gray-800/60 border-gray-700/80' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className={`font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{t('formatInstructions')}</span>
-                  <p className={`leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span className={`font-bold text-sm block mb-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    💡 {t('formatInstructions')}
+                  </span>
+                  <div className={`leading-relaxed whitespace-pre-line font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('formatGuideText')}
-                  </p>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
