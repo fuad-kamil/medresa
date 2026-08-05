@@ -613,12 +613,15 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
     const totalCount = submission.totalQuestions || quiz.questions.length || 0;
 
-    const element = document.createElement('div');
-    element.style.padding = '24px';
-    element.style.fontFamily = "'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', 'Segoe UI', Arial, sans-serif";
-    element.style.color = '#1f2937';
-    element.style.backgroundColor = '#ffffff';
-    element.style.width = '750px';
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '750px';
+    container.style.padding = '24px';
+    container.style.fontFamily = "'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', 'Segoe UI', Arial, sans-serif";
+    container.style.color = '#1f2937';
+    container.style.backgroundColor = '#ffffff';
 
     let contentHtml = `
       <div style="border-bottom: 3px solid #059669; padding-bottom: 12px; margin-bottom: 20px;">
@@ -678,26 +681,33 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       contentHtml += `</div></div>`;
     });
 
-    element.innerHTML = contentHtml;
+    container.innerHTML = contentHtml;
+    document.body.appendChild(container);
 
-    const filename = `${studentName.replace(/\s+/g, '_')}_${quizTitle.replace(/\s+/g, '_')}_Result.pdf`;
+    const safeStudentName = studentName.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
+    const safeQuizTitle = quizTitle.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
+    const filename = `${safeStudentName}_${safeQuizTitle}_Result.pdf`;
 
     const opt = {
       margin: [10, 10, 10, 10],
       filename: filename,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 3, useCORS: true, letterRendering: true, logging: false },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF...', { id: 'pdf-toast' });
+    toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF file...', { id: 'pdf-toast' });
 
-    html2pdf().set(opt).from(element).save().then(() => {
-      toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት PDF በስኬት ወርዷል!' : 'Student PDF downloaded successfully!', { id: 'pdf-toast' });
+    html2pdf().set(opt).from(container).save().then(() => {
+      toast.success(lang === 'am' ? 'የተማሪው የፈተና ውጤት PDF ፋይል በስኬት ወርዷል!' : 'PDF file downloaded directly!', { id: 'pdf-toast' });
     }).catch(err => {
       console.error('PDF generation error:', err);
-      toast.error('Failed to download PDF.', { id: 'pdf-toast' });
+      toast.error('Failed to download PDF file.', { id: 'pdf-toast' });
+    }).finally(() => {
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
     });
   };
 
