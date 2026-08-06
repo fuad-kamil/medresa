@@ -720,7 +720,7 @@ export default function ExamPlayer({ quizId, student }) {
 
       {/* Unanswered Questions Warning Modal */}
       {showUnansweredModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
           <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn space-y-4 ${
             isDark ? 'bg-gray-900 border-amber-900/50 text-white' : 'bg-white border-amber-200 text-gray-900'
           }`}>
@@ -770,7 +770,7 @@ export default function ExamPlayer({ quizId, student }) {
 
       {/* Styled Student Submission Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
           <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn ${
             isDark ? 'bg-gray-900 border-emerald-900/50 text-white' : 'bg-white border-emerald-100 text-gray-900'
           }`}>

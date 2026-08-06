@@ -202,6 +202,25 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const [submissions, setSubmissions] = useState([]);
   const [selectedStudentHistory, setSelectedStudentHistory] = useState(null);
 
+  const isAnyModalOpen = Boolean(
+    showCreateModal ||
+    selectedSubmissionQuiz ||
+    showBulkImportModal ||
+    selectedStudentHistory ||
+    confirmModal?.open
+  );
+
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isAnyModalOpen]);
+
   // Language state (en | am)
   const [lang, setLang] = useState(() => localStorage.getItem('ustaz_quiz_lang') || 'en');
 
@@ -1208,9 +1227,9 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           )}
         </div>
 
-        {/* Confirmation Modal (z-[100]) */}
+        {/* Confirmation Modal (z-[10000]) */}
         {confirmModal.open && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 border text-center animate-fadeIn ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -1251,9 +1270,9 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           </div>
         )}
 
-        {/* Submissions Modal */}
+        {/* Submissions Modal (z-[9999]) */}
         {selectedSubmissionQuiz && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -1419,9 +1438,9 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           </div>
         )}
 
-        {/* Student Detailed Exam History Modal (z-[100]) */}
+        {/* Student Detailed Exam History Modal (z-[10000]) */}
         {selectedStudentHistory && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto animate-fadeIn border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -1664,9 +1683,9 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           </div>
         )}
 
-        {/* Create Quiz Modal */}
+        {/* Create Quiz Modal (z-[9999]) */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -1980,9 +1999,9 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           </div>
         )}
 
-        {/* Bulk Import Modal */}
+        {/* Bulk Import Modal (z-[10000]) */}
         {showBulkImportModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
