@@ -17,6 +17,93 @@ const getCleanApiUrl = (url, defaultUrl) => {
 const MAIN_API_URL = getCleanApiUrl(import.meta.env.VITE_MAIN_API_URL, 'https://medresa.onrender.com/api');
 const EXAM_API_URL = getCleanApiUrl(import.meta.env.VITE_EXAM_API_URL, 'https://medresa-exam.onrender.com/api');
 
+// ─── Deterministic Seeded PRNG for Section-Aware Question Randomization ────
+function mulberry32(seed) {
+  return function() {
+    let t = (seed += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 8), t | 7);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function stringToSeed(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
+  }
+  return hash;
+}
+
+function seededShuffle(array, rng) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function shuffleQuizBySections(quizData, studentId) {
+  if (!quizData || !quizData.questions || quizData.questions.length <= 1) {
+    return quizData;
+  }
+
+  const seedStr = `${studentId || 'default'}_${quizData._id || 'quiz'}`;
+  const rng = mulberry32(stringToSeed(seedStr));
+
+  // Attach originalIdx to every question
+  const rawQuestions = quizData.questions.map((q, idx) => ({
+    ...q,
+    originalIdx: idx
+  }));
+
+  // Group contiguous questions into section blocks
+  const sectionBlocks = [];
+  let currentBlock = [];
+
+  rawQuestions.forEach((q, idx) => {
+    if (idx > 0 && q.sectionTitle && q.sectionTitle.trim()) {
+      if (currentBlock.length > 0) {
+        sectionBlocks.push(currentBlock);
+      }
+      currentBlock = [q];
+    } else {
+      currentBlock.push(q);
+    }
+  });
+  if (currentBlock.length > 0) {
+    sectionBlocks.push(currentBlock);
+  }
+
+  // Shuffle questions WITHIN each section block, maintaining sectionTitle on top question
+  const shuffledQuestions = [];
+
+  sectionBlocks.forEach((block) => {
+    const blockSectionTitle = block.find(q => q.sectionTitle && q.sectionTitle.trim())?.sectionTitle || '';
+
+    const cleanedBlock = block.map(q => {
+      const copy = { ...q };
+      delete copy.sectionTitle;
+      return copy;
+    });
+
+    const shuffledBlock = seededShuffle(cleanedBlock, rng);
+
+    if (blockSectionTitle && shuffledBlock.length > 0) {
+      shuffledBlock[0].sectionTitle = blockSectionTitle;
+    }
+
+    shuffledQuestions.push(...shuffledBlock);
+  });
+
+  return {
+    ...quizData,
+    _rawQuestions: quizData.questions,
+    questions: shuffledQuestions
+  };
+}
+
 // ─── Complete English & Authentic Amharic Translation Dictionary ───────────
 const translations = {
   en: {
@@ -187,7 +274,8 @@ export default function ExamPlayer({ quizId, student }) {
         throw new Error(data.message || 'Failed to load exam paper.');
       }
 
-      setQuiz(data);
+      const randomizedQuiz = shuffleQuizBySections(data, student?._id);
+      setQuiz(randomizedQuiz);
 
       // Restore saved answers from localStorage if available
       const savedKey = `exam_draft_${quizId}_${student._id}`;
@@ -295,12 +383,13 @@ export default function ExamPlayer({ quizId, student }) {
     localStorage.setItem(savedKey, JSON.stringify(updated));
   };
 
-  const isQuestionAnswered = (q, idx) => {
+  const isQuestionAnswered = (q, renderedIdx) => {
+    const origIdx = q.originalIdx !== undefined ? q.originalIdx : renderedIdx;
     const qType = q.questionType || 'multiple_choice';
     if (qType === 'short_answer' || qType === 'fill_blank') {
-      return typeof answers[idx] === 'string' && answers[idx].trim().length > 0;
+      return typeof answers[origIdx] === 'string' && answers[origIdx].trim().length > 0;
     }
-    return answers[idx] !== undefined && answers[idx] !== null && answers[idx] >= 0;
+    return answers[origIdx] !== undefined && answers[origIdx] !== null && answers[origIdx] >= 0;
   };
 
   const triggerSubmitPrompt = () => {
@@ -344,12 +433,14 @@ export default function ExamPlayer({ quizId, student }) {
     setError('');
 
     // Format answers: numbers for MCQ, strings for open, -1/'' for unanswered
-    const formattedAnswers = quiz.questions.map((q, idx) => {
+    // Strictly map answers back to original un-shuffled question indices (0 to N-1)
+    const rawQuestions = quiz._rawQuestions || quiz.questions;
+    const formattedAnswers = rawQuestions.map((q, origIdx) => {
       const qType = q.questionType || 'multiple_choice';
       if (qType === 'short_answer' || qType === 'fill_blank') {
-        return typeof answers[idx] === 'string' ? answers[idx] : '';
+        return typeof answers[origIdx] === 'string' ? answers[origIdx] : '';
       }
-      return answers[idx] ?? -1;
+      return answers[origIdx] ?? -1;
     });
 
     try {
@@ -652,6 +743,7 @@ export default function ExamPlayer({ quizId, student }) {
 
         {quiz.questions.map((q, qIdx) => {
           const qType = q.questionType || 'multiple_choice';
+          const origIdx = q.originalIdx !== undefined ? q.originalIdx : qIdx;
           const isAnswered = isQuestionAnswered(q, qIdx);
           return (
             <React.Fragment key={q._id || qIdx}>
@@ -701,11 +793,11 @@ export default function ExamPlayer({ quizId, student }) {
               {qType === 'multiple_choice' && (
                 <div className="space-y-3 pl-2">
                   {q.options.map((opt, optIdx) => {
-                    const isSelected = answers[qIdx] === optIdx;
+                    const isSelected = answers[origIdx] === optIdx;
                     return (
                       <label
                         key={optIdx}
-                        onClick={() => handleOptionSelect(qIdx, optIdx)}
+                        onClick={() => handleOptionSelect(origIdx, optIdx)}
                         className={`flex items-center p-4 rounded-2xl border cursor-pointer transition ${
                           isSelected
                             ? (isDark
@@ -718,7 +810,7 @@ export default function ExamPlayer({ quizId, student }) {
                       >
                         <input
                           type="radio"
-                          name={`question_${qIdx}`}
+                          name={`question_${origIdx}`}
                           checked={isSelected}
                           onChange={() => {}}
                           className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
@@ -735,8 +827,8 @@ export default function ExamPlayer({ quizId, student }) {
                 <div className="pl-2 space-y-2">
                   <textarea
                     rows={qType === 'short_answer' ? 4 : 2}
-                    value={typeof answers[qIdx] === 'string' ? answers[qIdx] : ''}
-                    onChange={(e) => handleTextAnswer(qIdx, e.target.value)}
+                    value={typeof answers[origIdx] === 'string' ? answers[origIdx] : ''}
+                    onChange={(e) => handleTextAnswer(origIdx, e.target.value)}
                     placeholder={qType === 'fill_blank' ? t('fillBlankPlaceholder') : t('shortAnswerPlaceholder')}
                     className={`w-full rounded-2xl border p-4 text-sm resize-none transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                       isDark
