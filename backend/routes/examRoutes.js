@@ -11,6 +11,8 @@ import {
     updateMyExam,
     deleteMyExam,
     verifyStudent,
+    sendExamHeartbeat,
+    releaseStudentSession,
     syncExamScore,
     clearExamScore,
     getExamSystemStatus,
@@ -21,6 +23,8 @@ const router = express.Router();
 
 // Public / Service endpoints (No user token required)
 router.post('/verify-student', verifyStudent);
+router.post('/heartbeat', sendExamHeartbeat);
+router.post('/release-session', releaseStudentSession);
 router.post('/sync-score', syncExamScore);
 router.post('/clear-score', clearExamScore);
 router.get('/system-status', getExamSystemStatus);

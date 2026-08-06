@@ -14,6 +14,7 @@ const getCleanApiUrl = (url, defaultUrl) => {
   return clean;
 };
 
+const MAIN_API_URL = getCleanApiUrl(import.meta.env.VITE_MAIN_API_URL, 'https://medresa.onrender.com/api');
 const EXAM_API_URL = getCleanApiUrl(import.meta.env.VITE_EXAM_API_URL, 'https://medresa-exam.onrender.com/api');
 
 // ─── Complete English & Authentic Amharic Translation Dictionary ───────────
@@ -215,6 +216,49 @@ export default function ExamPlayer({ quizId, student }) {
       setLoading(false);
     }
   };
+
+  // Real-time Heartbeat & Active Session Release
+  useEffect(() => {
+    if (!student || !student._id) return;
+    const deviceToken = localStorage.getItem('medresa_device_id');
+
+    const sendHeartbeatPing = () => {
+      fetch(`${MAIN_API_URL}/exams/heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: student._id, deviceToken })
+      }).catch(() => {});
+    };
+
+    sendHeartbeatPing();
+    const interval = setInterval(sendHeartbeatPing, 15000);
+
+    const handleRelease = () => {
+      if (student && student._id) {
+        const payload = JSON.stringify({ studentId: student._id, deviceToken });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(`${MAIN_API_URL}/exams/release-session`, payload);
+        } else {
+          fetch(`${MAIN_API_URL}/exams/release-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true
+          }).catch(() => {});
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleRelease);
+    window.addEventListener('unload', handleRelease);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleRelease);
+      window.removeEventListener('unload', handleRelease);
+      handleRelease();
+    };
+  }, [student]);
 
   // Countdown timer interval (only if hasTimer is enabled)
   useEffect(() => {

@@ -298,15 +298,15 @@ export const verifyStudent = async (req, res) => {
             return res.status(404).json({ message: 'Invalid exam code. Please enter your combined Exam Code (e.g. 011).' });
         }
 
-        // ── Single Active Session & Device Lock Enforcement ───────────────────
+        // ── Real-Time Active Session & Device Lock Enforcement ───────────────────
         const { deviceToken } = req.body;
         if (deviceToken) {
             const sidStr = student._id.toString();
-            const TWO_HOURS = 2 * 60 * 60 * 1000;
+            const SESSION_TIMEOUT = 45 * 1000; // 45 seconds timeout (relies on real-time heartbeats)
 
-            // 1. Check if another device is currently using this student code
+            // 1. Check if another device is currently actively taking the exam with this student code (< 45s)
             const existingSidSession = activeStudentSessions.get(sidStr);
-            if (existingSidSession && (Date.now() - existingSidSession.startedAt < TWO_HOURS)) {
+            if (existingSidSession && (Date.now() - (existingSidSession.lastPing || existingSidSession.startedAt) < SESSION_TIMEOUT)) {
                 if (existingSidSession.deviceToken !== deviceToken) {
                     return res.status(403).json({
                         code: 'MULTI_DEVICE_LOCKED',
@@ -314,26 +314,32 @@ export const verifyStudent = async (req, res) => {
                         message: `🔒 Exam code (${cleanInput}) is currently active on another device. Multi-device access is locked.`
                     });
                 }
+            } else if (existingSidSession) {
+                // Expired inactive session -> remove it
+                activeStudentSessions.delete(sidStr);
             }
 
-            // 2. Check if this device is already bound to another active student code
+            // 2. Check if this device is currently active on another student code (< 45s)
             const existingDeviceStudentId = activeDeviceStudents.get(deviceToken);
             if (existingDeviceStudentId && existingDeviceStudentId !== sidStr) {
                 const activeDeviceSession = activeStudentSessions.get(existingDeviceStudentId);
-                if (activeDeviceSession && (Date.now() - activeDeviceSession.startedAt < TWO_HOURS)) {
+                if (activeDeviceSession && (Date.now() - (activeDeviceSession.lastPing || activeDeviceSession.startedAt) < SESSION_TIMEOUT)) {
                     return res.status(403).json({
                         code: 'DEVICE_ALREADY_ACTIVE',
                         studentName: activeDeviceSession.studentName,
                         message: `🔒 You are currently taking an exam as "${activeDeviceSession.studentName}" on this device. Logging into another student account is locked.`
                     });
+                } else {
+                    activeDeviceStudents.delete(deviceToken);
                 }
             }
 
-            // Bind session to this deviceToken
+            // Bind session to this deviceToken with current lastPing timestamp
             activeStudentSessions.set(sidStr, {
                 deviceToken,
                 studentName: student.fullName,
-                startedAt: Date.now()
+                startedAt: Date.now(),
+                lastPing: Date.now()
             });
             activeDeviceStudents.set(deviceToken, sidStr);
         }
@@ -354,6 +360,59 @@ export const verifyStudent = async (req, res) => {
 // Map to track active student exam sessions in memory
 const activeStudentSessions = new Map();
 const activeDeviceStudents = new Map();
+
+// ── Real-Time Exam Heartbeat (pings every 15s while student is on exam page) ─
+export const sendExamHeartbeat = async (req, res) => {
+    try {
+        const { studentId, deviceToken } = req.body;
+        if (!studentId || !deviceToken) {
+            return res.status(400).json({ message: 'studentId and deviceToken required' });
+        }
+        const sidStr = studentId.toString();
+        const session = activeStudentSessions.get(sidStr);
+
+        if (session && session.deviceToken === deviceToken) {
+            session.lastPing = Date.now();
+            activeStudentSessions.set(sidStr, session);
+            return res.json({ success: true, active: true });
+        }
+        
+        activeStudentSessions.set(sidStr, {
+            deviceToken,
+            startedAt: Date.now(),
+            lastPing: Date.now()
+        });
+        activeDeviceStudents.set(deviceToken, sidStr);
+        res.json({ success: true, active: true });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ── Explicit Session Release (called on logout, submit, tab close, or leave) ─
+export const releaseStudentSession = async (req, res) => {
+    try {
+        const { studentId, deviceToken } = req.body;
+        if (studentId) {
+            const sidStr = studentId.toString();
+            const session = activeStudentSessions.get(sidStr);
+            if (session && (!deviceToken || session.deviceToken === deviceToken)) {
+                activeDeviceStudents.delete(session.deviceToken);
+                activeStudentSessions.delete(sidStr);
+            }
+        }
+        if (deviceToken) {
+            const boundSid = activeDeviceStudents.get(deviceToken);
+            if (boundSid) {
+                activeStudentSessions.delete(boundSid);
+                activeDeviceStudents.delete(deviceToken);
+            }
+        }
+        res.json({ success: true, message: 'Session released.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // Clear active student session (used when retake is granted or exam ends)
 export const clearActiveStudentSession = (studentId) => {
