@@ -202,25 +202,6 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   const [submissions, setSubmissions] = useState([]);
   const [selectedStudentHistory, setSelectedStudentHistory] = useState(null);
 
-  const isAnyModalOpen = Boolean(
-    showCreateModal ||
-    selectedSubmissionQuiz ||
-    showBulkImportModal ||
-    selectedStudentHistory ||
-    confirmModal?.open
-  );
-
-  useEffect(() => {
-    if (isAnyModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isAnyModalOpen]);
-
   // Language state (en | am)
   const [lang, setLang] = useState(() => localStorage.getItem('ustaz_quiz_lang') || 'en');
 
@@ -280,6 +261,25 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   // Grading State for Short Answer / Fill in Blank
   const [gradingScores, setGradingScores] = useState({});
   const [submittingGrading, setSubmittingGrading] = useState(false);
+
+  const isAnyModalOpen = Boolean(
+    showCreateModal ||
+    selectedSubmissionQuiz ||
+    showBulkImportModal ||
+    selectedStudentHistory ||
+    confirmModal?.open
+  );
+
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isAnyModalOpen]);
 
   const computeTotalCorrectCount = (sub, quiz) => {
     if (!quiz || !quiz.questions) return sub.correctAnswers || 0;
