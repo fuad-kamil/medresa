@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Globe, Sun, Moon } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+const ModalPortal = ({ children }) => {
+  if (typeof document === 'undefined') return null;
+  return createPortal(children, document.body);
+};
 
 const getCleanApiUrl = (url, defaultUrl) => {
   let clean = (url || defaultUrl).trim().replace(/\/+$/, '');
@@ -502,8 +508,12 @@ export default function ExamPlayer({ quizId, student }) {
       }`}
     >
       {/* ─── DEDICATED TOP NAVIGATION BAR ───────────────────────────────────── */}
-      <header className={`sticky top-0 z-40 border-b px-4 sm:px-8 py-3.5 transition-colors ${
-        isDark ? 'bg-gray-900/90 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900 shadow-sm'
+      <header className={`sticky top-0 transition-colors border-b px-4 sm:px-8 py-3.5 ${
+        (showUnansweredModal || showConfirmModal) ? 'z-20 pointer-events-none select-none' : 'z-40'
+      } ${
+        isDark
+          ? ((showUnansweredModal || showConfirmModal) ? 'bg-gray-900 border-gray-800 text-white' : 'bg-gray-900/90 border-gray-800 text-white')
+          : ((showUnansweredModal || showConfirmModal) ? 'bg-white border-gray-100 text-gray-900' : 'bg-white border-gray-100 text-gray-900 shadow-sm')
       }`}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -720,7 +730,8 @@ export default function ExamPlayer({ quizId, student }) {
 
       {/* Unanswered Questions Warning Modal */}
       {showUnansweredModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+        <ModalPortal>
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
           <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn space-y-4 ${
             isDark ? 'bg-gray-900 border-amber-900/50 text-white' : 'bg-white border-amber-200 text-gray-900'
           }`}>
@@ -766,11 +777,13 @@ export default function ExamPlayer({ quizId, student }) {
             </div>
           </div>
         </div>
+      </ModalPortal>
       )}
 
       {/* Styled Student Submission Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
           <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn ${
             isDark ? 'bg-gray-900 border-emerald-900/50 text-white' : 'bg-white border-emerald-100 text-gray-900'
           }`}>
@@ -800,6 +813,7 @@ export default function ExamPlayer({ quizId, student }) {
             </div>
           </div>
         </div>
+      </ModalPortal>
       )}
     </div>
   );

@@ -3,6 +3,12 @@ import toast from 'react-hot-toast';
 import mammoth from 'mammoth';
 import html2pdf from 'html2pdf.js';
 import { Globe, Sun, Moon, LogOut, FileUp, PlusCircle, FileQuestion } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+const ModalPortal = ({ children }) => {
+  if (typeof document === 'undefined') return null;
+  return createPortal(children, document.body);
+};
 
 const getCleanApiUrl = (url, defaultUrl) => {
   let clean = (url || defaultUrl).trim().replace(/\/+$/, '');
@@ -1004,8 +1010,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   return (
     <div className={`min-h-screen transition-colors duration-200 ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* ─── DEDICATED TOP NAVIGATION BAR ───────────────────────────────────── */}
-      <header className={`sticky top-0 z-40 border-b px-4 sm:px-8 py-3 transition-colors ${
-        isDark ? 'bg-gray-900/95 border-gray-800 text-white backdrop-blur-md' : 'bg-white/95 border-gray-100 text-gray-900 shadow-xs backdrop-blur-md'
+      <header className={`sticky top-0 transition-colors border-b px-4 sm:px-8 py-3 ${
+        isAnyModalOpen ? 'z-20 pointer-events-none select-none' : 'z-40 backdrop-blur-md'
+      } ${
+        isDark
+          ? (isAnyModalOpen ? 'bg-gray-900 border-gray-800 text-white' : 'bg-gray-900/95 border-gray-800 text-white')
+          : (isAnyModalOpen ? 'bg-white border-gray-100 text-gray-900' : 'bg-white/95 border-gray-100 text-gray-900 shadow-xs')
       }`}>
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -1272,175 +1282,178 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
         {/* Submissions Modal (z-[9999]) */}
         {selectedSubmissionQuiz && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-            <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border ${
-              isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
-            }`}>
-              <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-                <div>
-                  <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedSubmissionQuiz.title} - {t('results')}</h3>
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('studentSubmissionScores')}</p>
+          <ModalPortal>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border ${
+                isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
+              }`}>
+                <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <div>
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedSubmissionQuiz.title} - {t('results')}</h3>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('studentSubmissionScores')}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedSubmissionQuiz(null)}
+                    className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    &times;
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSelectedSubmissionQuiz(null)}
-                  className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  &times;
-                </button>
-              </div>
 
-              {submissions.length === 0 ? (
-                <p className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noSubmissionsYet')}</p>
-              ) : (
-                <table className="w-full text-left text-sm border-collapse">
-                  <thead>
-                    <tr className={`border-b ${isDark ? 'bg-gray-800/80 border-gray-800 text-gray-300' : 'bg-gray-100 border-gray-200 text-gray-700'}`}>
-                      <th className="p-3 font-semibold">{t('studentName')}</th>
-                      <th className="p-3 font-semibold text-center">{t('score')}</th>
-                      <th className="p-3 font-semibold text-center">{t('correct')}</th>
-                      <th className="p-3 font-semibold text-center">{t('action')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${isDark ? 'divide-gray-800' : 'divide-gray-100'}`}>
-                    {submissions.map((s) => {
-                      const matchingCol = examColumns.find(c => String(c._id) === String(selectedSubmissionQuiz?.examColumnId) || c.name === selectedSubmissionQuiz?.examColumnName);
-                      const targetMaxScore = matchingCol?.maxScore || selectedSubmissionQuiz?.maxScore || 100;
-                      const isPending = s.manualGradeStatus === 'pending';
-                      const displayScore = s.score !== undefined ? s.score : 0;
+                {submissions.length === 0 ? (
+                  <p className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noSubmissionsYet')}</p>
+                ) : (
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead>
+                      <tr className={`border-b ${isDark ? 'bg-gray-800/80 border-gray-800 text-gray-300' : 'bg-gray-100 border-gray-200 text-gray-700'}`}>
+                        <th className="p-3 font-semibold">{t('studentName')}</th>
+                        <th className="p-3 font-semibold text-center">{t('score')}</th>
+                        <th className="p-3 font-semibold text-center">{t('correct')}</th>
+                        <th className="p-3 font-semibold text-center">{t('action')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDark ? 'divide-gray-800' : 'divide-gray-100'}`}>
+                      {submissions.map((s) => {
+                        const matchingCol = examColumns.find(c => String(c._id) === String(selectedSubmissionQuiz?.examColumnId) || c.name === selectedSubmissionQuiz?.examColumnName);
+                        const targetMaxScore = matchingCol?.maxScore || selectedSubmissionQuiz?.maxScore || 100;
+                        const isPending = s.manualGradeStatus === 'pending';
+                        const displayScore = s.score !== undefined ? s.score : 0;
 
-                      return (
-                        <tr key={s._id} className={`hover:bg-opacity-50 ${isDark ? 'hover:bg-gray-800/40' : 'hover:bg-gray-50'}`}>
-                          <td className={`p-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.studentName}</td>
-                          <td className="p-3 text-center">
-                            {isPending ? (
-                              <span className={`px-2.5 py-1 font-bold rounded-full text-xs border inline-block ${
-                                isDark ? 'bg-amber-950/80 border-amber-800 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-800'
-                              }`}>
-                                ⏳ {lang === 'am' ? 'ግምገማ በጠበቅ ላይ' : 'Pending Grade'}
-                              </span>
-                            ) : (
-                              <span className={`px-2.5 py-1 font-bold rounded-full text-xs inline-block ${
-                                isDark ? 'bg-emerald-950 text-emerald-300' : 'bg-emerald-100 text-emerald-800'
-                              }`}>
-                                {displayScore} / {targetMaxScore}
-                              </span>
-                            )}
-                          </td>
-                          <td className={`p-3 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                            {isPending ? (
-                              <span className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
-                                ⏳ {lang === 'am' ? 'በግምገማ ላይ' : 'Pending'}
-                              </span>
-                            ) : (
-                              `${computeTotalCorrectCount(s, selectedSubmissionQuiz)} / ${s.totalQuestions}`
-                            )}
-                          </td>
-                          <td className="p-3 text-center relative">
-                            <div className="relative inline-block text-left">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveActionMenuId(activeActionMenuId === s._id ? null : s._id);
-                                }}
-                                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition cursor-pointer ${
-                                  isPending
-                                    ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
-                                    : (isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300')
-                                }`}
-                              >
-                                <span>{isPending ? (lang === 'am' ? '✏️ ገምግም' : '✏️ Grade') : (lang === 'am' ? '⚡ እርምጃዎች' : '⚡ Action')}</span>
-                                <span className="text-[10px]">▼</span>
-                              </button>
-
-                              {activeActionMenuId === s._id && (
-                                <div
-                                  className={`absolute right-0 mt-1 w-48 rounded-2xl shadow-2xl border z-50 py-1.5 text-xs animate-fadeIn ${
-                                    isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+                        return (
+                          <tr key={s._id} className={`hover:bg-opacity-50 ${isDark ? 'hover:bg-gray-800/40' : 'hover:bg-gray-50'}`}>
+                            <td className={`p-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.studentName}</td>
+                            <td className="p-3 text-center">
+                              {isPending ? (
+                                <span className={`px-2.5 py-1 font-bold rounded-full text-xs border inline-block ${
+                                  isDark ? 'bg-amber-950/80 border-amber-800 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-800'
+                                }`}>
+                                  ⏳ {lang === 'am' ? 'ግምገማ በጠበቅ ላይ' : 'Pending Grade'}
+                                </span>
+                              ) : (
+                                <span className={`px-2.5 py-1 font-bold rounded-full text-xs inline-block ${
+                                  isDark ? 'bg-emerald-950 text-emerald-300' : 'bg-emerald-100 text-emerald-800'
+                                }`}>
+                                  {displayScore} / {targetMaxScore}
+                                </span>
+                              )}
+                            </td>
+                            <td className={`p-3 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {isPending ? (
+                                <span className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                                  ⏳ {lang === 'am' ? 'በግምገማ ላይ' : 'Pending'}
+                                </span>
+                              ) : (
+                                `${computeTotalCorrectCount(s, selectedSubmissionQuiz)} / ${s.totalQuestions}`
+                              )}
+                            </td>
+                            <td className="p-3 text-center relative">
+                              <div className="relative inline-block text-left">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveActionMenuId(activeActionMenuId === s._id ? null : s._id);
+                                  }}
+                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition cursor-pointer ${
+                                    isPending
+                                      ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
+                                      : (isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300')
                                   }`}
                                 >
-                                  {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                                  <span>{isPending ? (lang === 'am' ? '✏️ ገምግም' : '✏️ Grade') : (lang === 'am' ? '⚡ እርምጃዎች' : '⚡ Action')}</span>
+                                  <span className="text-[10px]">▼</span>
+                                </button>
+
+                                {activeActionMenuId === s._id && (
+                                  <div
+                                    className={`absolute right-0 mt-1 w-48 rounded-2xl shadow-2xl border z-50 py-1.5 text-xs animate-fadeIn ${
+                                      isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+                                    }`}
+                                  >
+                                    {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActiveActionMenuId(null);
+                                          handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
+                                        }}
+                                        className={`w-full text-left px-3.5 py-2 font-bold flex items-center gap-2 transition ${
+                                          s.manualGradeStatus === 'graded'
+                                            ? (isDark ? 'text-emerald-400 hover:bg-emerald-950/40' : 'text-emerald-700 hover:bg-emerald-50')
+                                            : (isDark ? 'text-amber-400 hover:bg-amber-950/50' : 'text-amber-700 hover:bg-amber-50')
+                                        }`}
+                                      >
+                                        <span>{s.manualGradeStatus === 'graded' ? '✅' : '✏️'}</span>
+                                        <span>{s.manualGradeStatus === 'graded' ? (lang === 'am' ? 'ተገምግሟል' : 'Graded') : (lang === 'am' ? 'መልስ ገምግም' : 'Grade Answers')}</span>
+                                      </button>
+                                    )}
+
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setActiveActionMenuId(null);
                                         handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
                                       }}
-                                      className={`w-full text-left px-3.5 py-2 font-bold flex items-center gap-2 transition ${
-                                        s.manualGradeStatus === 'graded'
-                                          ? (isDark ? 'text-emerald-400 hover:bg-emerald-950/40' : 'text-emerald-700 hover:bg-emerald-50')
-                                          : (isDark ? 'text-amber-400 hover:bg-amber-950/50' : 'text-amber-700 hover:bg-amber-50')
+                                      className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
+                                        isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'
                                       }`}
                                     >
-                                      <span>{s.manualGradeStatus === 'graded' ? '✅' : '✏️'}</span>
-                                      <span>{s.manualGradeStatus === 'graded' ? (lang === 'am' ? 'ተገምግሟል' : 'Graded') : (lang === 'am' ? 'መልስ ገምግም' : 'Grade Answers')}</span>
+                                      <span>👁️</span>
+                                      <span>{lang === 'am' ? 'ታሪክ ተመልከት' : 'View History'}</span>
                                     </button>
-                                  )}
 
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setActiveActionMenuId(null);
-                                      handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
-                                    }}
-                                    className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
-                                      isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'
-                                    }`}
-                                  >
-                                    <span>👁️</span>
-                                    <span>{lang === 'am' ? 'ታሪክ ተመልከት' : 'View History'}</span>
-                                  </button>
+                                    <button
+                                      type="button"
+                                      disabled={isPending}
+                                      onClick={() => {
+                                        if (!isPending) {
+                                          setActiveActionMenuId(null);
+                                          downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz);
+                                        }
+                                      }}
+                                      className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
+                                        isPending
+                                          ? 'opacity-40 cursor-not-allowed text-gray-500'
+                                          : (isDark ? 'hover:bg-gray-800 text-red-400' : 'hover:bg-gray-100 text-red-600')
+                                      }`}
+                                      title={isPending ? (lang === 'am' ? 'ኡስታዝ እስኪገመግም ድረስ PDF ማውረድ አይቻልም' : 'PDF disabled until Ustaz finishes grading') : ''}
+                                    >
+                                      <span>📄</span>
+                                      <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
+                                    </button>
 
-                                  <button
-                                    type="button"
-                                    disabled={isPending}
-                                    onClick={() => {
-                                      if (!isPending) {
+                                    <div className={`my-1 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`} />
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
                                         setActiveActionMenuId(null);
-                                        downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz);
-                                      }
-                                    }}
-                                    className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
-                                      isPending
-                                        ? 'opacity-40 cursor-not-allowed text-gray-500'
-                                        : (isDark ? 'hover:bg-gray-800 text-red-400' : 'hover:bg-gray-100 text-red-600')
-                                    }`}
-                                    title={isPending ? (lang === 'am' ? 'ኡስታዝ እስኪገመግም ድረስ PDF ማውረድ አይቻልም' : 'PDF disabled until Ustaz finishes grading') : ''}
-                                  >
-                                    <span>📄</span>
-                                    <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
-                                  </button>
-
-                                  <div className={`my-1 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`} />
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setActiveActionMenuId(null);
-                                      handleAllowRetake(selectedSubmissionQuiz._id, s.studentId, s.studentName);
-                                    }}
-                                    className="w-full text-left px-3.5 py-2 font-medium text-orange-500 hover:bg-orange-500/10 flex items-center gap-2 transition"
-                                  >
-                                    <span>🔄</span>
-                                    <span>{t('allowRetake')}</span>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
+                                        handleAllowRetake(selectedSubmissionQuiz._id, s.studentId, s.studentName);
+                                      }}
+                                      className="w-full text-left px-3.5 py-2 font-medium text-orange-500 hover:bg-orange-500/10 flex items-center gap-2 transition"
+                                    >
+                                      <span>🔄</span>
+                                      <span>{t('allowRetake')}</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
 
         {/* Student Detailed Exam History Modal (z-[10000]) */}
         {selectedStudentHistory && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
+          <ModalPortal>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto animate-fadeIn border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -1681,11 +1694,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
               )}
             </div>
           </div>
+        </ModalPortal>
         )}
 
         {/* Create Quiz Modal (z-[9999]) */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+          <ModalPortal>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -1997,11 +2012,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
               </form>
             </div>
           </div>
+        </ModalPortal>
         )}
 
         {/* Bulk Import Modal (z-[10000]) */}
         {showBulkImportModal && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
+          <ModalPortal>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
             <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto border ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
             }`}>
@@ -2081,6 +2098,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
               </div>
             </div>
           </div>
+        </ModalPortal>
         )}
       </div>
     </div>
