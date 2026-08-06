@@ -302,9 +302,9 @@ export const verifyStudent = async (req, res) => {
         const { deviceToken } = req.body;
         if (deviceToken) {
             const sidStr = student._id.toString();
-            const SESSION_TIMEOUT = 45 * 1000; // 45 seconds timeout (relies on real-time heartbeats)
+            const SESSION_TIMEOUT = 15 * 1000; // 15 seconds timeout (relies on active heartbeats every 6s)
 
-            // 1. Check if another device is currently actively taking the exam with this student code (< 45s)
+            // 1. Check if another device is currently actively taking the exam with this student code (< 15s)
             const existingSidSession = activeStudentSessions.get(sidStr);
             if (existingSidSession && (Date.now() - (existingSidSession.lastPing || existingSidSession.startedAt) < SESSION_TIMEOUT)) {
                 if (existingSidSession.deviceToken !== deviceToken) {
@@ -315,11 +315,11 @@ export const verifyStudent = async (req, res) => {
                     });
                 }
             } else if (existingSidSession) {
-                // Expired inactive session -> remove it
+                // Expired inactive session -> remove it immediately
                 activeStudentSessions.delete(sidStr);
             }
 
-            // 2. Check if this device is currently active on another student code (< 45s)
+            // 2. Check if this device is currently active on another student code (< 15s)
             const existingDeviceStudentId = activeDeviceStudents.get(deviceToken);
             if (existingDeviceStudentId && existingDeviceStudentId !== sidStr) {
                 const activeDeviceSession = activeStudentSessions.get(existingDeviceStudentId);
@@ -333,15 +333,7 @@ export const verifyStudent = async (req, res) => {
                     activeDeviceStudents.delete(deviceToken);
                 }
             }
-
-            // Bind session to this deviceToken with current lastPing timestamp
-            activeStudentSessions.set(sidStr, {
-                deviceToken,
-                studentName: student.fullName,
-                startedAt: Date.now(),
-                lastPing: Date.now()
-            });
-            activeDeviceStudents.set(deviceToken, sidStr);
+            // NOTE: We do NOT bind session here in verifyStudent. Session binding happens inside sendExamHeartbeat when student enters ExamPlayer!
         }
 
         res.json({
@@ -361,7 +353,7 @@ export const verifyStudent = async (req, res) => {
 const activeStudentSessions = new Map();
 const activeDeviceStudents = new Map();
 
-// ── Real-Time Exam Heartbeat (pings every 15s while student is on exam page) ─
+// ── Real-Time Exam Heartbeat (pings every 6s while student is on exam page) ──
 export const sendExamHeartbeat = async (req, res) => {
     try {
         const { studentId, deviceToken } = req.body;
@@ -370,16 +362,18 @@ export const sendExamHeartbeat = async (req, res) => {
         }
         const sidStr = studentId.toString();
         const session = activeStudentSessions.get(sidStr);
+        const SESSION_TIMEOUT = 15 * 1000;
 
-        if (session && session.deviceToken === deviceToken) {
-            session.lastPing = Date.now();
-            activeStudentSessions.set(sidStr, session);
-            return res.json({ success: true, active: true });
+        if (session && session.deviceToken !== deviceToken && (Date.now() - (session.lastPing || session.startedAt) < SESSION_TIMEOUT)) {
+            return res.status(403).json({
+                code: 'MULTI_DEVICE_LOCKED',
+                message: '🔒 Exam code is active on another device.'
+            });
         }
-        
+
         activeStudentSessions.set(sidStr, {
             deviceToken,
-            startedAt: Date.now(),
+            startedAt: session ? session.startedAt : Date.now(),
             lastPing: Date.now()
         });
         activeDeviceStudents.set(deviceToken, sidStr);

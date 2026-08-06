@@ -231,7 +231,7 @@ export default function ExamPlayer({ quizId, student }) {
     };
 
     sendHeartbeatPing();
-    const interval = setInterval(sendHeartbeatPing, 15000);
+    const interval = setInterval(sendHeartbeatPing, 6000);
 
     const handleRelease = () => {
       if (student && student._id) {
