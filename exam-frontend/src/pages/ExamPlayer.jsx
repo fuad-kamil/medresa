@@ -836,11 +836,6 @@ export default function ExamPlayer({ quizId, student }) {
                         : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
                     }`}
                   />
-                  <p className={`text-xs flex items-center gap-1.5 ${
-                    isDark ? 'text-amber-400' : 'text-amber-700'
-                  }`}>
-                    ⏳ {t('openAnswerHint')}
-                  </p>
                 </div>
               )}
             </div>
