@@ -863,52 +863,53 @@ export default function ExamPlayer({ quizId, student }) {
       {showUnansweredModal && (
         <ModalPortal>
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-          <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn space-y-4 ${
-            isDark ? 'bg-gray-900 border-amber-900/50 text-white' : 'bg-white border-amber-200 text-gray-900'
-          }`}>
-            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">
-              ⚠️
-            </div>
-
-            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('unansweredTitle')}</h3>
-            <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              {t('unansweredDescPrefix')} <strong className="text-amber-600 dark:text-amber-400 font-black">{unansweredList.length}</strong> {t('unansweredDescSuffix')}
-            </p>
-
-            {/* List of unanswered question badges */}
-            <div className={`p-4 rounded-2xl border text-left space-y-2 ${
-              isDark ? 'bg-amber-950/30 border-amber-900/50' : 'bg-amber-50 border-amber-200'
+            <div className={`rounded-3xl shadow-2xl max-w-md sm:max-w-lg w-full p-5 sm:p-6 text-center border max-h-[85vh] flex flex-col overflow-hidden animate-fadeIn space-y-4 ${
+              isDark ? 'bg-gray-900 border-amber-900/50 text-white' : 'bg-white border-amber-200 text-gray-900'
             }`}>
-              <span className="text-xs font-extrabold text-amber-800 dark:text-amber-400 uppercase tracking-wider block">
-                {t('clickQuestionToAnswer')}
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {unansweredList.map((qNum) => (
-                  <button
-                    key={qNum}
-                    onClick={() => scrollToQuestion(qNum)}
-                    className={`font-extrabold text-xs px-3.5 py-2 rounded-xl border shadow-xs transition flex items-center gap-1.5 cursor-pointer hover:scale-105 ${
-                      isDark ? 'bg-gray-800 text-amber-300 border-amber-800 hover:bg-gray-700' : 'bg-white text-amber-900 border-amber-300 hover:bg-amber-100'
-                    }`}
-                  >
-                    <span>{t('questionLabel')} {qNum}</span>
-                    <span className="text-[10px]">↗</span>
-                  </button>
-                ))}
+              <div className="shrink-0 space-y-2">
+                <div className="w-14 h-14 bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-inner">
+                  ⚠️
+                </div>
+                <h3 className={`text-lg sm:text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('unansweredTitle')}</h3>
+                <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {t('unansweredDescPrefix')} <strong className="text-amber-600 dark:text-amber-400 font-black">{unansweredList.length}</strong> {t('unansweredDescSuffix')}
+                </p>
+              </div>
+
+              {/* List of unanswered question badges (Scrollable & Responsive Grid) */}
+              <div className={`p-3 rounded-2xl border text-left flex-1 min-h-0 flex flex-col ${
+                isDark ? 'bg-amber-950/30 border-amber-900/50' : 'bg-amber-50 border-amber-200'
+              }`}>
+                <span className="text-[11px] font-extrabold text-amber-800 dark:text-amber-400 uppercase tracking-wider block mb-2 shrink-0">
+                  {t('clickQuestionToAnswer')}
+                </span>
+                <div className="overflow-y-auto max-h-[35vh] pr-1 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {unansweredList.map((qNum) => (
+                    <button
+                      key={qNum}
+                      onClick={() => scrollToQuestion(qNum)}
+                      className={`font-extrabold text-xs px-2.5 py-2 rounded-xl border shadow-2xs transition flex items-center justify-between cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                        isDark ? 'bg-gray-800 text-amber-300 border-amber-800/80 hover:bg-gray-700' : 'bg-white text-amber-900 border-amber-300/80 hover:bg-amber-100'
+                      }`}
+                    >
+                      <span className="truncate">{t('questionLabel')} {qNum}</span>
+                      <span className="text-[10px] text-amber-500 shrink-0">↗</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2 shrink-0">
+                <button
+                  onClick={() => setShowUnansweredModal(false)}
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer text-sm"
+                >
+                  {t('backToAnswerBtn')}
+                </button>
               </div>
             </div>
-
-            <div className="pt-2">
-              <button
-                onClick={() => setShowUnansweredModal(false)}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer text-sm"
-              >
-                {t('backToAnswerBtn')}
-              </button>
-            </div>
           </div>
-        </div>
-      </ModalPortal>
+        </ModalPortal>
       )}
 
       {/* Styled Student Submission Confirmation Modal */}
