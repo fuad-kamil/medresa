@@ -786,10 +786,24 @@ export default function ExamPlayer({ quizId, student }) {
       onPaste={(e) => e.preventDefault()}
       onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'u', 's', 'p'].includes(e.key.toLowerCase())) { e.preventDefault(); toast.error(lang === 'am' ? 'የቁልፍ ትዕዛዝ ተከልክሏል!' : 'Keyboard shortcuts disabled!'); } }}
       style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
-      className={`min-h-screen transition-colors duration-200 pb-12 select-none ${
+      className={`min-h-screen transition-colors duration-200 pb-12 select-none relative ${
         isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'
       }`}
     >
+      {/* Dynamic Security Watermark Overlay (Solution B: Anti-Cheating Watermark) */}
+      {quiz && !result && (
+        <div className="fixed inset-0 pointer-events-none select-none z-[30] overflow-hidden opacity-25 dark:opacity-20 flex flex-wrap justify-around items-center gap-10 p-4">
+          {Array.from({ length: 28 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="transform -rotate-25 text-slate-900 dark:text-white font-black text-xs sm:text-sm tracking-widest whitespace-nowrap"
+            >
+              {student?.fullName || student?.name || 'Student'} {student?.identifier ? `(${student.identifier})` : ''} • {quiz.title}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ─── DEDICATED TOP NAVIGATION BAR ───────────────────────────────────── */}
       <header className={`sticky top-0 transition-colors border-b px-4 sm:px-8 py-3.5 ${
         (showUnansweredModal || showConfirmModal) ? 'z-20 pointer-events-none select-none' : 'z-40'
