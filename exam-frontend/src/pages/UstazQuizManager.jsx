@@ -1748,15 +1748,14 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                   })}
                 </div>
 
-                {/* Save Grade Button (Sticky Responsive Footer) */}
+                {/* Save Grade Button (Normal End-of-List Footer) */}
                 {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
-                  <div className={`sticky bottom-0 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 p-4 sm:p-5 border-t backdrop-blur-md shadow-2xl transition-colors z-20 space-y-2.5 ${isDark ? 'bg-gray-900/95 border-gray-800 text-white' : 'bg-white/95 border-gray-200 text-gray-900'
-                    }`}>
+                  <div className={`pt-4 mt-5 border-t space-y-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                     {/* Helper Tip Pill */}
-                    <div className={`p-2.5 rounded-xl border text-xs font-medium flex items-center gap-2 ${isDark ? 'bg-amber-950/40 border-amber-900/50 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+                    <div className={`p-3 rounded-2xl border text-xs font-medium flex items-center gap-2.5 ${isDark ? 'bg-amber-950/40 border-amber-900/50 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
                       }`}>
                       <span className="text-base shrink-0">💡</span>
-                      <span className="leading-tight">
+                      <span className="leading-relaxed">
                         {lang === 'am' ? 'የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ በስተታች ያለውን "ውጤት መዝግብ" የሚለውን ይጫኑ።' : 'Select scores for open questions above, then click Save Grade.'}
                       </span>
                     </div>
