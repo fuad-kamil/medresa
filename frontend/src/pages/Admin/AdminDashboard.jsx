@@ -641,7 +641,6 @@ export default function AdminDashboard() {
                         if (status === "excused") statusColor = "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
 
                         const rosterId = sIdx + 1;
-                        const studentExamCode = `${displayExamNo}${rosterId}`;
 
                         return (
                           <div key={student._id} className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-md transition-shadow group">
@@ -651,11 +650,8 @@ export default function AdminDashboard() {
                                 <History size={18} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-800 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate flex items-center gap-2">
+                                <p className="font-semibold text-gray-800 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate">
                                   {student.fullName}
-                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                    Login Code: {studentExamCode}
-                                  </span>
                                 </p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">Roster No. #{rosterId} • Click to view history</p>
                               </div>
