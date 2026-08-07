@@ -754,7 +754,11 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       .map((q, idx) => ({ q, idx }))
       .filter(({ q }) => (q.questionType || 'multiple_choice') !== 'multiple_choice');
 
-    const openScoresArray = openQIndices.map(({ idx }) => Number(gradingScores[idx] ?? 10));
+    const openScoresArray = openQIndices.map(({ idx }) => Number(gradingScores[idx] ?? 0));
+
+    const toastId = toast.loading(
+      lang === 'am' ? 'ውጤት በመመዝገብ ላይ ነው...' : 'Saving grade & updating total score...'
+    );
 
     try {
       setSubmittingGrading(true);
@@ -768,9 +772,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to save grade.');
+      if (!res.ok) throw new Error(data.message || (lang === 'am' ? 'ውጤት መመዝገብ አልተቻለም።' : 'Failed to save grade.'));
 
-      toast.success(lang === 'am' ? 'ውጤቱ በስኬት ተመዝግቧል!' : 'Grade saved & total score updated!');
+      toast.success(
+        lang === 'am' ? '🎉 ውጤቱ በስኬት ተመዝግቧል!' : '🎉 Grade saved & total score updated successfully!',
+        { id: toastId }
+      );
 
       setSubmissions(prev => prev.map(sub => sub._id === selectedStudentHistory._id ? {
         ...sub,
@@ -789,7 +796,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         openAnswerScores: openScoresArray
       }));
     } catch (err) {
-      toast.error(err.message || 'Failed to save grade.');
+      toast.error(err.message || (lang === 'am' ? 'ውጤት መመዝገብ አልተቻለም።' : 'Failed to save grade.'), { id: toastId });
     } finally {
       setSubmittingGrading(false);
     }
