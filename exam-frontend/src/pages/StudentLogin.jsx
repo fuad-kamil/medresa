@@ -222,13 +222,9 @@ export default function StudentLogin({ quizId, onVerified }) {
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder={t('inputPlaceholder')}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-900 placeholder-gray-400"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-900"
               required
             />
-            <p className="text-xs text-gray-400 mt-1">
-              {t('helperText')}
-            </p>
           </div>
 
           <button
