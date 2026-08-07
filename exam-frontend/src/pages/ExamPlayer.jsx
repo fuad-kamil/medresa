@@ -235,6 +235,7 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
   const [isContentBlurred, setIsContentBlurred] = useState(false);
   const [exitCount, setExitCount] = useState(0);
   const exitCountRef = useRef(0);
+  const lastExitTimeRef = useRef(0);
   const hasTriggeredTimeUpRef = useRef(false);
 
   // Language state (en | am)
@@ -381,64 +382,46 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
         if (res.ok) {
           const data = await res.json();
           if (data.hasTimer !== false && data.durationMinutes > 0) {
-            const totalSeconds = (data.durationMinutes + (data.addedTimeMinutes || 0)) * 60;
+            const newTotal = (data.durationMinutes + (data.addedTimeMinutes || 0)) * 60;
             const startTimeKey = `exam_start_${quizId}_${student._id}`;
             const startTime = localStorage.getItem(startTimeKey) || Date.now().toString();
-            const elapsedSeconds = Math.floor((Date.now() - Number(startTime)) / 1000);
-            const remaining = Math.max(0, totalSeconds - elapsedSeconds);
+            const elapsed = Math.floor((Date.now() - Number(startTime)) / 1000);
+            const newRemaining = Math.max(0, newTotal - elapsed);
 
-            if (remaining > 0) {
-              setTimeLeftSeconds(remaining);
-              if (isTimeUp || showTimeUpModal) {
-                setIsTimeUp(false);
-                setShowTimeUpModal(false);
-                hasTriggeredTimeUpRef.current = false;
-                toast.success(t('timeExtendedToast'));
-              }
+            if (isTimeUp && newRemaining > 0) {
+              setIsTimeUp(false);
+              setShowTimeUpModal(false);
+              hasTriggeredTimeUpRef.current = false;
+              setTimeLeftSeconds(newRemaining);
+              toast.success(t('timeExtendedToast'));
             }
           }
         }
-      } catch (e) {
-        console.warn('Poll quiz info error:', e);
-      }
-    }, 8000);
+      } catch (e) {}
+    }, 5000);
 
     return () => clearInterval(pollInterval);
-  }, [quizId, student, quiz, result, isTimeUp, showTimeUpModal, lang]);
+  }, [quiz, result, isTimeUp, quizId, student, lang]);
 
-  // Countdown timer interval (only if hasTimer is enabled)
-  // This effect only manages the countdown — the state updater is kept PURE (no side effects)
+  // Separate timer interval effect
   useEffect(() => {
-    if (!quiz || quiz.hasTimer === false || quiz.durationMinutes <= 0 || result || isTimeUp) {
-      return;
-    }
+    if (!quiz || result || isTimeUp) return;
+    if (quiz.hasTimer === false || quiz.durationMinutes <= 0) return;
 
-    // Don't start interval if time already expired (handled by detection effect below)
-    if (timeLeftSeconds <= 0) return;
-
-    const interval = setInterval(() => {
-      setTimeLeftSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+    const timer = setInterval(() => {
+      setTimeLeftSeconds((prev) => Math.max(0, prev - 1));
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [quiz, result, isTimeUp]);
 
-  // Time-up detection effect — shows Time-Up modal when countdown reaches zero
-  // Separated from the countdown so state updater stays pure and modal renders immediately
+  // Time-Up Detection Effect
   useEffect(() => {
+    if (!quiz || result || isTimeUp) return;
+    if (quiz.hasTimer === false || quiz.durationMinutes <= 0) return;
+
     if (
-      timeLeftSeconds <= 0 &&
-      quiz &&
-      quiz.hasTimer !== false &&
-      quiz.durationMinutes > 0 &&
-      !isTimeUp &&
-      !result &&
+      timeLeftSeconds === 0 &&
       !hasTriggeredTimeUpRef.current
     ) {
       hasTriggeredTimeUpRef.current = true;
@@ -450,21 +433,28 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
     }
   }, [timeLeftSeconds, quiz, isTimeUp, result, lang]);
 
-  // Instant Blur / Security Shield & 2-Exit Disqualification System
+  // Instant Blur / Security Shield & 3-Exit Disqualification System
   useEffect(() => {
     if (!quiz || result || isTimeUp) return;
 
     const handleExitViolation = () => {
+      const now = Date.now();
+      // Deduplicate rapid consecutive events (e.g. blur + visibilitychange within 2.5 seconds)
+      if (now - lastExitTimeRef.current < 2500) {
+        return;
+      }
+      lastExitTimeRef.current = now;
+
       exitCountRef.current += 1;
       const currentExits = exitCountRef.current;
       setExitCount(currentExits);
 
-      if (currentExits >= 2) {
-        // Violation 2: Force Logout & Redirect to Login Page
+      if (currentExits >= 3) {
+        // Violation 3: Force Logout & Redirect to Login Page
         toast.error(
           lang === 'am'
-            ? '🔒 ደጋግመው ከፈተናው ማያ ገጽ በመውጣትዎ ምክንያት መለያዎ ተቆልፎ ወጥተዋል (Logout)!'
-            : '🔒 You were automatically logged out due to exiting the exam page multiple times!',
+            ? '🔒 3 ጊዜ ደጋግመው ከፈተናው ማያ ገጽ በመውጣትዎ ምክንያት መለያዎ ተቆልፎ ወጥተዋል (Logout)!'
+            : '🔒 You were automatically logged out due to exiting the exam page 3 times!',
           { duration: 6000 }
         );
 
@@ -1193,8 +1183,8 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
         </div>
       </ModalPortal>
       )}
-      {/* Security Shield Blur Overlay (Violation 1 / 2 Warning) */}
-      {isContentBlurred && !result && exitCount <= 1 && (
+      {/* Security Shield Blur Overlay (Violation 1 or 2 Warning) */}
+      {isContentBlurred && !result && exitCount <= 2 && (
         <ModalPortal>
           <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn select-none">
             <div className="w-20 h-20 rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-4xl mb-3 border border-amber-500/40 shadow-xl animate-pulse">
@@ -1202,7 +1192,7 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
             </div>
 
             <span className="px-3.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-xs font-black mb-3">
-              {lang === 'am' ? 'ማስጠንቀቂያ 1 / 2' : 'Warning 1 of 2'}
+              {lang === 'am' ? `ማስጠንቀቂያ ${exitCount} / 3` : `Warning ${exitCount} of 3`}
             </span>
 
             <h3 className="text-xl sm:text-2xl font-black text-white mb-2">
@@ -1211,8 +1201,8 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
 
             <p className="text-sm text-gray-300 max-w-sm leading-relaxed font-medium mb-6">
               {lang === 'am'
-                ? 'ከፈተናው ማያ ገጽ ወጥተዋል! ለ2ኛ ጊዜ ከፈተናው ገጽ ከወጡ በራስ-ሰር ይወጣሉ (Logout) እና ፈተናው ይቋረጣል።'
-                : 'You exited the exam screen! If you exit the exam page a 2nd time, you will be automatically logged out.'}
+                ? `ከፈተናው ማያ ገጽ ወጥተዋል! (${exitCount}/3)። ለ3ኛ ጊዜ ከወጡ በራስ-ሰር ይወጣሉ (Logout) እና ፈተናው ይቋረጣል።`
+                : `You exited the exam screen! (${exitCount}/3). If you exit 3 times, you will be automatically logged out.`}
             </p>
 
             <button
