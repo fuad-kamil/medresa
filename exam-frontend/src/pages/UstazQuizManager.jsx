@@ -1540,23 +1540,24 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         {selectedStudentHistory && (
           <ModalPortal>
             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
-              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto animate-fadeIn border ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
+              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 max-h-[92vh] overflow-y-auto animate-fadeIn border ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
                 }`}>
                 <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                   <div>
-                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedStudentHistory.studentName}{t('examHistoryOf')}</h3>
+                    <h3 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedStudentHistory.studentName}{t('examHistoryOf')}</h3>
                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {selectedSubmissionQuiz?.title} • {t('score')}: {selectedStudentHistory.displayScore} / {selectedStudentHistory.targetMaxScore} ({selectedStudentHistory.correctAnswers} of {selectedStudentHistory.totalQuestions} {t('correct')})
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => downloadStudentHistoryPdf(selectedStudentHistory, selectedSubmissionQuiz)}
                       className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
                       title="Download PDF Exam Report"
                     >
                       <span>📄</span>
-                      <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
+                      <span className="hidden sm:inline">{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
+                      <span className="sm:hidden">PDF</span>
                     </button>
                     <button
                       onClick={() => setSelectedStudentHistory(null)}
@@ -1590,18 +1591,18 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                     return (
                       <div
                         key={qIdx}
-                        className={`p-4 rounded-2xl border ${isOpen
+                        className={`p-3.5 sm:p-4 rounded-2xl border ${isOpen
                             ? (isDark ? 'bg-blue-950/20 border-blue-900/50' : 'bg-blue-50/60 border-blue-200')
                             : isCorrect
                               ? (isDark ? 'bg-emerald-950/20 border-emerald-900/50' : 'bg-emerald-50/40 border-emerald-200')
                               : (isDark ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50/40 border-red-200')
                           }`}
                       >
-                        <div className="flex justify-between items-center mb-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                           <span className={`font-bold text-xs flex items-center gap-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             {t('questionLabel')} {qIdx + 1}
                             {isOpen && (
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${qType === 'fill_blank'
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${qType === 'fill_blank'
                                   ? (isDark ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800')
                                   : (isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800')
                                 }`}>
@@ -1610,7 +1611,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                             )}
                           </span>
                           {isOpen ? (
-                            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${selectedStudentHistory.manualGradeStatus === 'graded'
+                            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shrink-0 ${selectedStudentHistory.manualGradeStatus === 'graded'
                                 ? (isDark ? 'bg-emerald-900 text-emerald-300' : 'bg-emerald-100 text-emerald-800')
                                 : (isDark ? 'bg-amber-900 text-amber-300' : 'bg-amber-100 text-amber-800')
                               }`}>
@@ -1619,11 +1620,11 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                 : (lang === 'am' ? '⏳ ግምገማ በጠበቅ ላይ' : '⏳ Pending Grade')}
                             </span>
                           ) : isCorrect ? (
-                            <span className="bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                            <span className="bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shrink-0">
                               {t('correctBadge')}
                             </span>
                           ) : (
-                            <span className="bg-red-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                            <span className="bg-red-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shrink-0">
                               {t('incorrectBadge')}
                             </span>
                           )}
@@ -1639,7 +1640,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                               <span className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {lang === 'am' ? 'የተማሪው መልስ:' : "Student's Answer:"}
                               </span>
-                              <p className="leading-relaxed font-medium">
+                              <p className="leading-relaxed font-medium break-words">
                                 {(typeof studentAnswer === 'string' && studentAnswer.trim())
                                   ? studentAnswer
                                   : <em className={isDark ? 'text-gray-500' : 'text-gray-400'}>{lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>
@@ -1654,16 +1655,16 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                               const currentScore = gradingScores[qIdx] !== undefined ? gradingScores[qIdx] : maxQMarks;
 
                               return (
-                                <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
+                                <div className={`p-3 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
                                   }`}>
                                   <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     {lang === 'am' ? `ለዚህ ጥያቄ የተሰጠ ነጥብ (ከ ${maxQMarks}):` : `Score for this question (out of ${maxQMarks}):`}
                                   </span>
-                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                                     <button
                                       type="button"
                                       onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 0 }))}
-                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${currentScore === 0
+                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${currentScore === 0
                                           ? 'bg-red-600 text-white border-red-600 shadow-xs'
                                           : (isDark ? 'bg-gray-900 text-red-400 border-red-900/50 hover:bg-red-950' : 'bg-white text-red-700 border-red-200 hover:bg-red-50')
                                         }`}
@@ -1674,7 +1675,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                       <button
                                         type="button"
                                         onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: halfQMarks }))}
-                                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${currentScore === halfQMarks
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${currentScore === halfQMarks
                                             ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
                                             : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
                                           }`}
@@ -1685,7 +1686,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                     <button
                                       type="button"
                                       onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: maxQMarks }))}
-                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${currentScore === maxQMarks
+                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${currentScore === maxQMarks
                                           ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                                           : (isDark ? 'bg-gray-900 text-emerald-400 border-emerald-900/50 hover:bg-emerald-950' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50')
                                         }`}
@@ -1701,7 +1702,7 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                         const val = Math.min(maxQMarks, Math.max(0, Number(e.target.value) || 0));
                                         setGradingScores(prev => ({ ...prev, [qIdx]: val }));
                                       }}
-                                      className={`w-14 p-1 text-center font-bold text-xs rounded-lg border focus:ring-1 focus:ring-emerald-500 ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
+                                      className={`w-14 p-1.5 text-center font-bold text-xs rounded-xl border focus:ring-1 focus:ring-emerald-500 ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
                                         }`}
                                     />
                                   </div>
@@ -1750,15 +1751,15 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
                 {/* Save Grade Button (if quiz has open questions) */}
                 {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
-                  <div className={`pt-4 mt-4 border-t flex items-center justify-between gap-3 ${isDark ? 'border-gray-800' : 'border-gray-200'
+                  <div className={`pt-4 mt-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${isDark ? 'border-gray-800' : 'border-gray-200'
                     }`}>
-                    <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <p className={`text-xs font-medium text-center sm:text-left ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {lang === 'am' ? '💡 የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ "ውጤት መዝግብ" የሚለውን ይጫኑ።' : '💡 Select scores for open questions above and click Save Grade.'}
                     </p>
                     <button
                       onClick={handleSaveGrading}
                       disabled={submittingGrading}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
                     >
                       <span>💾</span>
                       <span>{submittingGrading ? (lang === 'am' ? 'እየተመዘገበ ነው...' : 'Saving Grade...') : (lang === 'am' ? 'ውጤት መዝግብ እና አዘምን' : 'Save Grade & Update Score')}</span>
