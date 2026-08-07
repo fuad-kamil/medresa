@@ -845,13 +845,22 @@ export default function ExamPlayer({ quizId, student }) {
           return (
             <React.Fragment key={q._id || qIdx}>
               {q.sectionTitle && (
-                <div className={`p-4 rounded-2xl border font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs mt-4 mb-2 ${
+                <div className={`p-4 rounded-2xl border font-bold text-sm sm:text-base flex items-center justify-between gap-2 shadow-xs mt-4 mb-2 ${
                   isDark
                     ? 'bg-emerald-950/50 border-emerald-800 text-emerald-300'
                     : 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 }`}>
-                  <span className="text-base">📌</span>
-                  <span>{q.sectionTitle}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📌</span>
+                    <span>{q.sectionTitle}</span>
+                  </div>
+                  {qType === 'multiple_choice' && (
+                    <span className={`text-xs font-extrabold px-3 py-1 rounded-xl border shrink-0 ${
+                      isDark ? 'bg-emerald-900/80 border-emerald-700 text-emerald-200' : 'bg-white border-emerald-300 text-emerald-800 shadow-2xs'
+                    }`}>
+                      {(q.marks || 1)} {lang === 'am' ? 'ነጥብ' : ((q.marks || 1) > 1 ? 'marks each' : 'mark each')}
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -872,13 +881,21 @@ export default function ExamPlayer({ quizId, student }) {
                       {t('questionLabel')} {qIdx + 1}
                     </span>
                     {(qType === 'short_answer' || qType === 'fill_blank') && (
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
-                        qType === 'fill_blank'
-                          ? (isDark ? 'bg-purple-950 text-purple-300 border-purple-800' : 'bg-purple-100 text-purple-800 border-purple-200')
-                          : (isDark ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-blue-100 text-blue-800 border-blue-200')
-                      }`}>
-                        {qType === 'fill_blank' ? t('fillBlankLabel') : t('shortAnswerLabel')}
-                      </span>
+                      <>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                          qType === 'fill_blank'
+                            ? (isDark ? 'bg-purple-950 text-purple-300 border-purple-800' : 'bg-purple-100 text-purple-800 border-purple-200')
+                            : (isDark ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-blue-100 text-blue-800 border-blue-200')
+                        }`}>
+                          {qType === 'fill_blank' ? t('fillBlankLabel') : t('shortAnswerLabel')}
+                        </span>
+                        <span className={`text-xs font-black px-2.5 py-1 rounded-lg border flex items-center gap-1 shrink-0 ${
+                          isDark ? 'bg-amber-950/80 border-amber-800 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-900'
+                        }`}>
+                          <span>🎯</span>
+                          <span>{(q.marks || 1)} {lang === 'am' ? 'ነጥብ' : ((q.marks || 1) > 1 ? 'Marks' : 'Mark')}</span>
+                        </span>
+                      </>
                     )}
                   </div>
                   <h3 className={`text-base sm:text-lg font-bold leading-relaxed w-full block ${isDark ? 'text-white' : 'text-gray-900'}`}>
