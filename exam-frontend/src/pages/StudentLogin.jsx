@@ -221,9 +221,15 @@ export default function StudentLogin({ quizId, onVerified }) {
             </label>
             <div className="relative">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck="false"
+                data-lpignore="true"
+                style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
                 className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-900 font-mono text-base tracking-wider"
                 required
               />
