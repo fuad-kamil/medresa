@@ -62,7 +62,11 @@ export default function App() {
             onVerified={(student) => setVerifiedStudent(student)}
           />
         ) : (
-          <ExamPlayer quizId={quizId} student={verifiedStudent} />
+          <ExamPlayer
+            quizId={quizId}
+            student={verifiedStudent}
+            onLogout={() => setVerifiedStudent(null)}
+          />
         )}
       </>
     );

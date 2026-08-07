@@ -218,7 +218,7 @@ const translations = {
   }
 };
 
-export default function ExamPlayer({ quizId, student }) {
+export default function ExamPlayer({ quizId, student, onLogout }) {
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -233,6 +233,8 @@ export default function ExamPlayer({ quizId, student }) {
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [showTimeUpModal, setShowTimeUpModal] = useState(false);
   const [isContentBlurred, setIsContentBlurred] = useState(false);
+  const [exitCount, setExitCount] = useState(0);
+  const exitCountRef = useRef(0);
   const hasTriggeredTimeUpRef = useRef(false);
 
   // Language state (en | am)
@@ -448,29 +450,57 @@ export default function ExamPlayer({ quizId, student }) {
     }
   }, [timeLeftSeconds, quiz, isTimeUp, result, lang]);
 
-  // Instant Blur / Security Shield on System Focus Loss & Screenshots (Solution A)
+  // Instant Blur / Security Shield & 2-Exit Disqualification System
   useEffect(() => {
     if (!quiz || result || isTimeUp) return;
 
-    let unblurTimeout = null;
+    const handleExitViolation = () => {
+      exitCountRef.current += 1;
+      const currentExits = exitCountRef.current;
+      setExitCount(currentExits);
 
-    const handleBlur = () => {
+      if (currentExits >= 2) {
+        // Violation 2: Force Logout & Redirect to Login Page
+        toast.error(
+          lang === 'am'
+            ? '🔒 ደጋግመው ከፈተናው ማያ ገጽ በመውጣትዎ ምክንያት መለያዎ ተቆልፎ ወጥተዋል (Logout)!'
+            : '🔒 You were automatically logged out due to exiting the exam page multiple times!',
+          { duration: 6000 }
+        );
+
+        // Release session in backend
+        const deviceToken = localStorage.getItem('medresa_device_id');
+        if (student && student._id) {
+          fetch(`${MAIN_API_URL}/exams/release-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId: student._id, deviceToken })
+          }).catch(() => {});
+        }
+
+        // Clean draft storage and redirect to login page
+        setTimeout(() => {
+          if (onLogout) {
+            onLogout();
+          } else {
+            window.location.reload();
+          }
+        }, 1200);
+        return;
+      }
+
+      // Violation 1: Blur content & show Warning 1/2 modal
       setIsContentBlurred(true);
-    };
-
-    const handleFocus = () => {
-      if (unblurTimeout) clearTimeout(unblurTimeout);
-      unblurTimeout = setTimeout(() => {
-        setIsContentBlurred(false);
-      }, 1200);
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden || document.visibilityState !== 'visible') {
-        handleBlur();
-      } else {
-        handleFocus();
+        handleExitViolation();
       }
+    };
+
+    const handleBlur = () => {
+      handleExitViolation();
     };
 
     const handleKeyDown = (e) => {
@@ -479,24 +509,20 @@ export default function ExamPlayer({ quizId, student }) {
         (e.ctrlKey && e.key.toLowerCase() === 'p') ||
         (e.metaKey && e.shiftKey && (e.key.toLowerCase() === 's' || e.key === '4'))
       ) {
-        handleBlur();
-        setTimeout(handleFocus, 2000);
+        handleExitViolation();
       }
     };
 
     window.addEventListener('blur', handleBlur);
-    window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('keydown', handleKeyDown);
-      if (unblurTimeout) clearTimeout(unblurTimeout);
     };
-  }, [quiz, result, isTimeUp]);
+  }, [quiz, result, isTimeUp, lang, student, onLogout]);
 
   const handleOptionSelect = (questionIndex, optionIndex) => {
     if (isTimeUp || submitting || result) return;
@@ -1167,21 +1193,35 @@ export default function ExamPlayer({ quizId, student }) {
         </div>
       </ModalPortal>
       )}
-      {/* Security Shield Blur Overlay (Solution A: Focus-Loss / Screenshot Protection) */}
-      {isContentBlurred && !result && (
+      {/* Security Shield Blur Overlay (Violation 1 / 2 Warning) */}
+      {isContentBlurred && !result && exitCount <= 1 && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[99999] bg-slate-950/90 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn pointer-events-none select-none">
-            <div className="w-20 h-20 rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-4xl mb-4 border border-amber-500/40 shadow-xl animate-pulse">
+          <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn select-none">
+            <div className="w-20 h-20 rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-4xl mb-3 border border-amber-500/40 shadow-xl animate-pulse">
               🛡️
             </div>
+
+            <span className="px-3.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-xs font-black mb-3">
+              {lang === 'am' ? 'ማስጠንቀቂያ 1 / 2' : 'Warning 1 of 2'}
+            </span>
+
             <h3 className="text-xl sm:text-2xl font-black text-white mb-2">
               {lang === 'am' ? 'የደህንነት ጥበቃ፡ ማያ ገጽ ተጋርዷል' : 'Security Shield Active'}
             </h3>
-            <p className="text-sm text-gray-300 max-w-xs leading-relaxed font-medium">
+
+            <p className="text-sm text-gray-300 max-w-sm leading-relaxed font-medium mb-6">
               {lang === 'am'
-                ? 'ማያ ገጽ መቅረፅ (Screenshot) ወይም ከስልኩ መውጣት ተከልክሏል። ጥያቄዎችን ለማየት ወደ ፈተናው ይመለሱ።'
-                : 'Screen capture or switching apps is restricted. Focus browser to resume exam.'}
+                ? 'ከፈተናው ማያ ገጽ ወጥተዋል! ለ2ኛ ጊዜ ከፈተናው ገጽ ከወጡ በራስ-ሰር ይወጣሉ (Logout) እና ፈተናው ይቋረጣል።'
+                : 'You exited the exam screen! If you exit the exam page a 2nd time, you will be automatically logged out.'}
             </p>
+
+            <button
+              type="button"
+              onClick={() => setIsContentBlurred(false)}
+              className="py-3.5 px-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black rounded-2xl shadow-xl active:scale-[0.98] transition cursor-pointer text-sm sm:text-base flex items-center justify-center gap-2"
+            >
+              <span>{lang === 'am' ? 'ወደ ፈተናው ተመለስ ➔' : 'Return to Exam ➔'}</span>
+            </button>
           </div>
         </ModalPortal>
       )}
