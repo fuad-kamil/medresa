@@ -233,16 +233,15 @@ export const verifyStudent = async (req, res) => {
                 if (targetUstaz) {
                     const prefixes = new Set();
                     if (targetUstaz.examNumber) {
-                        prefixes.add(targetUstaz.examNumber);
+                        prefixes.add(targetUstaz.examNumber.toString().trim());
                         prefixes.add(String(parseInt(targetUstaz.examNumber, 10)));
-                    }
-                    if (uIdx !== -1) {
+                    } else if (uIdx !== -1) {
                         const seqNum = uIdx + 1;
                         prefixes.add(String(seqNum).padStart(2, '0'));
                         prefixes.add(String(seqNum));
                     }
 
-                    // Sort prefixes by length descending (e.g. "08" before "8")
+                    // Sort prefixes by length descending (e.g. "088" before "88")
                     const sortedPrefixes = Array.from(prefixes).filter(Boolean).sort((a, b) => b.length - a.length);
 
                     for (const prefix of sortedPrefixes) {
@@ -269,11 +268,12 @@ export const verifyStudent = async (req, res) => {
                     const seqNum = i + 1;
                     const prefixes = new Set();
                     if (uz.examNumber) {
-                        prefixes.add(uz.examNumber);
+                        prefixes.add(uz.examNumber.toString().trim());
                         prefixes.add(String(parseInt(uz.examNumber, 10)));
+                    } else {
+                        prefixes.add(String(seqNum).padStart(2, '0'));
+                        prefixes.add(String(seqNum));
                     }
-                    prefixes.add(String(seqNum).padStart(2, '0'));
-                    prefixes.add(String(seqNum));
 
                     const sortedPrefixes = Array.from(prefixes).filter(Boolean).sort((a, b) => b.length - a.length);
 
