@@ -1749,19 +1749,27 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                   })}
                 </div>
 
-                {/* Save Grade Button (if quiz has open questions) */}
+                {/* Save Grade Button (Sticky Responsive Footer) */}
                 {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
-                  <div className={`pt-4 mt-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${isDark ? 'border-gray-800' : 'border-gray-200'
+                  <div className={`sticky bottom-0 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 p-4 sm:p-5 border-t backdrop-blur-md shadow-2xl transition-colors z-20 space-y-2.5 ${isDark ? 'bg-gray-900/95 border-gray-800 text-white' : 'bg-white/95 border-gray-200 text-gray-900'
                     }`}>
-                    <p className={`text-xs font-medium text-center sm:text-left ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {lang === 'am' ? '💡 የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ "ውጤት መዝግብ" የሚለውን ይጫኑ።' : '💡 Select scores for open questions above and click Save Grade.'}
-                    </p>
+                    {/* Helper Tip Pill */}
+                    <div className={`p-2.5 rounded-xl border text-xs font-medium flex items-center gap-2 ${isDark ? 'bg-amber-950/40 border-amber-900/50 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+                      }`}>
+                      <span className="text-base shrink-0">💡</span>
+                      <span className="leading-tight">
+                        {lang === 'am' ? 'የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ በስተታች ያለውን "ውጤት መዝግብ" የሚለውን ይጫኑ።' : 'Select scores for open questions above, then click Save Grade.'}
+                      </span>
+                    </div>
+
+                    {/* Primary Action Button */}
                     <button
+                      type="button"
                       onClick={handleSaveGrading}
                       disabled={submittingGrading}
-                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+                      className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black rounded-2xl shadow-lg hover:shadow-xl active:scale-[0.98] transition-all cursor-pointer text-sm sm:text-base flex items-center justify-center gap-2.5 disabled:opacity-50"
                     >
-                      <span>💾</span>
+                      <span className="text-lg">💾</span>
                       <span>{submittingGrading ? (lang === 'am' ? 'እየተመዘገበ ነው...' : 'Saving Grade...') : (lang === 'am' ? 'ውጤት መዝግብ እና አዘምን' : 'Save Grade & Update Score')}</span>
                     </button>
                   </div>
