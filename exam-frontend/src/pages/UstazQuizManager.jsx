@@ -1446,7 +1446,6 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                 </div>
                                 <div className="min-w-0">
                                   <h4 className="font-extrabold text-sm truncate">{s.studentName}</h4>
-                                  <p className="text-[11px] opacity-60">ID: {s.studentId}</p>
                                 </div>
                               </div>
 
