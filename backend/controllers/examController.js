@@ -296,7 +296,7 @@ export const verifyStudent = async (req, res) => {
         }
 
         if (!student) {
-            return res.status(404).json({ message: 'Invalid exam code. Please enter your combined Exam Code (e.g. 011).' });
+            return res.status(404).json({ message: 'Invalid exam code. Please enter your exam login code.' });
         }
 
         // ── Real-Time Active Session & Device Lock Enforcement ───────────────────
