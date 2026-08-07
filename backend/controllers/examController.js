@@ -232,9 +232,15 @@ export const verifyStudent = async (req, res) => {
 
                 if (targetUstaz) {
                     const prefixes = new Set();
-                    if (targetUstaz.examNumber) {
-                        prefixes.add(targetUstaz.examNumber.toString().trim());
-                        prefixes.add(String(parseInt(targetUstaz.examNumber, 10)));
+                    const hasCustomExamNo = targetUstaz.examNumber && String(targetUstaz.examNumber).trim() !== '';
+
+                    if (hasCustomExamNo) {
+                        const cleanExamNo = String(targetUstaz.examNumber).trim();
+                        prefixes.add(cleanExamNo);
+                        const parsedNum = parseInt(cleanExamNo, 10);
+                        if (!isNaN(parsedNum)) {
+                            prefixes.add(String(parsedNum));
+                        }
                     } else if (uIdx !== -1) {
                         const seqNum = uIdx + 1;
                         prefixes.add(String(seqNum).padStart(2, '0'));
@@ -267,9 +273,15 @@ export const verifyStudent = async (req, res) => {
                     const uz = allUstazs[i];
                     const seqNum = i + 1;
                     const prefixes = new Set();
-                    if (uz.examNumber) {
-                        prefixes.add(uz.examNumber.toString().trim());
-                        prefixes.add(String(parseInt(uz.examNumber, 10)));
+                    const hasCustomExamNo = uz.examNumber && String(uz.examNumber).trim() !== '';
+
+                    if (hasCustomExamNo) {
+                        const cleanExamNo = String(uz.examNumber).trim();
+                        prefixes.add(cleanExamNo);
+                        const parsedNum = parseInt(cleanExamNo, 10);
+                        if (!isNaN(parsedNum)) {
+                            prefixes.add(String(parsedNum));
+                        }
                     } else {
                         prefixes.add(String(seqNum).padStart(2, '0'));
                         prefixes.add(String(seqNum));
