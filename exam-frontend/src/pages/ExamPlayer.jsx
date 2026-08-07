@@ -232,6 +232,7 @@ export default function ExamPlayer({ quizId, student }) {
   const [showUnansweredModal, setShowUnansweredModal] = useState(false);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [showTimeUpModal, setShowTimeUpModal] = useState(false);
+  const [isContentBlurred, setIsContentBlurred] = useState(false);
   const hasTriggeredTimeUpRef = useRef(false);
 
   // Language state (en | am)
@@ -446,6 +447,56 @@ export default function ExamPlayer({ quizId, student }) {
       toast.error(t('timeUpToast'));
     }
   }, [timeLeftSeconds, quiz, isTimeUp, result, lang]);
+
+  // Instant Blur / Security Shield on System Focus Loss & Screenshots (Solution A)
+  useEffect(() => {
+    if (!quiz || result || isTimeUp) return;
+
+    let unblurTimeout = null;
+
+    const handleBlur = () => {
+      setIsContentBlurred(true);
+    };
+
+    const handleFocus = () => {
+      if (unblurTimeout) clearTimeout(unblurTimeout);
+      unblurTimeout = setTimeout(() => {
+        setIsContentBlurred(false);
+      }, 1200);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden || document.visibilityState !== 'visible') {
+        handleBlur();
+      } else {
+        handleFocus();
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (
+        e.key === 'PrintScreen' ||
+        (e.ctrlKey && e.key.toLowerCase() === 'p') ||
+        (e.metaKey && e.shiftKey && (e.key.toLowerCase() === 's' || e.key === '4'))
+      ) {
+        handleBlur();
+        setTimeout(handleFocus, 2000);
+      }
+    };
+
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('keydown', handleKeyDown);
+      if (unblurTimeout) clearTimeout(unblurTimeout);
+    };
+  }, [quiz, result, isTimeUp]);
 
   const handleOptionSelect = (questionIndex, optionIndex) => {
     if (isTimeUp || submitting || result) return;
@@ -796,8 +847,16 @@ export default function ExamPlayer({ quizId, student }) {
         </div>
       </header>
 
+      <style>{`
+        @media print {
+          body { display: none !important; }
+        }
+      `}</style>
+
       {/* Main Questions List */}
-      <main className="max-w-4xl mx-auto px-4 mt-6 space-y-6">
+      <main className={`max-w-4xl mx-auto px-4 mt-6 space-y-6 transition-all duration-300 ${
+        isContentBlurred ? 'filter blur-3xl select-none pointer-events-none opacity-20' : ''
+      }`}>
         {/* Exam Information Header Card */}
         <div className={`p-4 sm:p-6 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
           isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900 shadow-sm'
@@ -1093,6 +1152,24 @@ export default function ExamPlayer({ quizId, student }) {
           </div>
         </div>
       </ModalPortal>
+      )}
+      {/* Security Shield Blur Overlay (Solution A: Focus-Loss / Screenshot Protection) */}
+      {isContentBlurred && !result && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[99999] bg-slate-950/90 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn pointer-events-none select-none">
+            <div className="w-20 h-20 rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-4xl mb-4 border border-amber-500/40 shadow-xl animate-pulse">
+              🛡️
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white mb-2">
+              {lang === 'am' ? 'የደህንነት ጥበቃ፡ ማያ ገጽ ተጋርዷል' : 'Security Shield Active'}
+            </h3>
+            <p className="text-sm text-gray-300 max-w-xs leading-relaxed font-medium">
+              {lang === 'am'
+                ? 'ማያ ገጽ መቅረፅ (Screenshot) ወይም ከስልኩ መውጣት ተከልክሏል። ጥያቄዎችን ለማየት ወደ ፈተናው ይመለሱ።'
+                : 'Screen capture or switching apps is restricted. Focus browser to resume exam.'}
+            </p>
+          </div>
+        </ModalPortal>
       )}
     </div>
   );
