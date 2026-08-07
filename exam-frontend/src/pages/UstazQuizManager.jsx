@@ -359,15 +359,24 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           parsed.push(currentQ);
         }
 
-        const qText = isQuestionStart[2].trim();
+        let qText = isQuestionStart[2].trim();
         let qType = currentSectionType;
+        let qMarks = currentSectionMarks || 1;
+
+        // Check for inline question mark override e.g. "11. Question text (1 ነጥብ)" or "(1 mark)"
+        const inlineMarksMatch = qText.match(/[\(\[](\d+)\s*(ነጥብ|mark|marks|pt|pts)[\)\]]/i);
+        if (inlineMarksMatch) {
+          qMarks = Number(inlineMarksMatch[1]) || qMarks;
+          qText = qText.replace(/[\(\[](\d+)\s*(ነጥብ|mark|marks|pt|pts)[\)\]]/i, '').trim();
+        }
+
         if (qText.includes('___')) {
           qType = 'fill_blank';
         }
 
         currentQ = {
           sectionTitle: currentSectionTitle,
-          marks: currentSectionMarks || 1,
+          marks: qMarks,
           questionType: qType,
           questionText: qText,
           options: [],
