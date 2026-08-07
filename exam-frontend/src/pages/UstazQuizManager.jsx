@@ -1666,42 +1666,63 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                             {/* Ustaz Manual Score Input */}
                             {(() => {
                               const maxQMarks = q.marks || 1;
-                              const halfQMarks = Math.round(maxQMarks / 2);
                               const currentScore = gradingScores[qIdx] !== undefined ? gradingScores[qIdx] : maxQMarks;
 
                               return (
                                 <div className={`p-3 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
                                   }`}>
                                   <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    {lang === 'am' ? `ለዚህ ጥያቄ የተሰጠ ነጥብ (ከ ${maxQMarks}):` : `Score for this question (out of ${maxQMarks}):`}
+                                    {lang === 'am' ? `ለዚህ ጥያቄ የተሰጠ ነጥብ (ከ 0 እስከ ${maxQMarks}):` : `Score for this question (0 to ${maxQMarks}):`}
                                   </span>
-                                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
                                     <button
                                       type="button"
                                       onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 0 }))}
-                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${currentScore === 0
+                                      className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${Number(currentScore) === 0
                                           ? 'bg-red-600 text-white border-red-600 shadow-xs'
                                           : (isDark ? 'bg-gray-900 text-red-400 border-red-900/50 hover:bg-red-950' : 'bg-white text-red-700 border-red-200 hover:bg-red-50')
                                         }`}
                                     >
                                       ❌ 0
                                     </button>
-                                    {maxQMarks > 1 && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: halfQMarks }))}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${currentScore === halfQMarks
-                                            ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                                            : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
-                                          }`}
-                                      >
-                                        🟡 {halfQMarks}
-                                      </button>
+                                    {maxQMarks >= 2 && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 0.5 }))}
+                                          className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${Number(currentScore) === 0.5
+                                              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                              : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
+                                            }`}
+                                        >
+                                          🟡 0.5
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 1 }))}
+                                          className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${Number(currentScore) === 1
+                                              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                              : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
+                                            }`}
+                                        >
+                                          🟡 1
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 1.5 }))}
+                                          className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${Number(currentScore) === 1.5
+                                              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                              : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
+                                            }`}
+                                        >
+                                          🟡 1.5
+                                        </button>
+                                      </>
                                     )}
                                     <button
                                       type="button"
                                       onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: maxQMarks }))}
-                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${currentScore === maxQMarks
+                                      className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer flex-1 sm:flex-none text-center ${Number(currentScore) === maxQMarks
                                           ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                                           : (isDark ? 'bg-gray-900 text-emerald-400 border-emerald-900/50 hover:bg-emerald-950' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50')
                                         }`}
@@ -1710,14 +1731,24 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                     </button>
                                     <input
                                       type="number"
+                                      step="any"
                                       min="0"
                                       max={maxQMarks}
-                                      value={currentScore}
+                                      value={currentScore !== undefined ? currentScore : ''}
+                                      placeholder="0.0"
                                       onChange={(e) => {
-                                        const val = Math.min(maxQMarks, Math.max(0, Number(e.target.value) || 0));
-                                        setGradingScores(prev => ({ ...prev, [qIdx]: val }));
+                                        const rawVal = e.target.value;
+                                        if (rawVal === '' || rawVal === undefined) {
+                                          setGradingScores(prev => ({ ...prev, [qIdx]: '' }));
+                                          return;
+                                        }
+                                        const parsed = parseFloat(rawVal);
+                                        if (!isNaN(parsed)) {
+                                          const clamped = Math.min(maxQMarks, Math.max(0, parsed));
+                                          setGradingScores(prev => ({ ...prev, [qIdx]: clamped }));
+                                        }
                                       }}
-                                      className={`w-14 p-1.5 text-center font-bold text-xs rounded-xl border focus:ring-1 focus:ring-emerald-500 ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
+                                      className={`w-20 p-1.5 text-center font-bold text-xs rounded-xl border focus:ring-1 focus:ring-emerald-500 ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
                                         }`}
                                     />
                                   </div>

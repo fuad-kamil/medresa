@@ -624,10 +624,14 @@ export const gradeOpenAnswers = async (req, res) => {
 
     let newScore = 0;
     if (totalQuizPoints > 0) {
-      newScore = Math.round((earnedPoints / totalQuizPoints) * quiz.maxScore);
+      const rawScore = (earnedPoints / totalQuizPoints) * quiz.maxScore;
+      newScore = Number((Math.round(rawScore * 100) / 100).toFixed(2));
+      if (Number.isInteger(newScore)) {
+        newScore = Math.round(newScore);
+      }
     }
 
-    submission.openAnswerScores = openAnswerScores;
+    submission.openAnswerScores = openAnswerScores.map(s => Number(s) || 0);
     submission.score = Math.min(newScore, quiz.maxScore);
     submission.correctAnswers = mcqCorrect + openCorrect;
     submission.manualGradeStatus = 'graded';
