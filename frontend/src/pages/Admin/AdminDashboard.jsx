@@ -445,10 +445,6 @@ export default function AdminDashboard() {
             {t("Ustazs & Students Overview")}
           </h2>
           <div className="flex flex-wrap items-center gap-3 mt-1.5">
-            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-              {t("Teacher Join Code")}: <code className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-100 dark:border-emerald-900/40 select-all" title="Click to select code">ALI_JOIN_2026</code>
-            </p>
-            
             {/* Day Badges Legend */}
             <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-600 dark:text-zinc-300 bg-slate-100/80 dark:bg-zinc-800/80 px-3 py-1 rounded-xl border border-slate-200/60 dark:border-zinc-700/60">
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {language === 'am' ? 'ተወስዷል' : 'Attendance Taken'}</span>
