@@ -261,8 +261,9 @@ export const verifyStudent = async (req, res) => {
                 }
             }
 
-            // 2. If student not found yet (or targetUstazId was not provided), check ALL ustazs
-            if (!student) {
+            // 2. If student not found yet AND no targetUstazId provided, check ALL ustazs
+            // When targetUstazId IS provided, we strictly enforce that only that ustaz's students can access the exam
+            if (!student && !targetUstazId) {
                 for (let i = 0; i < allUstazs.length; i++) {
                     const uz = allUstazs[i];
                     const seqNum = i + 1;

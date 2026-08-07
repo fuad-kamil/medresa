@@ -191,7 +191,7 @@ export const submitQuiz = async (req, res) => {
       });
     }
 
-    const { quizId, studentId, studentName, answers } = req.body;
+    const { quizId, studentId, studentName, answers, isTimeoutSubmit, startedAt } = req.body;
 
     if (!quizId || !studentId || !answers || !Array.isArray(answers)) {
       return res.status(400).json({ message: 'Missing submission payload details.' });
@@ -203,31 +203,42 @@ export const submitQuiz = async (req, res) => {
     }
 
     // Check if student already submitted
-    const existing = await QuizSubmission.findOne({ quizId, studentId });
+    const existing = await QuizSubmission.findOne({ quizId, studentId: String(studentId) });
     if (existing) {
-      const breakdown = quiz.questions.map((q, idx) => {
-        const studentChoiceIdx = existing.answers?.[idx];
-        const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
-        return {
-          questionNumber: idx + 1,
-          questionText: q.questionText,
-          options: q.options,
-          studentChoiceIndex: studentChoiceIdx,
-          studentChoiceText: (studentChoiceIdx !== undefined && studentChoiceIdx >= 0) ? q.options[studentChoiceIdx] : 'Not Answered',
-          correctChoiceIndex: q.correctOptionIndex,
-          correctChoiceText: q.options[q.correctOptionIndex],
-          isCorrect
-        };
-      });
+      // Check if time extension permits updating this submission
+      const totalAllowedSeconds = (quiz.durationMinutes + (quiz.addedTimeMinutes || 0)) * 60;
+      const startTime = existing.startedAt
+        ? new Date(existing.startedAt).getTime()
+        : (startedAt ? new Date(startedAt).getTime() : new Date(existing.createdAt).getTime());
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
 
-      return res.status(400).json({
-        message: 'You have already submitted this exam.',
-        score: existing.score,
-        maxScore: quiz.maxScore || 100,
-        correctAnswers: existing.correctAnswers,
-        totalQuestions: existing.totalQuestions,
-        questionBreakdown: breakdown
-      });
+      const isTimeExtensionAllowed = existing.isTimeoutSubmit && quiz.hasTimer !== false && (elapsedSeconds <= totalAllowedSeconds + 60);
+
+      if (!isTimeExtensionAllowed) {
+        const breakdown = quiz.questions.map((q, idx) => {
+          const studentChoiceIdx = existing.answers?.[idx];
+          const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+          return {
+            questionNumber: idx + 1,
+            questionText: q.questionText,
+            options: q.options,
+            studentChoiceIndex: studentChoiceIdx,
+            studentChoiceText: (studentChoiceIdx !== undefined && studentChoiceIdx >= 0) ? q.options[studentChoiceIdx] : 'Not Answered',
+            correctChoiceIndex: q.correctOptionIndex,
+            correctChoiceText: q.options[q.correctOptionIndex],
+            isCorrect
+          };
+        });
+
+        return res.status(400).json({
+          message: 'You have already submitted this exam.',
+          score: existing.score,
+          maxScore: quiz.maxScore || 100,
+          correctAnswers: existing.correctAnswers,
+          totalQuestions: existing.totalQuestions,
+          questionBreakdown: breakdown
+        });
+      }
     }
 
     // Grade student answers & build detailed question breakdown
@@ -282,19 +293,33 @@ export const submitQuiz = async (req, res) => {
       ? Math.round((earnedPoints / totalQuizPoints) * quiz.maxScore)
       : 0;
 
-    // Save submission to MongoDB BEFORE responding!
-    const submission = new QuizSubmission({
-      quizId,
-      studentId: String(studentId),
-      studentName: studentName || 'Student',
-      score: finalScore,
-      totalQuestions,
-      correctAnswers: correctCount,
-      answers,
-      openAnswerScores: [],
-      manualGradeStatus: hasOpenQuestions ? 'pending' : 'not_required'
-    });
-    await submission.save();
+    let submission;
+    if (existing) {
+      // Update existing timeout submission with new answers & updated score
+      existing.score = finalScore;
+      existing.totalQuestions = totalQuestions;
+      existing.correctAnswers = correctCount;
+      existing.answers = answers;
+      existing.isTimeoutSubmit = Boolean(isTimeoutSubmit);
+      existing.completedAt = new Date();
+      submission = await existing.save();
+    } else {
+      // Create new submission
+      submission = new QuizSubmission({
+        quizId,
+        studentId: String(studentId),
+        studentName: studentName || 'Student',
+        score: finalScore,
+        totalQuestions,
+        correctAnswers: correctCount,
+        answers,
+        openAnswerScores: [],
+        manualGradeStatus: hasOpenQuestions ? 'pending' : 'not_required',
+        isTimeoutSubmit: Boolean(isTimeoutSubmit),
+        startedAt: startedAt ? new Date(startedAt) : new Date()
+      });
+      await submission.save();
+    }
 
     // Sync score to Main Ali Medresa Database ONLY IF exam has NO open questions
     // If exam has open questions, score sync happens ONLY inside gradeOpenAnswers when Ustaz completes manual grading!
@@ -356,8 +381,25 @@ export const checkStudentSubmission = async (req, res) => {
     if (!quizId || !studentId) {
       return res.status(400).json({ message: 'quizId and studentId required' });
     }
+    const quiz = await Quiz.findById(quizId);
     const submission = await QuizSubmission.findOne({ quizId, studentId: String(studentId) });
     if (submission) {
+      if (submission.isTimeoutSubmit && quiz && quiz.hasTimer !== false && quiz.durationMinutes > 0) {
+        const totalAllowedSeconds = (quiz.durationMinutes + (quiz.addedTimeMinutes || 0)) * 60;
+        const startTime = submission.startedAt
+          ? new Date(submission.startedAt).getTime()
+          : new Date(submission.createdAt).getTime();
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+
+        if (elapsedSeconds < totalAllowedSeconds) {
+          return res.json({
+            hasSubmitted: false,
+            isTimeExtended: true,
+            remainingSeconds: totalAllowedSeconds - elapsedSeconds
+          });
+        }
+      }
+
       return res.json({
         hasSubmitted: true,
         score: submission.score,

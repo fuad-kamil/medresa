@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Globe, Sun, Moon } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -155,7 +155,11 @@ const translations = {
     shortAnswerPlaceholder: 'Write your answer here...',
     fillBlankPlaceholder: 'Fill in the blank here...',
     openAnswerHint: 'Your Ustaz will review and grade this answer manually.',
-    openAnswerPendingNotice: '⏳ This question will be graded by your Ustaz.'
+    openAnswerPendingNotice: '⏳ This question will be graded by your Ustaz.',
+    timeUpModalTitle: '⏰ Time is Up!',
+    timeUpModalDesc: 'Your exam time has ended. Input fields are locked and you can no longer answer questions. Any unanswered questions will be marked as incorrect.',
+    timeUpModalSubmitBtn: 'Submit Exam Result',
+    timeExtendedToast: '⏱️ Ustaz added extra time! You can now continue your exam.'
   },
   am: {
     portalTitle: 'የዓሊ መድረሳ የመስመር ላይ ፈተና',
@@ -206,7 +210,11 @@ const translations = {
     shortAnswerPlaceholder: 'መልስዎን እዚህ ይፃፉ...',
     fillBlankPlaceholder: 'ክፍተቱን እዚህ ይሙሉ...',
     openAnswerHint: 'ይህ ጥያቄ በኡስታዝዎ ይታያል እና ውጤቱ ይሰጣል።',
-    openAnswerPendingNotice: '⏳ ይህ ጥያቄ በኡስታዝዎ ይገመገማል።'
+    openAnswerPendingNotice: '⏳ ይህ ጥያቄ በኡስታዝዎ ይገመገማል።',
+    timeUpModalTitle: '⏰ የፈተና ጊዜ አልቋል!',
+    timeUpModalDesc: 'የፈተና ጊዜዎ አብቅቷል። ተጨማሪ መልስ መመለስ አይችሉም። ያልተመለሱ ጥያቄዎች እንደ ስህተት ይቆጠራሉ።',
+    timeUpModalSubmitBtn: 'የፈተና ውጤት አስገባ',
+    timeExtendedToast: '⏱️ አስተማሪው ተጨማሪ ጊዜ አክሏል! ፈተናዎን መቀጠል ይችላሉ።'
   }
 };
 
@@ -222,6 +230,9 @@ export default function ExamPlayer({ quizId, student }) {
   const [isSystemLocked, setIsSystemLocked] = useState(false);
   const [unansweredList, setUnansweredList] = useState([]);
   const [showUnansweredModal, setShowUnansweredModal] = useState(false);
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const [showTimeUpModal, setShowTimeUpModal] = useState(false);
+  const hasTriggeredTimeUpRef = useRef(false);
 
   // Language state (en | am)
   const [lang, setLang] = useState(() => localStorage.getItem('student_exam_lang') || 'en');
@@ -348,18 +359,64 @@ export default function ExamPlayer({ quizId, student }) {
     };
   }, [student]);
 
-  // Countdown timer interval (only if hasTimer is enabled)
+  // Ensure Time-Up modal has total priority over unanswered & confirm modals
   useEffect(() => {
-    if (!quiz || quiz.hasTimer === false || quiz.durationMinutes <= 0 || timeLeftSeconds <= 0 || result || submitting) {
+    if (isTimeUp) {
+      setShowUnansweredModal(false);
+      setShowConfirmModal(false);
+      setShowTimeUpModal(true);
+    }
+  }, [isTimeUp]);
+
+  // Periodic poll for quiz info (detects if Ustaz added time in real-time)
+  useEffect(() => {
+    if (!quiz || result) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`${EXAM_API_URL}/quizzes/student/${quizId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasTimer !== false && data.durationMinutes > 0) {
+            const totalSeconds = (data.durationMinutes + (data.addedTimeMinutes || 0)) * 60;
+            const startTimeKey = `exam_start_${quizId}_${student._id}`;
+            const startTime = localStorage.getItem(startTimeKey) || Date.now().toString();
+            const elapsedSeconds = Math.floor((Date.now() - Number(startTime)) / 1000);
+            const remaining = Math.max(0, totalSeconds - elapsedSeconds);
+
+            if (remaining > 0) {
+              setTimeLeftSeconds(remaining);
+              if (isTimeUp || showTimeUpModal) {
+                setIsTimeUp(false);
+                setShowTimeUpModal(false);
+                hasTriggeredTimeUpRef.current = false;
+                toast.success(t('timeExtendedToast'));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Poll quiz info error:', e);
+      }
+    }, 8000);
+
+    return () => clearInterval(pollInterval);
+  }, [quizId, student, quiz, result, isTimeUp, showTimeUpModal, lang]);
+
+  // Countdown timer interval (only if hasTimer is enabled)
+  // This effect only manages the countdown — the state updater is kept PURE (no side effects)
+  useEffect(() => {
+    if (!quiz || quiz.hasTimer === false || quiz.durationMinutes <= 0 || result || isTimeUp) {
       return;
     }
 
+    // Don't start interval if time already expired (handled by detection effect below)
+    if (timeLeftSeconds <= 0) return;
+
     const interval = setInterval(() => {
-      setTimeLeftSeconds((prev) => {
+      setTimeLeftSeconds(prev => {
         if (prev <= 1) {
           clearInterval(interval);
-          toast.error(t('timeUpToast'));
-          executeSubmit(true); // Auto-submit when time expires
           return 0;
         }
         return prev - 1;
@@ -367,9 +424,31 @@ export default function ExamPlayer({ quizId, student }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [quiz, timeLeftSeconds, result, submitting, lang]);
+  }, [quiz, result, isTimeUp]);
+
+  // Time-up detection effect — shows Time-Up modal when countdown reaches zero
+  // Separated from the countdown so state updater stays pure and modal renders immediately
+  useEffect(() => {
+    if (
+      timeLeftSeconds <= 0 &&
+      quiz &&
+      quiz.hasTimer !== false &&
+      quiz.durationMinutes > 0 &&
+      !isTimeUp &&
+      !result &&
+      !hasTriggeredTimeUpRef.current
+    ) {
+      hasTriggeredTimeUpRef.current = true;
+      setIsTimeUp(true);
+      setShowUnansweredModal(false);
+      setShowConfirmModal(false);
+      setShowTimeUpModal(true);
+      toast.error(t('timeUpToast'));
+    }
+  }, [timeLeftSeconds, quiz, isTimeUp, result, lang]);
 
   const handleOptionSelect = (questionIndex, optionIndex) => {
+    if (isTimeUp || submitting || result) return;
     const updated = { ...answers, [questionIndex]: optionIndex };
     setAnswers(updated);
     const savedKey = `exam_draft_${quizId}_${student._id}`;
@@ -377,6 +456,7 @@ export default function ExamPlayer({ quizId, student }) {
   };
 
   const handleTextAnswer = (questionIndex, text) => {
+    if (isTimeUp || submitting || result) return;
     const updated = { ...answers, [questionIndex]: text };
     setAnswers(updated);
     const savedKey = `exam_draft_${quizId}_${student._id}`;
@@ -393,6 +473,12 @@ export default function ExamPlayer({ quizId, student }) {
   };
 
   const triggerSubmitPrompt = () => {
+    if (isTimeUp || timeLeftSeconds <= 0) {
+      setShowUnansweredModal(false);
+      setShowConfirmModal(false);
+      setShowTimeUpModal(true);
+      return;
+    }
     const missing = [];
     quiz.questions.forEach((q, idx) => {
       if (!isQuestionAnswered(q, idx)) missing.push(idx + 1);
@@ -415,9 +501,10 @@ export default function ExamPlayer({ quizId, student }) {
 
   const executeSubmit = async (isAutoSubmit = false) => {
     setShowConfirmModal(false);
+    setShowUnansweredModal(false);
     if (submitting || result) return;
 
-    if (!isAutoSubmit) {
+    if (!isAutoSubmit && !isTimeUp) {
       const missing = [];
       quiz.questions.forEach((q, idx) => {
         if (!isQuestionAnswered(q, idx)) missing.push(idx + 1);
@@ -443,6 +530,11 @@ export default function ExamPlayer({ quizId, student }) {
       return answers[origIdx] ?? -1;
     });
 
+    const startTimeKey = `exam_start_${quizId}_${student._id}`;
+    const startTimeStr = localStorage.getItem(startTimeKey);
+    const startedAt = startTimeStr ? new Date(Number(startTimeStr)).toISOString() : new Date().toISOString();
+    const isTimeout = Boolean(isAutoSubmit || isTimeUp || timeLeftSeconds <= 0);
+
     try {
       const res = await fetch(`${EXAM_API_URL}/quizzes/student/submit`, {
         method: 'POST',
@@ -451,7 +543,9 @@ export default function ExamPlayer({ quizId, student }) {
           quizId,
           studentId: student._id,
           studentName: student.fullName,
-          answers: formattedAnswers
+          answers: formattedAnswers,
+          isTimeoutSubmit: isTimeout,
+          startedAt
         })
       });
 
@@ -460,10 +554,13 @@ export default function ExamPlayer({ quizId, student }) {
         throw new Error(data.message || t('submissionFailedToast'));
       }
 
-      // Clear local draft and start time
-      localStorage.removeItem(`exam_draft_${quizId}_${student._id}`);
-      localStorage.removeItem(`exam_start_${quizId}_${student._id}`);
+      // If manual submit (not timeout submit), clear local draft and start time
+      if (!isTimeout) {
+        localStorage.removeItem(`exam_draft_${quizId}_${student._id}`);
+        localStorage.removeItem(`exam_start_${quizId}_${student._id}`);
+      }
 
+      setShowTimeUpModal(false);
       setResult(data);
       toast.success(t('submissionSuccessToast'));
     } catch (err) {
@@ -798,7 +895,9 @@ export default function ExamPlayer({ quizId, student }) {
                       <label
                         key={optIdx}
                         onClick={() => handleOptionSelect(origIdx, optIdx)}
-                        className={`flex items-center p-4 rounded-2xl border cursor-pointer transition ${
+                        className={`flex items-center p-4 rounded-2xl border transition ${
+                          (isTimeUp || submitting) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                        } ${
                           isSelected
                             ? (isDark
                                 ? 'border-emerald-500 bg-emerald-950/60 text-emerald-300 font-medium shadow-sm'
@@ -812,8 +911,9 @@ export default function ExamPlayer({ quizId, student }) {
                           type="radio"
                           name={`question_${origIdx}`}
                           checked={isSelected}
+                          disabled={isTimeUp || submitting}
                           onChange={() => {}}
-                          className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                          className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 disabled:opacity-50"
                         />
                         <span className="ml-3 text-sm">{opt}</span>
                       </label>
@@ -828,9 +928,10 @@ export default function ExamPlayer({ quizId, student }) {
                   <textarea
                     rows={qType === 'short_answer' ? 4 : 2}
                     value={typeof answers[origIdx] === 'string' ? answers[origIdx] : ''}
+                    disabled={isTimeUp || submitting}
                     onChange={(e) => handleTextAnswer(origIdx, e.target.value)}
                     placeholder={qType === 'fill_blank' ? t('fillBlankPlaceholder') : t('shortAnswerPlaceholder')}
-                    className={`w-full rounded-2xl border p-4 text-sm resize-none transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                    className={`w-full rounded-2xl border p-4 text-sm resize-none transition focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                       isDark
                         ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
                         : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
@@ -858,6 +959,35 @@ export default function ExamPlayer({ quizId, student }) {
           </button>
         </div>
       </main>
+
+      {/* Time Expired Modal Popup */}
+      {showTimeUpModal && (
+        <ModalPortal>
+          <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+            <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border animate-fadeIn space-y-4 ${
+              isDark ? 'bg-gray-900 border-red-900/60 text-white' : 'bg-white border-red-200 text-gray-900'
+            }`}>
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner animate-bounce">
+                ⏰
+              </div>
+              <h3 className={`text-xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('timeUpModalTitle')}</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                {t('timeUpModalDesc')}
+              </p>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => executeSubmit(true)}
+                  disabled={submitting}
+                  className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-extrabold rounded-xl shadow-lg transition cursor-pointer text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {submitting ? <span>{t('submittingBtn')}</span> : <span>{t('timeUpModalSubmitBtn')}</span>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
 
       {/* Unanswered Questions Warning Modal */}
       {showUnansweredModal && (

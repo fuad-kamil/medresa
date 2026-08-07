@@ -1010,19 +1010,17 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
   return (
     <div className={`min-h-screen transition-colors duration-200 ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* ─── DEDICATED TOP NAVIGATION BAR ───────────────────────────────────── */}
-      <header className={`sticky top-0 transition-colors border-b px-4 sm:px-8 py-3 ${
-        isAnyModalOpen ? 'z-20 pointer-events-none select-none' : 'z-40 backdrop-blur-md'
-      } ${
-        isDark
+      <header className={`sticky top-0 transition-colors border-b px-4 sm:px-8 py-3 ${isAnyModalOpen ? 'z-20 pointer-events-none select-none' : 'z-40 backdrop-blur-md'
+        } ${isDark
           ? (isAnyModalOpen ? 'bg-gray-900 border-gray-800 text-white' : 'bg-gray-900/95 border-gray-800 text-white')
           : (isAnyModalOpen ? 'bg-white border-gray-100 text-gray-900' : 'bg-white/95 border-gray-100 text-gray-900 shadow-xs')
-      }`}>
+        }`}>
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img 
-              src="/medresa_icon.jpg" 
-              alt="Ali Medresa" 
-              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-emerald-100/60" 
+            <img
+              src="/medresa_icon.jpg"
+              alt="Ali Medresa"
+              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-emerald-100/60"
             />
             <div>
               <h1 className={`font-black text-base sm:text-lg leading-tight tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -1035,17 +1033,15 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           </div>
 
           {/* Unified Header Controls Cluster */}
-          <div className={`flex items-center gap-1 p-1 rounded-2xl border ${
-            isDark ? 'bg-gray-800/80 border-gray-700/80' : 'bg-gray-50 border-gray-200/70 shadow-2xs'
-          }`}>
+          <div className={`flex items-center gap-1 p-1 rounded-2xl border ${isDark ? 'bg-gray-800/80 border-gray-700/80' : 'bg-gray-50 border-gray-200/70 shadow-2xs'
+            }`}>
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className={`h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
-                isDark
+              className={`h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${isDark
                   ? 'bg-gray-700 hover:bg-gray-600 text-amber-300 shadow-2xs'
                   : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200/50 shadow-2xs'
-              }`}
+                }`}
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDark ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-emerald-600" />}
@@ -1055,11 +1051,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
             {/* Globe Language Toggle Button */}
             <button
               onClick={toggleLanguage}
-              className={`h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
-                isDark
+              className={`h-9 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${isDark
                   ? 'bg-gray-700 hover:bg-gray-600 text-white shadow-2xs'
                   : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200/50 shadow-2xs'
-              }`}
+                }`}
               title={lang === 'en' ? 'Switch to Amharic' : 'Switch to English'}
             >
               <Globe size={15} className="text-blue-500" />
@@ -1083,11 +1078,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
       <div className="max-w-6xl mx-auto p-4 sm:p-8 space-y-8">
         {/* Main Action Header Card */}
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 rounded-3xl border transition-all ${
-          isDark 
-            ? 'bg-gray-900 border-gray-800 text-white shadow-lg' 
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 rounded-3xl border transition-all ${isDark
+            ? 'bg-gray-900 border-gray-800 text-white shadow-lg'
             : 'bg-white border-gray-100 text-gray-900 shadow-sm hover:shadow-md'
-        }`}>
+          }`}>
           <div>
             <h1 className={`text-2xl sm:text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('title')}</h1>
             <p className={`text-sm font-medium mt-1 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('subtitle')}</p>
@@ -1097,11 +1091,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
             {/* Secondary Action: Bulk Import (Outline style) */}
             <button
               onClick={() => setShowBulkImportModal(true)}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
-                isDark
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${isDark
                   ? 'bg-gray-800 hover:bg-gray-700 text-purple-300 border-purple-500/30'
                   : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200/80 shadow-2xs'
-              }`}
+                }`}
             >
               <FileUp size={16} className="text-purple-600" />
               <span>{t('bulkImportBtn')}</span>
@@ -1122,23 +1115,20 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         </div>
 
         {message && (
-          <div className={`p-4 rounded-2xl text-sm font-medium border ${
-            isDark ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300' : 'bg-emerald-100 border-emerald-300 text-emerald-800'
-          }`}>
+          <div className={`p-4 rounded-2xl text-sm font-medium border ${isDark ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300' : 'bg-emerald-100 border-emerald-300 text-emerald-800'
+            }`}>
             {message}
           </div>
         )}
 
         {/* Quizzes List Card */}
-        <div className={`rounded-3xl border p-6 sm:p-8 transition-all ${
-          isDark ? 'bg-gray-900 border-gray-800 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-900 shadow-sm hover:shadow-md'
-        }`}>
+        <div className={`rounded-3xl border p-6 sm:p-8 transition-all ${isDark ? 'bg-gray-900 border-gray-800 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-900 shadow-sm hover:shadow-md'
+          }`}>
           <h2 className={`text-xl font-black tracking-tight mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('activePastTitle')}</h2>
 
           {quizzes.length === 0 ? (
-            <div className={`text-center py-12 px-6 border-2 border-dashed rounded-3xl transition-all ${
-              isDark ? 'border-gray-800 bg-gray-900/40' : 'border-emerald-200/60 bg-emerald-50/20'
-            }`}>
+            <div className={`text-center py-12 px-6 border-2 border-dashed rounded-3xl transition-all ${isDark ? 'border-gray-800 bg-gray-900/40' : 'border-emerald-200/60 bg-emerald-50/20'
+              }`}>
               <div className="w-14 h-14 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
                 <FileQuestion size={28} />
               </div>
@@ -1148,14 +1138,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {quizzes.map((q) => (
-                <div key={q._id} className={`border rounded-2xl p-5 hover:shadow-md transition ${
-                  isDark ? 'bg-gray-800/40 border-gray-800' : 'bg-gray-50/50 border-gray-200'
-                }`}>
+                <div key={q._id} className={`border rounded-2xl p-5 hover:shadow-md transition ${isDark ? 'bg-gray-800/40 border-gray-800' : 'bg-gray-50/50 border-gray-200'
+                  }`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full border mb-2 ${
-                        isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-800 border-emerald-200/50'
-                      }`}>
+                      <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full border mb-2 ${isDark ? 'bg-emerald-950 text-emerald-400 border-emerald-800/40' : 'bg-emerald-100 text-emerald-800 border-emerald-200/50'
+                        }`}>
                         {t('column')}: {q.examColumnName}
                       </span>
                       <h3 className={`text-lg font-bold leading-snug ${isDark ? 'text-white' : 'text-gray-900'}`}>{q.title}</h3>
@@ -1163,19 +1151,17 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                         {t('duration')}: {q.hasTimer !== false && q.durationMinutes > 0 ? `${q.durationMinutes + q.addedTimeMinutes} ${t('mins')}` : t('untimed')} ({q.questions.length} {t('questions')})
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                      q.status === 'active' 
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${q.status === 'active'
                         ? (isDark ? 'bg-green-950 text-green-300' : 'bg-green-100 text-green-800')
                         : (isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700')
-                    }`}>
+                      }`}>
                       {q.status}
                     </span>
                   </div>
 
                   {/* Controls */}
-                  <div className={`mt-4 pt-3 border-t flex flex-wrap gap-2 text-xs ${
-                    isDark ? 'border-gray-800' : 'border-gray-200'
-                  }`}>
+                  <div className={`mt-4 pt-3 border-t flex flex-wrap gap-2 text-xs ${isDark ? 'border-gray-800' : 'border-gray-200'
+                    }`}>
                     <button
                       onClick={() => copyExamLink(q._id)}
                       className="bg-gray-800 hover:bg-gray-900 text-white font-medium px-3 py-1.5 rounded-lg transition cursor-pointer"
@@ -1240,14 +1226,12 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         {/* Confirmation Modal (z-[10000]) */}
         {confirmModal.open && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
-            <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 border text-center animate-fadeIn ${
-              isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
-            }`}>
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-                confirmModal.danger 
-                  ? (isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600') 
-                  : (isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600')
+            <div className={`rounded-3xl shadow-2xl max-w-md w-full p-6 border text-center animate-fadeIn ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
               }`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${confirmModal.danger
+                  ? (isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600')
+                  : (isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600')
+                }`}>
                 <span className="text-2xl">{confirmModal.danger ? '⚠️' : '❓'}</span>
               </div>
 
@@ -1258,20 +1242,18 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                 {confirmModal.onConfirm && (
                   <button
                     onClick={() => setConfirmModal({ open: false })}
-                    className={`flex-1 py-3 border rounded-xl font-semibold cursor-pointer transition ${
-                      isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className={`flex-1 py-3 border rounded-xl font-semibold cursor-pointer transition ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
                     {t('cancelBtn')}
                   </button>
                 )}
                 <button
                   onClick={confirmModal.onConfirm || (() => setConfirmModal({ open: false }))}
-                  className={`flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition cursor-pointer ${
-                    confirmModal.danger
+                  className={`flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition cursor-pointer ${confirmModal.danger
                       ? 'bg-red-600 hover:bg-red-700'
                       : 'bg-emerald-600 hover:bg-emerald-700'
-                  }`}
+                    }`}
                 >
                   {confirmModal.confirmLabel}
                 </button>
@@ -1284,9 +1266,8 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         {selectedSubmissionQuiz && (
           <ModalPortal>
             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border ${
-                isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
-              }`}>
+              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
+                }`}>
                 <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                   <div>
                     <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedSubmissionQuiz.title} - {t('results')}</h3>
@@ -1324,15 +1305,13 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                             <td className={`p-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.studentName}</td>
                             <td className="p-3 text-center">
                               {isPending ? (
-                                <span className={`px-2.5 py-1 font-bold rounded-full text-xs border inline-block ${
-                                  isDark ? 'bg-amber-950/80 border-amber-800 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-800'
-                                }`}>
+                                <span className={`px-2.5 py-1 font-bold rounded-full text-xs border inline-block ${isDark ? 'bg-amber-950/80 border-amber-800 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-800'
+                                  }`}>
                                   ⏳ {lang === 'am' ? 'ግምገማ በጠበቅ ላይ' : 'Pending Grade'}
                                 </span>
                               ) : (
-                                <span className={`px-2.5 py-1 font-bold rounded-full text-xs inline-block ${
-                                  isDark ? 'bg-emerald-950 text-emerald-300' : 'bg-emerald-100 text-emerald-800'
-                                }`}>
+                                <span className={`px-2.5 py-1 font-bold rounded-full text-xs inline-block ${isDark ? 'bg-emerald-950 text-emerald-300' : 'bg-emerald-100 text-emerald-800'
+                                  }`}>
                                   {displayScore} / {targetMaxScore}
                                 </span>
                               )}
@@ -1354,11 +1333,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                     e.stopPropagation();
                                     setActiveActionMenuId(activeActionMenuId === s._id ? null : s._id);
                                   }}
-                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition cursor-pointer ${
-                                    isPending
+                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition cursor-pointer ${isPending
                                       ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
                                       : (isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300')
-                                  }`}
+                                    }`}
                                 >
                                   <span>{isPending ? (lang === 'am' ? '✏️ ገምግም' : '✏️ Grade') : (lang === 'am' ? '⚡ እርምጃዎች' : '⚡ Action')}</span>
                                   <span className="text-[10px]">▼</span>
@@ -1366,9 +1344,8 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 
                                 {activeActionMenuId === s._id && (
                                   <div
-                                    className={`absolute right-0 mt-1 w-48 rounded-2xl shadow-2xl border z-50 py-1.5 text-xs animate-fadeIn ${
-                                      isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
-                                    }`}
+                                    className={`absolute right-0 mt-1 w-48 rounded-2xl shadow-2xl border z-50 py-1.5 text-xs animate-fadeIn ${isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+                                      }`}
                                   >
                                     {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
                                       <button
@@ -1377,11 +1354,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                           setActiveActionMenuId(null);
                                           handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
                                         }}
-                                        className={`w-full text-left px-3.5 py-2 font-bold flex items-center gap-2 transition ${
-                                          s.manualGradeStatus === 'graded'
+                                        className={`w-full text-left px-3.5 py-2 font-bold flex items-center gap-2 transition ${s.manualGradeStatus === 'graded'
                                             ? (isDark ? 'text-emerald-400 hover:bg-emerald-950/40' : 'text-emerald-700 hover:bg-emerald-50')
                                             : (isDark ? 'text-amber-400 hover:bg-amber-950/50' : 'text-amber-700 hover:bg-amber-50')
-                                        }`}
+                                          }`}
                                       >
                                         <span>{s.manualGradeStatus === 'graded' ? '✅' : '✏️'}</span>
                                         <span>{s.manualGradeStatus === 'graded' ? (lang === 'am' ? 'ተገምግሟል' : 'Graded') : (lang === 'am' ? 'መልስ ገምግም' : 'Grade Answers')}</span>
@@ -1394,9 +1370,8 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                         setActiveActionMenuId(null);
                                         handleOpenStudentHistory(s, selectedSubmissionQuiz, targetMaxScore, displayScore);
                                       }}
-                                      className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
-                                        isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'
-                                      }`}
+                                      className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'
+                                        }`}
                                     >
                                       <span>👁️</span>
                                       <span>{lang === 'am' ? 'ታሪክ ተመልከት' : 'View History'}</span>
@@ -1411,11 +1386,10 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
                                           downloadStudentHistoryPdf({ ...s, displayScore, targetMaxScore }, selectedSubmissionQuiz);
                                         }
                                       }}
-                                      className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${
-                                        isPending
+                                      className={`w-full text-left px-3.5 py-2 font-medium flex items-center gap-2 transition ${isPending
                                           ? 'opacity-40 cursor-not-allowed text-gray-500'
                                           : (isDark ? 'hover:bg-gray-800 text-red-400' : 'hover:bg-gray-100 text-red-600')
-                                      }`}
+                                        }`}
                                       title={isPending ? (lang === 'am' ? 'ኡስታዝ እስኪገመግም ድረስ PDF ማውረድ አይቻልም' : 'PDF disabled until Ustaz finishes grading') : ''}
                                     >
                                       <span>📄</span>
@@ -1454,651 +1428,614 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
         {selectedStudentHistory && (
           <ModalPortal>
             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
-            <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto animate-fadeIn border ${
-              isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
-            }`}>
-              <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-                <div>
-                  <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedStudentHistory.studentName}{t('examHistoryOf')}</h3>
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {selectedSubmissionQuiz?.title} • {t('score')}: {selectedStudentHistory.displayScore} / {selectedStudentHistory.targetMaxScore} ({selectedStudentHistory.correctAnswers} of {selectedStudentHistory.totalQuestions} {t('correct')})
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => downloadStudentHistoryPdf(selectedStudentHistory, selectedSubmissionQuiz)}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
-                    title="Download PDF Exam Report"
-                  >
-                    <span>📄</span>
-                    <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
-                  </button>
-                  <button
-                    onClick={() => setSelectedStudentHistory(null)}
-                    className={`text-2xl font-bold cursor-pointer px-2 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
-
-              {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
-                <div className={`mb-4 p-3 rounded-2xl border text-xs font-medium flex items-center gap-2 ${
-                  isDark ? 'bg-amber-950/40 border-amber-900/60 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto animate-fadeIn border ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
                 }`}>
-                  <span className="text-base shrink-0">✏️</span>
-                  <span>
-                    {lang === 'am'
-                      ? 'የኡስታዝ መገምገሚያ፡ የተማሪውን የጽሑፍ መልስ ከታች ይመልከቱ እና ነጥብ ይስጡ። ከጨረሱ በኋላ በስተታች ያለው "ውጤት መዝግብ" የሚለውን ይጫኑ።'
-                      : 'Ustaz Grading: Review the student\'s typed response below and assign score (0 to max marks). Click "Save Grade & Update Score" below.'}
-                  </span>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {selectedSubmissionQuiz?.questions.map((q, qIdx) => {
-                  const qType = q.questionType || 'multiple_choice';
-                  const studentAnswer = selectedStudentHistory.answers?.[qIdx];
-                  const isOpen = qType === 'short_answer' || qType === 'fill_blank';
-                  const studentChoiceIdx = !isOpen ? studentAnswer : undefined;
-                  const isCorrect = !isOpen && studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
-
-                  return (
-                    <div
-                      key={qIdx}
-                      className={`p-4 rounded-2xl border ${
-                        isOpen
-                          ? (isDark ? 'bg-blue-950/20 border-blue-900/50' : 'bg-blue-50/60 border-blue-200')
-                          : isCorrect
-                            ? (isDark ? 'bg-emerald-950/20 border-emerald-900/50' : 'bg-emerald-50/40 border-emerald-200')
-                            : (isDark ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50/40 border-red-200')
-                      }`}
+                <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <div>
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedStudentHistory.studentName}{t('examHistoryOf')}</h3>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {selectedSubmissionQuiz?.title} • {t('score')}: {selectedStudentHistory.displayScore} / {selectedStudentHistory.targetMaxScore} ({selectedStudentHistory.correctAnswers} of {selectedStudentHistory.totalQuestions} {t('correct')})
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => downloadStudentHistoryPdf(selectedStudentHistory, selectedSubmissionQuiz)}
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
+                      title="Download PDF Exam Report"
                     >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className={`font-bold text-xs flex items-center gap-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {t('questionLabel')} {qIdx + 1}
-                          {isOpen && (
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              qType === 'fill_blank'
-                                ? (isDark ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800')
-                                : (isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800')
-                            }`}>
-                              {qType === 'fill_blank' ? (lang === 'am' ? 'ክፍተት' : 'Fill Blank') : (lang === 'am' ? 'ጭብጥ' : 'Short Ans.')}
+                      <span>📄</span>
+                      <span>{lang === 'am' ? 'PDF አውርድ' : 'Download PDF'}</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedStudentHistory(null)}
+                      className={`text-2xl font-bold cursor-pointer px-2 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                </div>
+
+                {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                  <div className={`mb-4 p-3 rounded-2xl border text-xs font-medium flex items-center gap-2 ${isDark ? 'bg-amber-950/40 border-amber-900/60 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+                    }`}>
+                    <span className="text-base shrink-0">✏️</span>
+                    <span>
+                      {lang === 'am'
+                        ? 'የኡስታዝ መገምገሚያ፡ የተማሪውን የጽሑፍ መልስ ከታች ይመልከቱ እና ነጥብ ይስጡ። ከጨረሱ በኋላ በስተታች ያለው "ውጤት መዝግብ" የሚለውን ይጫኑ።'
+                        : 'Ustaz Grading: Review the student\'s typed response below and assign score (0 to max marks). Click "Save Grade & Update Score" below.'}
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {selectedSubmissionQuiz?.questions.map((q, qIdx) => {
+                    const qType = q.questionType || 'multiple_choice';
+                    const studentAnswer = selectedStudentHistory.answers?.[qIdx];
+                    const isOpen = qType === 'short_answer' || qType === 'fill_blank';
+                    const studentChoiceIdx = !isOpen ? studentAnswer : undefined;
+                    const isCorrect = !isOpen && studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+
+                    return (
+                      <div
+                        key={qIdx}
+                        className={`p-4 rounded-2xl border ${isOpen
+                            ? (isDark ? 'bg-blue-950/20 border-blue-900/50' : 'bg-blue-50/60 border-blue-200')
+                            : isCorrect
+                              ? (isDark ? 'bg-emerald-950/20 border-emerald-900/50' : 'bg-emerald-50/40 border-emerald-200')
+                              : (isDark ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50/40 border-red-200')
+                          }`}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`font-bold text-xs flex items-center gap-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {t('questionLabel')} {qIdx + 1}
+                            {isOpen && (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${qType === 'fill_blank'
+                                  ? (isDark ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800')
+                                  : (isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800')
+                                }`}>
+                                {qType === 'fill_blank' ? (lang === 'am' ? 'ክፍተት' : 'Fill Blank') : (lang === 'am' ? 'ጭብጥ' : 'Short Ans.')}
+                              </span>
+                            )}
+                          </span>
+                          {isOpen ? (
+                            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${selectedStudentHistory.manualGradeStatus === 'graded'
+                                ? (isDark ? 'bg-emerald-900 text-emerald-300' : 'bg-emerald-100 text-emerald-800')
+                                : (isDark ? 'bg-amber-900 text-amber-300' : 'bg-amber-100 text-amber-800')
+                              }`}>
+                              {selectedStudentHistory.manualGradeStatus === 'graded'
+                                ? (lang === 'am' ? '✅ ተገምግሟል' : '✅ Graded')
+                                : (lang === 'am' ? '⏳ ግምገማ በጠበቅ ላይ' : '⏳ Pending Grade')}
+                            </span>
+                          ) : isCorrect ? (
+                            <span className="bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                              {t('correctBadge')}
+                            </span>
+                          ) : (
+                            <span className="bg-red-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                              {t('incorrectBadge')}
                             </span>
                           )}
-                        </span>
+                        </div>
+
+                        <p className={`font-bold text-sm mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{q.questionText}</p>
+
+                        {/* Open question: show typed answer + grading controls */}
                         {isOpen ? (
-                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                            selectedStudentHistory.manualGradeStatus === 'graded'
-                              ? (isDark ? 'bg-emerald-900 text-emerald-300' : 'bg-emerald-100 text-emerald-800')
-                              : (isDark ? 'bg-amber-900 text-amber-300' : 'bg-amber-100 text-amber-800')
-                          }`}>
-                            {selectedStudentHistory.manualGradeStatus === 'graded'
-                              ? (lang === 'am' ? '✅ ተገምግሟል' : '✅ Graded')
-                              : (lang === 'am' ? '⏳ ግምገማ በጠበቅ ላይ' : '⏳ Pending Grade')}
-                          </span>
-                        ) : isCorrect ? (
-                          <span className="bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                            {t('correctBadge')}
-                          </span>
-                        ) : (
-                          <span className="bg-red-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                            {t('incorrectBadge')}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className={`font-bold text-sm mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{q.questionText}</p>
-
-                      {/* Open question: show typed answer + grading controls */}
-                      {isOpen ? (
-                        <div className="space-y-3">
-                          <div className={`p-3 rounded-xl border text-sm ${
-                            isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
-                          }`}>
-                            <span className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {lang === 'am' ? 'የተማሪው መልስ:' : "Student's Answer:"}
-                            </span>
-                            <p className="leading-relaxed font-medium">
-                              {(typeof studentAnswer === 'string' && studentAnswer.trim())
-                                ? studentAnswer
-                                : <em className={isDark ? 'text-gray-500' : 'text-gray-400'}>{lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>
-                              }
-                            </p>
-                          </div>
-
-                          {/* Ustaz Manual Score Input */}
-                          {(() => {
-                            const maxQMarks = q.marks || 1;
-                            const halfQMarks = Math.round(maxQMarks / 2);
-                            const currentScore = gradingScores[qIdx] !== undefined ? gradingScores[qIdx] : maxQMarks;
-
-                            return (
-                              <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 ${
-                                isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
+                          <div className="space-y-3">
+                            <div className={`p-3 rounded-xl border text-sm ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
                               }`}>
-                                <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                  {lang === 'am' ? `ለዚህ ጥያቄ የተሰጠ ነጥብ (ከ ${maxQMarks}):` : `Score for this question (out of ${maxQMarks}):`}
-                                </span>
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 0 }))}
-                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
-                                      currentScore === 0
-                                        ? 'bg-red-600 text-white border-red-600 shadow-xs'
-                                        : (isDark ? 'bg-gray-900 text-red-400 border-red-900/50 hover:bg-red-950' : 'bg-white text-red-700 border-red-200 hover:bg-red-50')
-                                    }`}
-                                  >
-                                    ❌ 0
-                                  </button>
-                                  {maxQMarks > 1 && (
+                              <span className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {lang === 'am' ? 'የተማሪው መልስ:' : "Student's Answer:"}
+                              </span>
+                              <p className="leading-relaxed font-medium">
+                                {(typeof studentAnswer === 'string' && studentAnswer.trim())
+                                  ? studentAnswer
+                                  : <em className={isDark ? 'text-gray-500' : 'text-gray-400'}>{lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>
+                                }
+                              </p>
+                            </div>
+
+                            {/* Ustaz Manual Score Input */}
+                            {(() => {
+                              const maxQMarks = q.marks || 1;
+                              const halfQMarks = Math.round(maxQMarks / 2);
+                              const currentScore = gradingScores[qIdx] !== undefined ? gradingScores[qIdx] : maxQMarks;
+
+                              return (
+                                <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
+                                  }`}>
+                                  <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    {lang === 'am' ? `ለዚህ ጥያቄ የተሰጠ ነጥብ (ከ ${maxQMarks}):` : `Score for this question (out of ${maxQMarks}):`}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
                                     <button
                                       type="button"
-                                      onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: halfQMarks }))}
-                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
-                                        currentScore === halfQMarks
-                                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                                          : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
-                                      }`}
+                                      onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: 0 }))}
+                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${currentScore === 0
+                                          ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                                          : (isDark ? 'bg-gray-900 text-red-400 border-red-900/50 hover:bg-red-950' : 'bg-white text-red-700 border-red-200 hover:bg-red-50')
+                                        }`}
                                     >
-                                      🟡 {halfQMarks}
+                                      ❌ 0
                                     </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: maxQMarks }))}
-                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
-                                      currentScore === maxQMarks
-                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                                        : (isDark ? 'bg-gray-900 text-emerald-400 border-emerald-900/50 hover:bg-emerald-950' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50')
-                                    }`}
-                                  >
-                                    ✅ {maxQMarks}
-                                  </button>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={maxQMarks}
-                                    value={currentScore}
-                                    onChange={(e) => {
-                                      const val = Math.min(maxQMarks, Math.max(0, Number(e.target.value) || 0));
-                                      setGradingScores(prev => ({ ...prev, [qIdx]: val }));
-                                    }}
-                                    className={`w-14 p-1 text-center font-bold text-xs rounded-lg border focus:ring-1 focus:ring-emerald-500 ${
-                                      isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
-                                    }`}
-                                  />
+                                    {maxQMarks > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: halfQMarks }))}
+                                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${currentScore === halfQMarks
+                                            ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                            : (isDark ? 'bg-gray-900 text-amber-400 border-amber-900/50 hover:bg-amber-950' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50')
+                                          }`}
+                                      >
+                                        🟡 {halfQMarks}
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => setGradingScores(prev => ({ ...prev, [qIdx]: maxQMarks }))}
+                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${currentScore === maxQMarks
+                                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                          : (isDark ? 'bg-gray-900 text-emerald-400 border-emerald-900/50 hover:bg-emerald-950' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50')
+                                        }`}
+                                    >
+                                      ✅ {maxQMarks}
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={maxQMarks}
+                                      value={currentScore}
+                                      onChange={(e) => {
+                                        const val = Math.min(maxQMarks, Math.max(0, Number(e.target.value) || 0));
+                                        setGradingScores(prev => ({ ...prev, [qIdx]: val }));
+                                      }}
+                                      className={`w-14 p-1 text-center font-bold text-xs rounded-lg border focus:ring-1 focus:ring-emerald-500 ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
+                                        }`}
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5 text-xs">
-                          {q.options.map((opt, optIdx) => {
-                            const isChosen = studentChoiceIdx === optIdx;
-                            const isCorrectOpt = q.correctOptionIndex === optIdx;
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5 text-xs">
+                            {q.options.map((opt, optIdx) => {
+                              const isChosen = studentChoiceIdx === optIdx;
+                              const isCorrectOpt = q.correctOptionIndex === optIdx;
 
-                            let style = isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700';
-                            let tag = null;
+                              let style = isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700';
+                              let tag = null;
 
-                            if (isCorrectOpt) {
-                              style = isDark ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300 font-extrabold' : 'bg-emerald-100 border-emerald-400 text-emerald-900 font-extrabold';
-                              tag = t('correctAnswerTag');
-                            }
-                            if (isChosen && !isCorrectOpt) {
-                              style = isDark ? 'bg-red-950/80 border-red-700 text-red-300 font-extrabold' : 'bg-red-100 border-red-400 text-red-900 font-extrabold';
-                              tag = t('studentChoiceWrong');
-                            }
-                            if (isChosen && isCorrectOpt) {
-                              tag = t('studentChoiceCorrect');
-                            }
+                              if (isCorrectOpt) {
+                                style = isDark ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300 font-extrabold' : 'bg-emerald-100 border-emerald-400 text-emerald-900 font-extrabold';
+                                tag = t('correctAnswerTag');
+                              }
+                              if (isChosen && !isCorrectOpt) {
+                                style = isDark ? 'bg-red-950/80 border-red-700 text-red-300 font-extrabold' : 'bg-red-100 border-red-400 text-red-900 font-extrabold';
+                                tag = t('studentChoiceWrong');
+                              }
+                              if (isChosen && isCorrectOpt) {
+                                tag = t('studentChoiceCorrect');
+                              }
 
-                            return (
-                              <div key={optIdx} className={`p-2.5 rounded-xl border flex items-center justify-between ${style}`}>
-                                <span className="flex items-center gap-2">
-                                  <span className="font-bold text-[11px] opacity-60">{String.fromCharCode(65 + optIdx)})</span>
-                                  <span>{opt}</span>
-                                </span>
-                                {tag && <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
-                                  isDark ? 'bg-gray-900/80 border-current' : 'bg-white/80 border-current'
-                                }`}>{tag}</span>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Save Grade Button (if quiz has open questions) */}
-              {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
-                <div className={`pt-4 mt-4 border-t flex items-center justify-between gap-3 ${
-                  isDark ? 'border-gray-800' : 'border-gray-200'
-                }`}>
-                  <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {lang === 'am' ? '💡 የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ "ውጤት መዝግብ" የሚለውን ይጫኑ።' : '💡 Select scores for open questions above and click Save Grade.'}
-                  </p>
-                  <button
-                    onClick={handleSaveGrading}
-                    disabled={submittingGrading}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
-                  >
-                    <span>💾</span>
-                    <span>{submittingGrading ? (lang === 'am' ? 'እየተመዘገበ ነው...' : 'Saving Grade...') : (lang === 'am' ? 'ውጤት መዝግብ እና አዘምን' : 'Save Grade & Update Score')}</span>
-                  </button>
+                              return (
+                                <div key={optIdx} className={`p-2.5 rounded-xl border flex items-center justify-between ${style}`}>
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-bold text-[11px] opacity-60">{String.fromCharCode(65 + optIdx)})</span>
+                                    <span>{opt}</span>
+                                  </span>
+                                  {tag && <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${isDark ? 'bg-gray-900/80 border-current' : 'bg-white/80 border-current'
+                                    }`}>{tag}</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
+
+                {/* Save Grade Button (if quiz has open questions) */}
+                {selectedSubmissionQuiz?.questions.some(q => (q.questionType || 'multiple_choice') !== 'multiple_choice') && (
+                  <div className={`pt-4 mt-4 border-t flex items-center justify-between gap-3 ${isDark ? 'border-gray-800' : 'border-gray-200'
+                    }`}>
+                    <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {lang === 'am' ? '💡 የክፍት ጥያቄዎችን ውጤት ከሰጡ በኋላ "ውጤት መዝግብ" የሚለውን ይጫኑ።' : '💡 Select scores for open questions above and click Save Grade.'}
+                    </p>
+                    <button
+                      onClick={handleSaveGrading}
+                      disabled={submittingGrading}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      <span>💾</span>
+                      <span>{submittingGrading ? (lang === 'am' ? 'እየተመዘገበ ነው...' : 'Saving Grade...') : (lang === 'am' ? 'ውጤት መዝግብ እና አዘምን' : 'Save Grade & Update Score')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </ModalPortal>
+          </ModalPortal>
         )}
 
         {/* Create Quiz Modal (z-[9999]) */}
         {showCreateModal && (
           <ModalPortal>
             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-            <div className={`rounded-3xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto border ${
-              isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
-            }`}>
-              <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('createQuizBtn')}</h3>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  &times;
-                </button>
-              </div>
+              <div className={`rounded-3xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto border ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
+                }`}>
+                <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('createQuizBtn')}</h3>
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    &times;
+                  </button>
+                </div>
 
-              <form onSubmit={handleCreateQuizSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {t('linkExamColumn')}
-                    </label>
-                    <select
-                      value={selectedExamColumnId}
-                      onChange={(e) => setSelectedExamColumnId(e.target.value)}
-                      className={`w-full p-3 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm font-medium ${
-                        isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
-                      }`}
-                      required
-                    >
-                      {examColumns.map((col) => {
-                        const alreadyCreated = quizzes.some(
-                          q => String(q.examColumnId) === String(col._id) || q.examColumnName === col.name
-                        );
-                        return (
-                          <option key={col._id} value={col._id} disabled={alreadyCreated}>
-                            {col.name} (Max: {col.maxScore}){alreadyCreated ? ` ${t('examAlreadyExists')}` : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className={`block text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {t('examTimer')}
+                <form onSubmit={handleCreateQuizSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {t('linkExamColumn')}
                       </label>
-                      <label className={`inline-flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
-                        isDark ? 'text-emerald-400' : 'text-emerald-700'
-                      }`}>
-                        <input
-                          type="checkbox"
-                          checked={hasTimer}
-                          onChange={(e) => setHasTimer(e.target.checked)}
-                          className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                        />
-                        <span>{t('enableTimer')}</span>
-                      </label>
+                      <select
+                        value={selectedExamColumnId}
+                        onChange={(e) => setSelectedExamColumnId(e.target.value)}
+                        className={`w-full p-3 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm font-medium ${isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
+                          }`}
+                        required
+                      >
+                        {examColumns.map((col) => {
+                          const alreadyCreated = quizzes.some(
+                            q => String(q.examColumnId) === String(col._id) || q.examColumnName === col.name
+                          );
+                          return (
+                            <option key={col._id} value={col._id} disabled={alreadyCreated}>
+                              {col.name} (Max: {col.maxScore}){alreadyCreated ? ` ${t('examAlreadyExists')}` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
                     </div>
 
-                    {hasTimer ? (
-                      <input
-                        type="number"
-                        value={durationMinutes}
-                        onChange={(e) => setDurationMinutes(e.target.value)}
-                        placeholder={t('enterDuration')}
-                        className={`w-full p-3 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm ${
-                          isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        min="1"
-                        max="300"
-                        required
-                      />
-                    ) : (
-                      <div className={`p-3 border rounded-xl text-xs font-bold text-center ${
-                        isDark ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                      }`}>
-                        {t('untimedNotice')}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className={`block text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {t('examTimer')}
+                        </label>
+                        <label className={`inline-flex items-center gap-1.5 text-xs font-bold cursor-pointer ${isDark ? 'text-emerald-400' : 'text-emerald-700'
+                          }`}>
+                          <input
+                            type="checkbox"
+                            checked={hasTimer}
+                            onChange={(e) => setHasTimer(e.target.checked)}
+                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                          />
+                          <span>{t('enableTimer')}</span>
+                        </label>
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                <div>
-                  <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('quizTitleLabel')}</label>
-                  <input
-                    type="text"
-                    value={quizTitle}
-                    onChange={(e) => setQuizTitle(e.target.value)}
-                    placeholder={t('quizTitlePlaceholder')}
-                    className={`w-full p-3 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm ${
-                      isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                    required
-                  />
-                </div>
-
-                {/* Questions Section */}
-                <div className={`pt-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                    <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-800'}`}>{t('questionsHeader')}</h4>
-                    <button
-                      type="button"
-                      onClick={() => setShowBulkImportModal(true)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <span>📥</span>
-                      <span>{t('bulkImportBtn')}</span>
-                    </button>
+                      {hasTimer ? (
+                        <input
+                          type="number"
+                          value={durationMinutes}
+                          onChange={(e) => setDurationMinutes(e.target.value)}
+                          placeholder={t('enterDuration')}
+                          className={`w-full p-3 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm ${isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
+                            }`}
+                          min="1"
+                          max="300"
+                          required
+                        />
+                      ) : (
+                        <div className={`p-3 border rounded-xl text-xs font-bold text-center ${isDark ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                          }`}>
+                          {t('untimedNotice')}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    {questions.map((q, qIdx) => (
-                      <div key={qIdx} className={`p-4 border rounded-2xl relative space-y-3 ${
-                        isDark ? 'bg-gray-800/60 border-gray-700/80' : 'bg-gray-50 border-gray-200'
-                      }`}>
-                        <div className="flex justify-between items-center">
-                          <span className={`font-bold text-sm ${isDark ? 'text-emerald-400' : 'text-emerald-800'}`}>
-                            {t('questionLabel')} {qIdx + 1}
-                          </span>
-                          {questions.length > 1 && (
+                  <div>
+                    <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('quizTitleLabel')}</label>
+                    <input
+                      type="text"
+                      value={quizTitle}
+                      onChange={(e) => setQuizTitle(e.target.value)}
+                      placeholder={t('quizTitlePlaceholder')}
+                      className={`w-full p-3 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm ${isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
+                        }`}
+                      required
+                    />
+                  </div>
+
+                  {/* Questions Section */}
+                  <div className={`pt-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                      <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-800'}`}>{t('questionsHeader')}</h4>
+                      <button
+                        type="button"
+                        onClick={() => setShowBulkImportModal(true)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>📥</span>
+                        <span>{t('bulkImportBtn')}</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {questions.map((q, qIdx) => (
+                        <div key={qIdx} className={`p-4 border rounded-2xl relative space-y-3 ${isDark ? 'bg-gray-800/60 border-gray-700/80' : 'bg-gray-50 border-gray-200'
+                          }`}>
+                          <div className="flex justify-between items-center">
+                            <span className={`font-bold text-sm ${isDark ? 'text-emerald-400' : 'text-emerald-800'}`}>
+                              {t('questionLabel')} {qIdx + 1}
+                            </span>
+                            {questions.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveQuestion(qIdx)}
+                                className={`text-xs font-bold px-2 py-1 rounded-lg cursor-pointer ${isDark ? 'text-red-400 bg-red-950/50' : 'text-red-500 bg-red-50'
+                                  }`}
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Section Header & Marks Row */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div className="sm:col-span-2 space-y-1">
+                              <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                                {lang === 'am' ? '📌 የክፍል ርዕስ (አማራጭ)' : '📌 Section Title / Header (Optional)'}
+                              </label>
+                              <input
+                                type="text"
+                                value={q.sectionTitle || ''}
+                                onChange={(e) => handleSectionTitleChange(qIdx, e.target.value)}
+                                placeholder={lang === 'am' ? 'ምሳሌ፡ ክፍል ሦስት፡ አጭር መልስ ይጻፉ' : 'e.g. Section 2: Write short answers'}
+                                className={`w-full p-2 rounded-xl border text-xs ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                                  }`}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                                {lang === 'am' ? '🎯 ነጥብ (Marks)' : '🎯 Question Marks'}
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={q.marks || 1}
+                                onChange={(e) => handleMarksChange(qIdx, e.target.value)}
+                                className={`w-full p-2 rounded-xl border text-xs font-bold text-center ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                                  }`}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Question Type Selector */}
+                          <div className="flex gap-2 flex-wrap pt-1">
+                            {[
+                              { value: 'multiple_choice', label: lang === 'am' ? '🔵 ምርጫ' : '🔵 Multiple Choice' },
+                              { value: 'short_answer', label: lang === 'am' ? '✏️ ጭብጥ መልስ' : '✏️ Short Answer' },
+                              { value: 'fill_blank', label: lang === 'am' ? '🔲 ክፍተት መሙያ' : '🔲 Fill in the Blank' }
+                            ].map(({ value, label }) => (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => handleQuestionTypeChange(qIdx, value)}
+                                className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition cursor-pointer ${(q.questionType || 'multiple_choice') === value
+                                    ? (isDark ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-emerald-600 border-emerald-600 text-white')
+                                    : (isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100')
+                                  }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <input
+                            type="text"
+                            value={q.questionText}
+                            onChange={(e) => handleQuestionTextChange(qIdx, e.target.value)}
+                            placeholder={
+                              (q.questionType === 'fill_blank')
+                                ? (lang === 'am' ? 'ምሳሌ: ___ ቁርዓን ውስጥ ምን ሱራ ነው?' : 'e.g. The first Surah in the Quran is ___')
+                                : t('enterQuestionPlaceholder')
+                            }
+                            className={`w-full p-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                              }`}
+                            required
+                          />
+
+                          {/* Fill in the blank hint */}
+                          {q.questionType === 'fill_blank' && (
+                            <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                              💡 {lang === 'am' ? 'ባዶ ቦታ ለማመልከት ___ ይጠቀሙ' : 'Use ___ in the question text to mark the blank'}
+                            </p>
+                          )}
+
+                          {/* Open question notice */}
+                          {(q.questionType === 'short_answer' || q.questionType === 'fill_blank') && (
+                            <div className={`p-3 rounded-xl text-xs border ${isDark ? 'bg-blue-950/40 border-blue-900/60 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-800'
+                              }`}>
+                              ⏳ {lang === 'am'
+                                ? 'ተማሪው ጽሑፍ ይጽፋል። ኡስታዝ ከፈተናው ማብቂያ በኋላ ውጤት ይሰጣሉ።'
+                                : 'Student will write a text answer. Ustaz grades this manually after the exam.'}
+                            </div>
+                          )}
+
+                          {/* MCQ Options */}
+                          {(!q.questionType || q.questionType === 'multiple_choice') && (
+                            <div className="space-y-2">
+                              <label className={`block text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {t('correctAnswerLabel')}
+                              </label>
+                              {q.options.map((opt, oIdx) => (
+                                <div key={oIdx} className="flex items-center gap-2">
+                                  <input
+                                    type="radio"
+                                    name={`correct_${qIdx}`}
+                                    checked={q.correctOptionIndex === oIdx}
+                                    onChange={() => handleCorrectOptionChange(qIdx, oIdx)}
+                                    className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={opt}
+                                    onChange={(e) => handleOptionChange(qIdx, oIdx, e.target.value)}
+                                    placeholder={`${t('optionLabel')} ${String.fromCharCode(65 + oIdx)}`}
+                                    className={`flex-1 p-2 rounded-xl border text-sm ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                                      } ${q.correctOptionIndex === oIdx
+                                        ? 'border-emerald-500 ring-1 ring-emerald-400 font-medium'
+                                        : (isDark ? 'border-gray-700' : 'border-gray-300')
+                                      }`}
+                                    required
+                                  />
+                                  {q.options.length > 2 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveOption(qIdx, oIdx)}
+                                      className="text-gray-400 hover:text-red-500 font-bold px-1"
+                                    >
+                                      &times;
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {(!q.questionType || q.questionType === 'multiple_choice') && q.options.length < 10 && (
                             <button
                               type="button"
-                              onClick={() => handleRemoveQuestion(qIdx)}
-                              className={`text-xs font-bold px-2 py-1 rounded-lg cursor-pointer ${
-                                isDark ? 'text-red-400 bg-red-950/50' : 'text-red-500 bg-red-50'
-                              }`}
+                              onClick={() => handleAddOption(qIdx)}
+                              className={`text-xs font-semibold hover:underline pt-1 cursor-pointer ${isDark ? 'text-emerald-400' : 'text-emerald-600'
+                                }`}
                             >
-                              Remove
+                              {t('addOptionBtn')}
                             </button>
                           )}
                         </div>
+                      ))}
+                    </div>
 
-                        {/* Section Header & Marks Row */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <div className="sm:col-span-2 space-y-1">
-                            <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                              {lang === 'am' ? '📌 የክፍል ርዕስ (አማራጭ)' : '📌 Section Title / Header (Optional)'}
-                            </label>
-                            <input
-                              type="text"
-                              value={q.sectionTitle || ''}
-                              onChange={(e) => handleSectionTitleChange(qIdx, e.target.value)}
-                              placeholder={lang === 'am' ? 'ምሳሌ፡ ክፍል ሦስት፡ አጭር መልስ ይጻፉ' : 'e.g. Section 2: Write short answers'}
-                              className={`w-full p-2 rounded-xl border text-xs ${
-                                isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                              }`}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                              {lang === 'am' ? '🎯 ነጥብ (Marks)' : '🎯 Question Marks'}
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="100"
-                              value={q.marks || 1}
-                              onChange={(e) => handleMarksChange(qIdx, e.target.value)}
-                              className={`w-full p-2 rounded-xl border text-xs font-bold text-center ${
-                                isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
-                              }`}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Question Type Selector */}
-                        <div className="flex gap-2 flex-wrap pt-1">
-                          {[
-                            { value: 'multiple_choice', label: lang === 'am' ? '🔵 ምርጫ' : '🔵 Multiple Choice' },
-                            { value: 'short_answer',   label: lang === 'am' ? '✏️ ጭብጥ መልስ' : '✏️ Short Answer' },
-                            { value: 'fill_blank',     label: lang === 'am' ? '🔲 ክፍተት መሙያ' : '🔲 Fill in the Blank' }
-                          ].map(({ value, label }) => (
-                            <button
-                              key={value}
-                              type="button"
-                              onClick={() => handleQuestionTypeChange(qIdx, value)}
-                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition cursor-pointer ${
-                                (q.questionType || 'multiple_choice') === value
-                                  ? (isDark ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-emerald-600 border-emerald-600 text-white')
-                                  : (isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100')
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-
-                        <input
-                          type="text"
-                          value={q.questionText}
-                          onChange={(e) => handleQuestionTextChange(qIdx, e.target.value)}
-                          placeholder={
-                            (q.questionType === 'fill_blank')
-                              ? (lang === 'am' ? 'ምሳሌ: ___ ቁርዓን ውስጥ ምን ሱራ ነው?' : 'e.g. The first Surah in the Quran is ___')
-                              : t('enterQuestionPlaceholder')
-                          }
-                          className={`w-full p-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-emerald-500 ${
-                            isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
-                          }`}
-                          required
-                        />
-
-                        {/* Fill in the blank hint */}
-                        {q.questionType === 'fill_blank' && (
-                          <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
-                            💡 {lang === 'am' ? 'ባዶ ቦታ ለማመልከት ___ ይጠቀሙ' : 'Use ___ in the question text to mark the blank'}
-                          </p>
-                        )}
-
-                        {/* Open question notice */}
-                        {(q.questionType === 'short_answer' || q.questionType === 'fill_blank') && (
-                          <div className={`p-3 rounded-xl text-xs border ${
-                            isDark ? 'bg-blue-950/40 border-blue-900/60 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-800'
-                          }`}>
-                            ⏳ {lang === 'am'
-                              ? 'ተማሪው ጽሑፍ ይጽፋል። ኡስታዝ ከፈተናው ማብቂያ በኋላ ውጤት ይሰጣሉ።'
-                              : 'Student will write a text answer. Ustaz grades this manually after the exam.'}
-                          </div>
-                        )}
-
-                        {/* MCQ Options */}
-                        {(!q.questionType || q.questionType === 'multiple_choice') && (
-                          <div className="space-y-2">
-                            <label className={`block text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {t('correctAnswerLabel')}
-                            </label>
-                            {q.options.map((opt, oIdx) => (
-                              <div key={oIdx} className="flex items-center gap-2">
-                                <input
-                                  type="radio"
-                                  name={`correct_${qIdx}`}
-                                  checked={q.correctOptionIndex === oIdx}
-                                  onChange={() => handleCorrectOptionChange(qIdx, oIdx)}
-                                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                                />
-                                <input
-                                  type="text"
-                                  value={opt}
-                                  onChange={(e) => handleOptionChange(qIdx, oIdx, e.target.value)}
-                                  placeholder={`${t('optionLabel')} ${String.fromCharCode(65 + oIdx)}`}
-                                  className={`flex-1 p-2 rounded-xl border text-sm ${
-                                    isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                                  } ${
-                                    q.correctOptionIndex === oIdx
-                                      ? 'border-emerald-500 ring-1 ring-emerald-400 font-medium'
-                                      : (isDark ? 'border-gray-700' : 'border-gray-300')
-                                  }`}
-                                  required
-                                />
-                                {q.options.length > 2 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveOption(qIdx, oIdx)}
-                                    className="text-gray-400 hover:text-red-500 font-bold px-1"
-                                  >
-                                    &times;
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {(!q.questionType || q.questionType === 'multiple_choice') && q.options.length < 10 && (
-                          <button
-                            type="button"
-                            onClick={() => handleAddOption(qIdx)}
-                            className={`text-xs font-semibold hover:underline pt-1 cursor-pointer ${
-                              isDark ? 'text-emerald-400' : 'text-emerald-600'
-                            }`}
-                          >
-                            {t('addOptionBtn')}
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddQuestion}
+                      className={`mt-4 w-full py-2.5 border-2 border-dashed font-bold rounded-2xl transition text-xs cursor-pointer ${isDark
+                          ? 'border-emerald-700 text-emerald-400 hover:bg-emerald-950/40'
+                          : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                        }`}
+                    >
+                      {t('addQuestionBtn')}
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAddQuestion}
-                    className={`mt-4 w-full py-2.5 border-2 border-dashed font-bold rounded-2xl transition text-xs cursor-pointer ${
-                      isDark 
-                        ? 'border-emerald-700 text-emerald-400 hover:bg-emerald-950/40' 
-                        : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                    }`}
-                  >
-                    {t('addQuestionBtn')}
-                  </button>
-                </div>
-
-                <div className="pt-4 flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className={`px-4 py-2.5 border rounded-xl font-semibold text-sm cursor-pointer ${
-                      isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {t('cancelBtn')}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-sm disabled:opacity-50 cursor-pointer"
-                  >
-                    {submitting ? t('publishing') : t('publishBtn')}
-                  </button>
-                </div>
-              </form>
+                  <div className="pt-4 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateModal(false)}
+                      className={`px-4 py-2.5 border rounded-xl font-semibold text-sm cursor-pointer ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {t('cancelBtn')}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-sm disabled:opacity-50 cursor-pointer"
+                    >
+                      {submitting ? t('publishing') : t('publishBtn')}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
-        </ModalPortal>
+          </ModalPortal>
         )}
 
         {/* Bulk Import Modal (z-[10000]) */}
         {showBulkImportModal && (
           <ModalPortal>
             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-fadeIn">
-            <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto border ${
-              isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
-            }`}>
-              <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('bulkImportTitle')}</h3>
-                <button
-                  onClick={() => setShowBulkImportModal(false)}
-                  className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  &times;
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Word Upload Box */}
-                <div className={`p-4 border rounded-2xl ${
-                  isDark ? 'bg-purple-950/40 border-purple-800/60' : 'bg-purple-50 border-purple-200'
+              <div className={`rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto border ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-900'
                 }`}>
-                  <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
-                    📄 {t('uploadWordFile')}
-                  </label>
-                  <input
-                    type="file"
-                    accept=".docx"
-                    onChange={handleWordFileUpload}
-                    className={`w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer ${
-                      isDark ? 'text-purple-300' : 'text-purple-700'
-                    }`}
-                  />
-                  {bulkLoading && <p className={`text-xs mt-1 font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{t('processing')}</p>}
-                </div>
-
-                <div>
-                  <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {t('pasteRawText')}
-                  </label>
-                  <textarea
-                    rows={10}
-                    value={bulkText}
-                    onChange={(e) => setBulkText(e.target.value)}
-                    placeholder={t('bulkPlaceholder')}
-                    className={`w-full p-3 rounded-2xl border font-mono text-xs focus:ring-2 focus:ring-emerald-500 whitespace-pre-wrap ${
-                      isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  />
-                </div>
-
-                <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
-                  isDark ? 'bg-gray-800/60 border-gray-700/80' : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <span className={`font-bold text-sm block mb-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                    💡 {t('formatInstructions')}
-                  </span>
-                  <div className={`leading-relaxed whitespace-pre-line font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {t('formatGuideText')}
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-2">
+                <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('bulkImportTitle')}</h3>
                   <button
-                    type="button"
                     onClick={() => setShowBulkImportModal(false)}
-                    className={`px-4 py-2 border rounded-xl font-semibold text-xs cursor-pointer ${
-                      isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className={`text-2xl font-bold cursor-pointer ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
                   >
-                    {t('cancelBtn')}
+                    &times;
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleExecuteBulkImport}
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow text-xs transition cursor-pointer"
-                  >
-                    {t('parseImportBtn')}
-                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Word Upload Box */}
+                  <div className={`p-4 border rounded-2xl ${isDark ? 'bg-purple-950/40 border-purple-800/60' : 'bg-purple-50 border-purple-200'
+                    }`}>
+                    <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
+                      📄 {t('uploadWordFile')}
+                    </label>
+                    <input
+                      type="file"
+                      accept=".docx"
+                      onChange={handleWordFileUpload}
+                      className={`w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer ${isDark ? 'text-purple-300' : 'text-purple-700'
+                        }`}
+                    />
+                    {bulkLoading && <p className={`text-xs mt-1 font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{t('processing')}</p>}
+                  </div>
+
+                  <div>
+                    <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {t('pasteRawText')}
+                    </label>
+                    <textarea
+                      rows={10}
+                      value={bulkText}
+                      onChange={(e) => setBulkText(e.target.value)}
+                      placeholder={t('bulkPlaceholder')}
+                      className={`w-full p-3 rounded-2xl border font-mono text-xs focus:ring-2 focus:ring-emerald-500 whitespace-pre-wrap ${isDark ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
+                        }`}
+                    />
+                  </div>
+
+                  <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${isDark ? 'bg-gray-800/60 border-gray-700/80' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                    <span className={`font-bold text-sm block mb-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                      💡 {t('formatInstructions')}
+                    </span>
+                    <div className={`leading-relaxed whitespace-pre-line font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {t('formatGuideText')}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowBulkImportModal(false)}
+                      className={`px-4 py-2 border rounded-xl font-semibold text-xs cursor-pointer ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {t('cancelBtn')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExecuteBulkImport}
+                      className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow text-xs transition cursor-pointer"
+                    >
+                      {t('parseImportBtn')}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </ModalPortal>
+          </ModalPortal>
         )}
       </div>
     </div>

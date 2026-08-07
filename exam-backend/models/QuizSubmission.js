@@ -16,6 +16,8 @@ const quizSubmissionSchema = new mongoose.Schema(
       default: 'not_required'
     },
     syncedToMain: { type: Boolean, default: false },
+    isTimeoutSubmit: { type: Boolean, default: false },
+    startedAt: { type: Date },
     completedAt: { type: Date, default: Date.now }
   },
   { timestamps: true }
