@@ -455,7 +455,7 @@ export default function ExamPlayer({ quizId, student, onLogout }) {
           lang === 'am'
             ? '🔒 3 ጊዜ ደጋግመው ከፈተናው ማያ ገጽ በመውጣትዎ ምክንያት መለያዎ ተቆልፎ ወጥተዋል (Logout)!'
             : '🔒 You were automatically logged out due to exiting the exam page 3 times!',
-          { duration: 6000 }
+          { duration: Infinity }
         );
 
         // Release session in backend
