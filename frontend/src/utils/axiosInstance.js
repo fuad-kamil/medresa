@@ -9,7 +9,7 @@ if (apiURL && !apiURL.endsWith('/api') && !apiURL.endsWith('/api/')) {
 
 // Warn in console if using fallback (helps catch missing env var on Vercel)
 if (!import.meta.env.VITE_API_URL) {
-    console.warn('⚠️ VITE_API_URL is not set. Falling back to:', apiURL);
+    console.warn('VITE_API_URL is not set. Falling back to:', apiURL);
 }
 
 const axiosInstance = axios.create({

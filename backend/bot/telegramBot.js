@@ -212,16 +212,16 @@ export function initBot() {
         const registerWebhook = async (attempt = 1) => {
             try {
                 await bot.setWebHook(webhookUrl);
-                console.log(`✅ Telegram webhook registered: ${webhookUrl}`);
+                console.log(`Telegram webhook registered: ${webhookUrl}`);
             } catch (err) {
-                console.error(`❌ Webhook registration failed (attempt ${attempt}):`, err.message);
+                console.error(`Webhook registration failed (attempt ${attempt}):`, err.message);
                 if (attempt < 5) setTimeout(() => registerWebhook(attempt + 1), attempt * 5000);
             }
         };
         registerWebhook();
 
         bot.on('message', (msg) => handleMessage(bot, msg));
-        console.log('✅ Telegram Bot started in WEBHOOK mode.');
+        console.log('Telegram Bot started in WEBHOOK mode.');
 
         return { webhookPath, webhookHandler };
     } else {
@@ -229,7 +229,7 @@ export function initBot() {
         const bot = new TelegramBot(token, { polling: true });
         bot.on('polling_error', (err) => console.error('Telegram polling error:', err.message));
         bot.on('message', (msg) => handleMessage(bot, msg));
-        console.log('✅ Telegram Bot started in POLLING mode (local dev).');
+        console.log('Telegram Bot started in POLLING mode (local dev).');
         return null;
     }
 }

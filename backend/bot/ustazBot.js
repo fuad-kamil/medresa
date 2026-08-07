@@ -657,9 +657,9 @@ export function initUstazBot() {
         const registerWebhook = async (attempt = 1) => {
             try {
                 await bot.setWebHook(webhookUrl);
-                console.log(`✅ Ustaz Telegram webhook registered: ${webhookUrl}`);
+                console.log(`Ustaz Telegram webhook registered: ${webhookUrl}`);
             } catch (err) {
-                console.error(`❌ Ustaz Webhook registration failed (attempt ${attempt}):`, err.message);
+                console.error(`Ustaz Webhook registration failed (attempt ${attempt}):`, err.message);
                 if (attempt < 5) setTimeout(() => registerWebhook(attempt + 1), attempt * 5000);
             }
         };
@@ -668,7 +668,7 @@ export function initUstazBot() {
         bot.on('message', (msg) => handleMessage(bot, msg));
         bot.on('callback_query', (query) => handleCallbackQuery(bot, query));
         bot.on('poll_answer', (answer) => handlePollAnswer(bot, answer));
-        console.log('✅ Ustaz Telegram Bot started in WEBHOOK mode.');
+        console.log('Ustaz Telegram Bot started in WEBHOOK mode.');
 
         return { webhookPath, webhookHandler };
     } else {
@@ -678,7 +678,7 @@ export function initUstazBot() {
         bot.on('message', (msg) => handleMessage(bot, msg));
         bot.on('callback_query', (query) => handleCallbackQuery(bot, query));
         bot.on('poll_answer', (answer) => handlePollAnswer(bot, answer));
-        console.log('✅ Ustaz Telegram Bot started in POLLING mode (local dev).');
+        console.log('Ustaz Telegram Bot started in POLLING mode (local dev).');
         return null;
     }
 }
