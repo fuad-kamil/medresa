@@ -851,49 +851,108 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
     const correctCount = submission.correctAnswers !== undefined ? submission.correctAnswers : 0;
     const totalCount = submission.totalQuestions || quiz.questions.length || 0;
 
+    let openCounter = 0;
     let questionsHtml = '';
+
     quiz.questions.forEach((q, idx) => {
-      const studentChoiceIdx = submission.answers?.[idx];
-      const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+      const qType = q.questionType || 'multiple_choice';
+      const isOpen = qType === 'short_answer' || qType === 'fill_blank';
+      const maxQMarks = q.marks || 1;
+      const studentAnswer = submission.answers?.[idx];
 
-      let optionsHtml = '';
-      q.options.forEach((opt, optIdx) => {
-        const isChosen = studentChoiceIdx === optIdx;
-        const isCorrectOpt = q.correctOptionIndex === optIdx;
-        let bgColor = '#ffffff';
-        let border = '1px solid #e5e7eb';
-        let color = '#374151';
-        let fw = 'normal';
-        let noteLine = '';
+      let earnedScore = 0;
+      let statusBadgeHtml = '';
 
-        if (isCorrectOpt && isChosen) {
-          bgColor = '#d1fae5'; border = '2px solid #10b981'; color = '#065f46'; fw = 'bold';
-          noteLine = '<div style="font-size:11px;color:#065f46;margin-top:3px;font-weight:bold;">&#9989; ትክክለኛ መልስ - የተማሪው ምርጫ</div>';
-        } else if (isCorrectOpt) {
-          bgColor = '#ecfdf5'; border = '1px solid #34d399'; color = '#047857'; fw = 'bold';
-          noteLine = '<div style="font-size:11px;color:#047857;margin-top:3px;font-weight:bold;">&#9989; ትክክለኛ መልስ</div>';
-        } else if (isChosen) {
-          bgColor = '#fee2e2'; border = '2px solid #ef4444'; color = '#991b1b'; fw = 'bold';
-          noteLine = '<div style="font-size:11px;color:#991b1b;margin-top:3px;font-weight:bold;">&#10060; የተማሪው ምርጫ - ስህተት</div>';
+      if (isOpen) {
+        const openIdx = openCounter++;
+        if (submission.openAnswerScores && submission.openAnswerScores[openIdx] !== undefined) {
+          earnedScore = Number(submission.openAnswerScores[openIdx]);
+        } else if (gradingScores[idx] !== undefined) {
+          earnedScore = Number(gradingScores[idx]);
+        } else {
+          earnedScore = 0;
         }
 
-        const label = String.fromCharCode(65 + optIdx);
-        optionsHtml += `<div style="padding:8px 12px;margin:5px 0;border-radius:6px;background:${bgColor};border:${border};color:${color};font-weight:${fw};font-size:13px;">${label}) ${opt}${noteLine}</div>`;
-      });
+        if (earnedScore > 0) {
+          statusBadgeHtml = `<span style="color:#065f46;font-weight:900;font-size:12px;background:#d1fae5;padding:3px 8px;border-radius:6px;border:1px solid #10b981;">&#9989; ${lang === 'am' ? 'ትክክል' : 'Correct'} (${earnedScore}/${maxQMarks})</span>`;
+        } else {
+          statusBadgeHtml = `<span style="color:#991b1b;font-weight:900;font-size:12px;background:#fee2e2;padding:3px 8px;border-radius:6px;border:1px solid #ef4444;">&#10060; ${lang === 'am' ? 'ስህተት' : 'Incorrect'} (0/${maxQMarks})</span>`;
+        }
+      } else {
+        const studentChoiceIdx = studentAnswer;
+        const isCorrect = studentChoiceIdx !== undefined && studentChoiceIdx === q.correctOptionIndex;
+        earnedScore = isCorrect ? maxQMarks : 0;
 
-      const statusLabel = isCorrect
-        ? '<span style="color:#065f46;font-weight:bold;font-size:12px;">&#9989; ትክክል</span>'
-        : '<span style="color:#991b1b;font-weight:bold;font-size:12px;">&#10060; ስህተት</span>';
+        if (isCorrect) {
+          statusBadgeHtml = `<span style="color:#065f46;font-weight:900;font-size:12px;background:#d1fae5;padding:3px 8px;border-radius:6px;border:1px solid #10b981;">&#9989; ${lang === 'am' ? 'ትክክል' : 'Correct'} (${earnedScore}/${maxQMarks})</span>`;
+        } else {
+          statusBadgeHtml = `<span style="color:#991b1b;font-weight:900;font-size:12px;background:#fee2e2;padding:3px 8px;border-radius:6px;border:1px solid #ef4444;">&#10060; ${lang === 'am' ? 'ስህተት' : 'Incorrect'} (0/${maxQMarks})</span>`;
+        }
+      }
+
+      // Section Header if present
+      let sectionHeaderHtml = '';
+      if (q.sectionTitle) {
+        sectionHeaderHtml = `
+          <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-weight:900;font-size:13px;padding:6px 12px;border-radius:8px;margin-top:14px;margin-bottom:8px;">
+            📌 ${q.sectionTitle}
+          </div>`;
+      }
+
+      let contentHtml = '';
+      if (isOpen) {
+        const typeLabel = qType === 'fill_blank'
+          ? (lang === 'am' ? 'ክፍተት ሙላ' : 'Fill in the Blank')
+          : (lang === 'am' ? 'አጭር መልስ' : 'Short Answer');
+
+        const textAns = (typeof studentAnswer === 'string' && studentAnswer.trim())
+          ? studentAnswer
+          : `<em style="color:#9ca3af;">${lang === 'am' ? 'ምላሽ አልተሰጠም' : 'No answer provided'}</em>`;
+
+        contentHtml = `
+          <div style="margin-top:8px;background:#ffffff;border:1px solid #d1d5db;border-radius:6px;padding:10px 12px;">
+            <div style="font-size:11px;font-weight:bold;color:#6b7280;margin-bottom:4px;">[${typeLabel}] ${lang === 'am' ? 'የተማሪው መልስ፡' : "Student's Answer:"}</div>
+            <div style="font-size:13px;font-weight:bold;color:#111827;white-space:pre-wrap;">${textAns}</div>
+          </div>`;
+      } else {
+        const studentChoiceIdx = studentAnswer;
+        let optionsHtml = '';
+        (q.options || []).forEach((opt, optIdx) => {
+          const isChosen = studentChoiceIdx === optIdx;
+          const isCorrectOpt = q.correctOptionIndex === optIdx;
+          let bgColor = '#ffffff';
+          let border = '1px solid #e5e7eb';
+          let color = '#374151';
+          let fw = 'normal';
+          let noteLine = '';
+
+          if (isCorrectOpt && isChosen) {
+            bgColor = '#d1fae5'; border = '2px solid #10b981'; color = '#065f46'; fw = 'bold';
+            noteLine = `<div style="font-size:11px;color:#065f46;margin-top:2px;font-weight:bold;">&#9989; ${lang === 'am' ? 'ትክክለኛ መልስ - የተማሪው ምርጫ' : 'Correct Choice (Student Selected)'}</div>`;
+          } else if (isCorrectOpt) {
+            bgColor = '#ecfdf5'; border = '1px solid #34d399'; color = '#047857'; fw = 'bold';
+            noteLine = `<div style="font-size:11px;color:#047857;margin-top:2px;font-weight:bold;">&#9989; ${lang === 'am' ? 'ትክክለኛ መልስ' : 'Correct Choice'}</div>`;
+          } else if (isChosen) {
+            bgColor = '#fee2e2'; border = '2px solid #ef4444'; color = '#991b1b'; fw = 'bold';
+            noteLine = `<div style="font-size:11px;color:#991b1b;margin-top:2px;font-weight:bold;">&#10060; ${lang === 'am' ? 'የተማሪው ምርጫ - ስህተት' : 'Student Selected (Incorrect)'}</div>`;
+          }
+
+          const label = String.fromCharCode(65 + optIdx);
+          optionsHtml += `<div style="padding:6px 10px;margin:4px 0;border-radius:6px;background:${bgColor};border:${border};color:${color};font-weight:${fw};font-size:12px;">${label}) ${opt}${noteLine}</div>`;
+        });
+        contentHtml = `<div style="margin-top:6px;">${optionsHtml}</div>`;
+      }
 
       questionsHtml += `
-        <div style="border:1px solid #d1d5db;border-radius:8px;padding:14px 14px 10px 14px;margin-bottom:14px;background:#f9fafb;page-break-inside:avoid;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:10px;">
+        ${sectionHeaderHtml}
+        <div style="border:1px solid #d1d5db;border-radius:8px;padding:12px 14px 10px 14px;margin-bottom:12px;background:#f9fafb;page-break-inside:avoid;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:6px;">
             <tr>
-              <td style="font-weight:bold;font-size:14px;color:#111827;padding-right:10px;">ጥያቄ ${idx + 1}፡ ${q.questionText}</td>
-              <td width="80" style="text-align:right;vertical-align:top;white-space:nowrap;">${statusLabel}</td>
+              <td style="font-weight:bold;font-size:13px;color:#111827;padding-right:10px;">${lang === 'am' ? 'ጥያቄ' : 'Question'} ${idx + 1}፡ ${q.questionText}</td>
+              <td width="130" style="text-align:right;vertical-align:top;white-space:nowrap;">${statusBadgeHtml}</td>
             </tr>
           </table>
-          ${optionsHtml}
+          ${contentHtml}
         </div>`;
     });
 
@@ -908,27 +967,27 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
       font-family: 'Noto Sans Ethiopic', 'Nyala', 'Ethiopic', Arial, sans-serif;
       background: #ffffff;
       color: #1f2937;
-      padding: 28px;
-      font-size: 14px;
-      line-height: 1.6;
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
-  <div style="border-bottom:3px solid #059669;padding-bottom:14px;margin-bottom:22px;">
-    <h1 style="color:#065f46;font-size:22px;font-weight:900;margin-bottom:4px;">የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
-    <h2 style="color:#374151;font-size:14px;font-weight:700;">የተማሪ የፈተና ውጤት እና የመልስ ወረቀት</h2>
+  <div style="border-bottom:3px solid #059669;padding-bottom:12px;margin-bottom:18px;">
+    <h1 style="color:#065f46;font-size:20px;font-weight:900;margin-bottom:3px;">የዓሊ መድረሳ የመስመር ላይ ፈተና ፖርታል</h1>
+    <h2 style="color:#374151;font-size:13px;font-weight:700;">የተማሪ የፈተና ውጤት እና የመልስ ወረቀት (Graded Exam Report)</h2>
   </div>
 
-  <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:14px 18px;margin-bottom:22px;">
-    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የፈተናው ርዕስ፡</strong> ${quizTitle}</div>
-    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የተማሪው ስም፡</strong> ${studentName}</div>
-    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የውጤት ዓምድ፡</strong> ${quiz.examColumnName || 'የለም'}</div>
-    <div style="margin-bottom:6px;"><strong style="color:#065f46;">የመጨረሻ ውጤት፡</strong> <strong style="color:#047857;font-size:16px;">${displayScore} / ${targetMaxScore}</strong> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
+  <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:18px;">
+    <div style="margin-bottom:5px;"><strong style="color:#065f46;">የፈተናው ርዕስ፡</strong> ${quizTitle}</div>
+    <div style="margin-bottom:5px;"><strong style="color:#065f46;">የተማሪው ስም፡</strong> ${studentName}</div>
+    <div style="margin-bottom:5px;"><strong style="color:#065f46;">የውጤት ዓምድ፡</strong> ${quiz.examColumnName || 'የለም'}</div>
+    <div style="margin-bottom:5px;"><strong style="color:#065f46;">የመጨረሻ ውጤት፡</strong> <strong style="color:#047857;font-size:16px;">${displayScore} / ${targetMaxScore}</strong> (ከ ${totalCount} ጥያቄዎች ${correctCount}ቱ ትክክል)</div>
     <div><strong style="color:#065f46;">የተላከበት ቀን፡</strong> ${new Date(submission.createdAt || Date.now()).toLocaleString('en-US')}</div>
   </div>
 
-  <h3 style="color:#111827;border-bottom:1.5px solid #d1d5db;padding-bottom:8px;margin-bottom:16px;font-size:15px;font-weight:900;">ዝርዝር ጥያቄዎች እና የመልስ አማራጮች፡</h3>
+  <h3 style="color:#111827;border-bottom:1.5px solid #d1d5db;padding-bottom:6px;margin-bottom:14px;font-size:14px;font-weight:900;">ዝርዝር ጥያቄዎች እና የመልስ ወረቀት፡</h3>
   ${questionsHtml}
 </body>
 </html>`;
