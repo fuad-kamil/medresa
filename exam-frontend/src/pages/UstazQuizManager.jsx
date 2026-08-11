@@ -1022,37 +1022,27 @@ export default function UstazQuizManager({ ustazToken, ustazUser, onLogout }) {
 </body>
 </html>`;
 
-    const printWin = window.open('', '_blank', 'width=950,height=1000');
-    if (printWin) {
-      printWin.document.open();
-      printWin.document.write(fullHtml);
-      printWin.document.close();
-      printWin.focus();
-      setTimeout(() => {
-        printWin.print();
-      }, 400);
-    } else {
-      const safeStudentName = studentName.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
-      const safeQuizTitle = quizTitle.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
-      const filename = `${safeStudentName}_${safeQuizTitle}_Result.pdf`;
+    const safeStudentName = studentName.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
+    const safeQuizTitle = quizTitle.replace(/[^a-zA-Z0-9_\u1200-\u137F]/g, '_');
+    const filename = `${safeStudentName}_${safeQuizTitle}_Result.pdf`;
 
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 3, useCORS: true, letterRendering: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2.5, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
 
-      toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF...', { id: 'pdf-toast' });
+    toast.loading(lang === 'am' ? 'PDF እየወረደ ነው...' : 'Downloading PDF...', { id: 'pdf-toast' });
 
-      html2pdf().set(opt).from(fullHtml, 'string').save().then(() => {
-        toast.success(lang === 'am' ? 'PDF ፋይሉ በስኬት ወርዷል!' : 'PDF downloaded!', { id: 'pdf-toast' });
-      }).catch(err => {
-        console.error('PDF error:', err);
-        toast.error('PDF download failed.', { id: 'pdf-toast' });
-      });
-    }
+    html2pdf().set(opt).from(fullHtml, 'string').save().then(() => {
+      toast.success(lang === 'am' ? 'PDF ፋይሉ በስኬት ወርዷል!' : 'PDF downloaded!', { id: 'pdf-toast' });
+    }).catch(err => {
+      console.error('PDF error:', err);
+      toast.error('PDF download failed.', { id: 'pdf-toast' });
+    });
   };
 
   const downloadAsWord = (quiz) => {
